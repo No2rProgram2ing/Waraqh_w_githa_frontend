@@ -1,1 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap");
 @import "tailwindcss";
+
+/* @theme {
+  --color-brand-cream: #fcf9f4;
+  --color-brand-green: #536138;
+  --color-brand-text: #45483e;
+  --color-brand-border: #c6c8ba;
+  --color-brand-brown: #805533;
+
+  --font-serif: "Amiri", "FreeSerif", serif;
+  --font-marhey: "Marhey", sans-serif;
+  --font-sans: "Inter", -apple-system, Roboto, Helvetica, sans-serif;
+} */
+
+@theme {
+  /* Brand palette — derived from the Figma signup screen */
+  --color-brand-cream: #fdfcfa;
+  --color-brand-surface: #f6f5f0;
+  --color-brand-border: #e6e4db;
+  --color-brand-ink: #23261f;
+  --color-brand-muted: #8b8d80;
+  --color-brand-olive-50: #eef0e7;
+  --color-brand-olive-400: #6b7c52;
+  --color-brand-olive-600: #4a5a37;
+  --color-brand-olive-700: #3c4a2c;
+  --color-brand-olive-900: #262f1a;
+
+  /* تم تقديم Tajawal ليصبح خط العناوين الرئيسي المطابق لتصميم Figma */
+  --font-display: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-field: 0.625rem;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+  }
+
+  body {
+    @apply bg-brand-cream text-brand-ink antialiased;
+  }
+
+  /* تطبيقه تلقائياً على كافة العناوين لضمان توحيد الخط مع Figma */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+
+  /* Visible keyboard focus everywhere, respecting the brand ring color */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-olive-600);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
