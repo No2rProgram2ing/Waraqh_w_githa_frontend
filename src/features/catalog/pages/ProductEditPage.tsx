@@ -1,6 +1,6 @@
 ﻿    import { useEffect, useState } from 'react'
     import { Link, useNavigate, useParams } from 'react-router-dom'
-    import { Pencil, Star, Trash2, X } from 'lucide-react'
+    //import { Pencil, Star, Trash2, X } from 'lucide-react'
     import { useQueryClient } from '@tanstack/react-query'
 
     import { useProduct } from '../hooks/useProduct'

@@ -23,10 +23,10 @@ function AdminTopbar() {
   return (
     <header
       dir="rtl"
-      className="sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 backdrop-blur sm:px-6"
+      className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--color-border)] px-4 backdrop-blur sm:px-6"
       style={{
+        // color-mix() cannot be expressed as a Tailwind arbitrary value
         backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 95%, transparent)',
-        borderColor: 'var(--color-border)',
       }}
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -34,8 +34,7 @@ function AdminTopbar() {
         <button
           type="button"
           onClick={openMobileSidebar}
-          className="rounded-xl p-2 transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D] lg:hidden"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="rounded-xl p-2 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D] lg:hidden"
           aria-label="فتح القائمة"
         >
           <Menu className="h-5 w-5" />
@@ -45,29 +44,19 @@ function AdminTopbar() {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="hidden rounded-xl p-2 transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D] lg:block"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="hidden rounded-xl p-2 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D] lg:block"
           aria-label="طي القائمة الجانبية"
         >
           <Menu className="h-5 w-5" />
         </button>
 
         {/* Search */}
-        <div
-          className="hidden w-64 items-center rounded-xl border px-3 sm:flex"
-          style={{
-            borderColor: 'var(--color-border)',
-            backgroundColor: 'var(--color-surface-subtle)',
-          }}
-        >
-          <Search className="h-4 w-4 shrink-0" style={{ color: 'var(--color-text-faint)' }} />
+        <div className="hidden w-64 items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 sm:flex">
+          <Search className="h-4 w-4 shrink-0 text-[var(--color-text-faint)]" />
           <input
             type="search"
             placeholder="بحث..."
-            className="w-full bg-transparent px-2 py-2 text-sm outline-none"
-            style={{
-              color: 'var(--color-text-secondary)',
-            }}
+            className="w-full bg-transparent px-2 py-2 text-sm text-[var(--color-text-secondary)] outline-none"
           />
         </div>
       </div>
@@ -78,8 +67,7 @@ function AdminTopbar() {
         <button
           type="button"
           onClick={toggleTheme}
-          className="rounded-xl p-2.5 transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="rounded-xl p-2.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
           aria-label={theme === 'dark' ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
           title={theme === 'dark' ? 'وضع فاتح' : 'وضع داكن'}
         >
@@ -89,8 +77,7 @@ function AdminTopbar() {
         {/* Notifications */}
         <button
           type="button"
-          className="relative rounded-xl p-2.5 transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="relative rounded-xl p-2.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
           aria-label="الإشعارات"
         >
           <Bell className="h-5 w-5" />
@@ -98,24 +85,16 @@ function AdminTopbar() {
         </button>
 
         {/* Admin info */}
-        <div
-          className="flex items-center gap-3 border-r pr-3 sm:pr-4"
-          style={{ borderColor: 'var(--color-border)' }}
-        >
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#45592D] text-sm font-bold text-white sm:h-10 sm:w-10"
-          >
+        <div className="flex items-center gap-3 border-r border-[var(--color-border)] pr-3 sm:pr-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#45592D] text-sm font-bold text-white sm:h-10 sm:w-10">
             {adminInitial}
           </div>
 
           <div className="hidden min-w-0 md:block">
-            <p
-              className="max-w-40 truncate text-sm font-semibold"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
+            <p className="max-w-40 truncate text-sm font-semibold text-[var(--color-text-primary)]">
               {adminName}
             </p>
-            <p className="text-xs" style={{ color: 'var(--color-text-faint)' }}>
+            <p className="text-xs text-[var(--color-text-faint)]">
               مدير النظام
             </p>
           </div>
@@ -125,4 +104,4 @@ function AdminTopbar() {
   )
 }
 
-export default AdminTopbar
+export default AdminTopbar

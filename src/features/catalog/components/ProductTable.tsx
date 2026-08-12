@@ -1,4 +1,4 @@
-﻿import type { Product } from '../types/product'
+import type { Product } from '../types/product'
 
 import { Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -68,7 +68,7 @@ function ProductTable({
             products.map((product) => (
               <tr
                 key={product.id}
-                className="border-b border-[#F0EAE3] last:border-b-0 hover:bg-[#FCFAF7]"
+                className="border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-surface-subtle)] transition-colors"
               >
                 <td className="px-5 py-4">
                   <div>

@@ -38,38 +38,43 @@
 /* ============================================================
    DESIGN TOKENS — Dark Mode
    Applied when <html class="dark"> is set by ThemeProvider
+
+   Palette rationale: all dark surfaces share the warm brown/olive
+   family of the Sidebar (#2B2620) to avoid colour-family clashes.
+   Hierarchy: surface < surface-card ≈ sidebar < surface-subtle
    ============================================================ */
 html.dark {
-  /* Surfaces */
-  --color-surface:      #141611;
-  --color-surface-card: #1E2019;
-  --color-surface-subtle: #262820;
+  /* Surfaces — warm brown / dark olive family harmonized with fixed Sidebar (#2B2620) */
+  --color-surface:        #1A1612;   /* page background — deep warm dark brown */
+  --color-surface-card:   #231E19;   /* cards, modals — elevated warm dark surface */
+  --color-surface-subtle: #2C2620;   /* inputs, hover state — matching sidebar warmth (#2B2620) */
 
-  /* Borders */
-  --color-border:       #2E3028;
-  --color-border-muted: #3A3D32;
+  /* Borders — warm brown-olive tints */
+  --color-border:         #3D342C;
+  --color-border-muted:   #493E35;
 
-  /* Text */
-  --color-text-primary: #EDE9E2;
-  --color-text-secondary: #C4C7BB;
-  --color-text-muted:   #8A8D82;
-  --color-text-faint:   #5E6159;
+  /* Text — warm-tinted whites and grays */
+  --color-text-primary:   #EDE6DC;
+  --color-text-secondary: #C4BCB0;
+  --color-text-muted:     #8A8278;
+  --color-text-faint:     #5E5850;
 
-  /* Accent */
-  --color-accent:       #6B8A43;
-  --color-accent-hover: #7EA050;
-  --color-accent-subtle: #1E2B12;
-  --color-accent-subtle-hover: #283A18;
+  /* Accent — dark olive green tones tuned to warm brown background */
+  --color-accent:         #6B8A43;
+  --color-accent-hover:   #7EA050;
+  --color-accent-subtle:  #262F1C;   /* warm dark olive tint matching warm brown base */
+  --color-accent-subtle-hover: #323E24;
 
   /* Danger */
-  --color-danger:       #C0614F;
-  --color-danger-subtle: #2A1714;
+  --color-danger:         #C0614F;
+  --color-danger-subtle:  #2A1714;
   --color-danger-subtle-hover: #3A201C;
 
   /* Warning */
-  --color-warning:      #E8B92A;
+  --color-warning:        #E8B92A;
   --color-warning-subtle: #2A2510;
 }
+
 
 /* ============================================================
    GLOBAL BASE STYLES
