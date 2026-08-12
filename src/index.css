@@ -1,1 +1,148 @@
 @import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS — Light Mode (Default)
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --color-surface:      #FAF8F5;
+  --color-surface-card: #FFFFFF;
+  --color-surface-subtle: #F5F2EE;
+
+  /* Borders */
+  --color-border:       #EBE1D7;
+  --color-border-muted: #DCCFC1;
+
+  /* Text */
+  --color-text-primary: #1F1B15;
+  --color-text-secondary: #44483E;
+  --color-text-muted:   #75786D;
+  --color-text-faint:   #A5A096;
+
+  /* Accent (brand green) */
+  --color-accent:       #45592D;
+  --color-accent-hover: #5D7243;
+  --color-accent-subtle: #EEF4E8;
+  --color-accent-subtle-hover: #D5E6C9;
+
+  /* Danger */
+  --color-danger:       #A04A3A;
+  --color-danger-subtle: #FBEDEA;
+  --color-danger-subtle-hover: #F3D7D3;
+
+  /* Warning */
+  --color-warning:      #E8B92A;
+  --color-warning-subtle: #FEF9EC;
+}
+
+/* ============================================================
+   DESIGN TOKENS — Dark Mode
+   Applied when <html class="dark"> is set by ThemeProvider
+
+   Palette rationale: all dark surfaces share the warm brown/olive
+   family of the Sidebar (#2B2620) to avoid colour-family clashes.
+   Hierarchy: surface < surface-card ≈ sidebar < surface-subtle
+   ============================================================ */
+html.dark {
+  /* Surfaces — warm brown / dark olive family harmonized with fixed Sidebar (#2B2620) */
+  --color-surface:        #1A1612;   /* page background — deep warm dark brown */
+  --color-surface-card:   #231E19;   /* cards, modals — elevated warm dark surface */
+  --color-surface-subtle: #2C2620;   /* inputs, hover state — matching sidebar warmth (#2B2620) */
+
+  /* Borders — warm brown-olive tints */
+  --color-border:         #3D342C;
+  --color-border-muted:   #493E35;
+
+  /* Text — warm-tinted whites and grays */
+  --color-text-primary:   #EDE6DC;
+  --color-text-secondary: #C4BCB0;
+  --color-text-muted:     #8A8278;
+  --color-text-faint:     #5E5850;
+
+  /* Accent — dark olive green tones tuned to warm brown background */
+  --color-accent:         #6B8A43;
+  --color-accent-hover:   #7EA050;
+  --color-accent-subtle:  #262F1C;   /* warm dark olive tint matching warm brown base */
+  --color-accent-subtle-hover: #323E24;
+
+  /* Danger */
+  --color-danger:         #C0614F;
+  --color-danger-subtle:  #2A1714;
+  --color-danger-subtle-hover: #3A201C;
+
+  /* Warning */
+  --color-warning:        #E8B92A;
+  --color-warning-subtle: #2A2510;
+}
+
+
+/* ============================================================
+   GLOBAL BASE STYLES
+   ============================================================ */
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Smooth theme transitions for key properties */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-in-out;
+}
+
+/* ============================================================
+   MOTION / TRANSITION UTILITIES
+   Reusable classes to avoid duplicating transition logic
+   ============================================================ */
+.motion-base {
+  transition-property: all;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+.motion-slow {
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
+.motion-fade {
+  transition-property: opacity, visibility;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+.motion-scale {
+  transition-property: transform, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Modal backdrop + panel entrance */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgb(0 0 0 / 0.5);
+  animation: fadeIn 0.18s ease-in-out;
+}
+
+.modal-panel {
+  animation: scaleIn 0.18s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}

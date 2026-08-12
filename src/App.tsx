@@ -1,8 +1,12 @@
+import { BrowserRouter } from 'react-router-dom'
+
+import { AdminRoutes } from '@/routes/AdminRoutes'
+
 function App() {
   return (
-    <div>
-      <h1>Waraqah w Githa</h1>
-    </div>
+    <BrowserRouter>
+      <AdminRoutes />
+    </BrowserRouter>
   )
 }
 
