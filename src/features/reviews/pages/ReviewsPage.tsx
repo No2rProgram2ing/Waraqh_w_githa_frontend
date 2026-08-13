@@ -10,6 +10,8 @@ const DEFAULT_FILTERS: ReviewFilters = {
     search: '',
     status: '',
     rating: '',
+    date_from: '',
+    date_to: '',
     page: 1,
 }
 
@@ -25,8 +27,8 @@ export default function ReviewsPage() {
     const reviews = data?.data ?? []
     const meta = data?.meta
 
-    const handleUpdateStatus = (id: number, status: 'approved' | 'rejected') => {
-        const statusLabel = status === 'approved' ? 'موافقة ونشر' : 'رفض'
+    const handleUpdateStatus = (id: number, status: 'published' | 'rejected') => {
+        const statusLabel = status === 'published' ? 'موافقة ونشر' : 'رفض'
         if (confirm(`هل أنت متأكد من ${statusLabel} هذا التقييم؟`)) {
             updateStatus({ id, status })
         }

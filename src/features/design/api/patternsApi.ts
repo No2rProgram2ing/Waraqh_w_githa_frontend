@@ -12,29 +12,46 @@ export interface PatternResponse {
 export const patternsApi = {
     async getAll(): Promise<DesignPattern[]> {
         const response = await axiosAdminClient.get<PatternListResponse>(
-            '/admin/patterns' // Placeholder endpoint
+            '/admin/design-patterns'
         )
         return response.data.data
     },
 
-    async create(data: CreatePatternPayload): Promise<DesignPattern> {
-        // Typically requires FormData if uploading an actual file
+    async create(data: CreatePatternPayload | FormData): Promise<DesignPattern> {
+        const payload = data instanceof FormData ? data : Object.entries(data).reduce((form, [key, value]) => {
+            if (value !== undefined && value !== null) {
+                form.append(key, String(value))
+            }
+            return form
+        }, new FormData())
+
         const response = await axiosAdminClient.post<PatternResponse>(
-            '/admin/patterns', // Placeholder endpoint
-            data
+            '/admin/design-patterns',
+            payload,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
         )
         return response.data.data
     },
 
-    async update(id: number, data: UpdatePatternPayload): Promise<DesignPattern> {
-        const response = await axiosAdminClient.put<PatternResponse>(
-            `/admin/patterns/${id}`, // Placeholder endpoint
-            data
+    async update(id: number, data: UpdatePatternPayload | FormData): Promise<DesignPattern> {
+        const payload = data instanceof FormData ? data : Object.entries(data).reduce((form, [key, value]) => {
+            if (value !== undefined && value !== null) {
+                form.append(key, String(value))
+            }
+            return form
+        }, new FormData())
+
+        payload.append('_method', 'PUT')
+
+        const response = await axiosAdminClient.post<PatternResponse>(
+            `/admin/design-patterns/${id}`,
+            payload,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
         )
         return response.data.data
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/patterns/${id}`) // Placeholder endpoint
+        await axiosAdminClient.delete(`/admin/design-patterns/${id}`)
     }
 }

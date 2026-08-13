@@ -20,13 +20,33 @@ export const categoriesApi = {
         return response.data.data
     },
 
-    async create(data: CreateCategoryPayload): Promise<ProductCategory> {
-        const response = await axiosAdminClient.post<CategoryResponse>('/admin/categories', data)
+    async create(data: CreateCategoryPayload | FormData): Promise<ProductCategory> {
+        const payload = data instanceof FormData ? data : Object.entries(data).reduce((form, [key, value]) => {
+            if (value !== undefined && value !== null) {
+                form.append(key, String(value))
+            }
+            return form
+        }, new FormData())
+
+        const response = await axiosAdminClient.post<CategoryResponse>('/admin/categories', payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
         return response.data.data
     },
 
-    async update(id: number, data: UpdateCategoryPayload): Promise<ProductCategory> {
-        const response = await axiosAdminClient.put<CategoryResponse>(`/admin/categories/${id}`, data)
+    async update(id: number, data: UpdateCategoryPayload | FormData): Promise<ProductCategory> {
+        const payload = data instanceof FormData ? data : Object.entries(data).reduce((form, [key, value]) => {
+            if (value !== undefined && value !== null) {
+                form.append(key, String(value))
+            }
+            return form
+        }, new FormData())
+
+        payload.append('_method', 'PUT')
+
+        const response = await axiosAdminClient.post<CategoryResponse>(`/admin/categories/${id}`, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
         return response.data.data
     },
 

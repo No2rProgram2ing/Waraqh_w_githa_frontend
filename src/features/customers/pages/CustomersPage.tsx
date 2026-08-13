@@ -7,7 +7,8 @@ import type { CustomerFilters } from '../types/customer'
 
 const DEFAULT_FILTERS: CustomerFilters = {
     search: '',
-    status: '',
+    category: '',
+    verified: '',
     page: 1,
 }
 

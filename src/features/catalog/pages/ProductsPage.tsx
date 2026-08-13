@@ -1,15 +1,25 @@
 ﻿import { useState } from 'react'
-
+import { useNavigate } from 'react-router-dom'
 import ProductPagination from '../components/ProductPagination'
 import ProductTable from '../components/ProductTable'
 import ProductToolbar from '../components/ProductToolbar'
-import { useProducts } from '../hooks/useProducts'
-import { useNavigate } from 'react-router-dom'
+import ProductFormModal from '../components/ProductFormModal'
+import { useProducts, useDeleteProduct } from '../hooks/useProducts'
 
 function ProductsPage() {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
+
+  const { mutate: deleteProduct } = useDeleteProduct()
+
+  const handleDelete = (productId: number) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.')) {
+      deleteProduct(productId)
+    }
+  }
+
   const {
     data,
     isLoading,
@@ -40,12 +50,13 @@ function ProductsPage() {
           </h1>
 
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            إدارة منتجات ورقة وجذع
+            إدارة المنتجات وحالتها بكل سهولة
           </p>
         </div>
 
         <button
           type="button"
+          onClick={() => setIsModalOpen(true)}
           className="rounded-xl bg-[#45592D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#5D7243]"
         >
           + إضافة منتج
@@ -81,6 +92,7 @@ function ProductsPage() {
               onView={(productId) =>
                 navigate(`/admin/products/${productId}`)
               }
+              onDelete={handleDelete}
             />
 
             {data?.meta && (
@@ -97,6 +109,11 @@ function ProductsPage() {
           </>
         )}
       </section>
+
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }

@@ -7,12 +7,14 @@ interface ProductTableProps {
   products: Product[]
   isLoading?: boolean
   onView?: (productId: number) => void
+  onDelete?: (productId: number) => void
 }
 
 function ProductTable({
   products,
   isLoading = false,
   //onView,
+  onDelete,
 }: ProductTableProps) {
   return (
     <div className="overflow-x-auto">
@@ -117,6 +119,7 @@ function ProductTable({
                     <button
                       type="button"
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-danger)] transition hover:bg-[var(--color-danger-subtle)] hover:text-[#8C382A]"
+                      onClick={() => onDelete?.(product.id)}
                       aria-label="حذف المنتج"
                       title="حذف المنتج"
                     >

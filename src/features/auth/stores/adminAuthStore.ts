@@ -12,6 +12,8 @@ interface AdminAuthState {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   clearError: () => void
+  setAdmin: (admin: AdminUser | null) => void
+  updateAdmin: (admin: Partial<AdminUser>) => void
 }
 
 export const useAdminAuthStore = create<AdminAuthState>((set) => ({
@@ -87,6 +89,28 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   clearError: (): void => {
     set({
       error: null,
+    })
+  },
+
+  setAdmin: (admin: AdminUser | null): void => {
+    set({
+      admin,
+      isAuthenticated: Boolean(admin),
+    })
+  },
+
+  updateAdmin: (admin: Partial<AdminUser>): void => {
+    set((state) => {
+      if (!state.admin) {
+        return { admin: null }
+      }
+
+      return {
+        admin: {
+          ...state.admin,
+          ...admin,
+        },
+      }
     })
   },
 }))

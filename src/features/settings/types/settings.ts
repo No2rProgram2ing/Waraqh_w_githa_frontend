@@ -14,4 +14,6 @@ export interface SystemSettings {
     maintenance_message: string | null
 }
 
-export interface UpdateSettingsPayload extends Partial<SystemSettings> {}
+export interface UpdateSettingsPayload extends Partial<SystemSettings> {
+    tax_enabled?: boolean
+}

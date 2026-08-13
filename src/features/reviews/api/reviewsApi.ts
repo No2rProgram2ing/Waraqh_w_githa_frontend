@@ -11,11 +11,13 @@ export const reviewsApi = {
 
         if (filters.search) params.search = filters.search
         if (filters.status) params.status = filters.status
-        if (filters.rating) params.rating = filters.rating
+        if (filters.rating !== '' && filters.rating !== undefined && filters.rating !== null) params.rating = filters.rating
+        if (filters.date_from) params.date_from = filters.date_from
+        if (filters.date_to) params.date_to = filters.date_to
         if (filters.page) params.page = filters.page
 
         const response = await axiosAdminClient.get<ReviewListResponse>(
-            '/admin/reviews', // Placeholder endpoint
+            '/admin/reviews',
             { params }
         )
         return response.data

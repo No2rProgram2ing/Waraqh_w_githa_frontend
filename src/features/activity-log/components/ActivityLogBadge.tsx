@@ -3,15 +3,15 @@
 const config: Record<ActivityLogAction, { label: string; className: string }> = {
     created: {
         label: 'إنشاء',
-        className: 'bg-[var(--color-accent-subtle)] text-[#45592D]',
+        className: 'bg-[#EAF5DA] text-[#285B27] border border-[#B7D98B]',
     },
     updated: {
         label: 'تعديل',
-        className: 'bg-[#EAF0FB] text-[#2F5FAC]',
+        className: 'bg-[#E8F0FF] text-[#214DA0] border border-[#A8C2F1]',
     },
     deleted: {
         label: 'حذف',
-        className: 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]',
+        className: 'bg-[#FDE7E6] text-[#7E2A2A] border border-[#F0A9A4]',
     },
 }
 

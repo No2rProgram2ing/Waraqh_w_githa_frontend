@@ -19,6 +19,8 @@ export interface ReviewFilters {
     search?: string
     status?: ReviewStatus | ''
     rating?: number | ''
+    date_from?: string
+    date_to?: string
     page?: number
 }
 

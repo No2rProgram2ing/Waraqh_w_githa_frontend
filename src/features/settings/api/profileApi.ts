@@ -7,12 +7,30 @@ export interface ProfileResponse {
 
 export const profileApi = {
     async getProfile(): Promise<AdminProfile> {
-        const response = await axiosAdminClient.get<ProfileResponse>('/admin/profile') // Placeholder endpoint
+        const response = await axiosAdminClient.get<ProfileResponse>('/admin/profile')
         return response.data.data
     },
 
     async updateProfile(data: UpdateProfilePayload): Promise<AdminProfile> {
-        const response = await axiosAdminClient.put<ProfileResponse>('/admin/profile', data) // Placeholder endpoint
+        const formData = new FormData()
+
+        formData.append('_method', 'PUT')
+        formData.append('first_name', data.first_name)
+        formData.append('last_name', data.last_name)
+        formData.append('email', data.email)
+
+        if (data.avatar instanceof File) {
+            formData.append('avatar', data.avatar)
+        }
+
+        if (data.current_password) formData.append('current_password', data.current_password)
+        if (data.new_password) formData.append('new_password', data.new_password)
+        if (data.new_password_confirmation) formData.append('new_password_confirmation', data.new_password_confirmation)
+
+        const response = await axiosAdminClient.post<ProfileResponse>('/admin/profile', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
+
         return response.data.data
     }
 }

@@ -55,13 +55,19 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+
+        const safeName = (name || attributeToEdit?.name || '').trim()
+        const safeDisplayName = (displayName || attributeToEdit?.display_name || safeName).trim()
+        const safeType = type || attributeToEdit?.type || 'text'
+
         const payload = {
-            name,
-            display_name: displayName,
-            type,
+            name: safeName,
+            display_name: safeDisplayName,
+            type: safeType,
             is_required: isRequired,
-            options: type === 'select' ? options : null,
+            options: safeType === 'select' ? options : null,
         }
+
         if (attributeToEdit) {
             updateAttribute({ id: attributeToEdit.id, data: payload }, { onSuccess: onClose })
         } else {

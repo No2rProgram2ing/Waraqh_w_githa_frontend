@@ -1,14 +1,21 @@
 export type CustomerStatus = 'active' | 'inactive'
+export type CustomerCategory = 'regular' | 'vip'
 
 export interface Customer {
     id: number
-    first_name: string
-    last_name: string
+    full_name: string
     email: string
+    phone_country_code?: string | null
     phone: string | null
-    status: CustomerStatus
+    avatar_url?: string | null
+    category?: CustomerCategory | null
+    email_verified_at?: string | null
+    phone_verified_at?: string | null
     total_orders: number
+    total_purchases?: number | string
+    last_order_at?: string | null
     created_at: string
+    updated_at?: string | null
 }
 
 export interface CustomerAddress {
@@ -22,14 +29,21 @@ export interface CustomerAddress {
 
 export interface CustomerDetails extends Customer {
     addresses: CustomerAddress[]
-    total_spent: string // e.g. "1500.00"
-    last_order_date: string | null
+    orders?: unknown[]
+    reviews?: unknown[]
+    favorites?: unknown[]
+    notifications?: unknown[]
+    cart?: unknown
 }
 
 export interface CustomerFilters {
     search?: string
-    status?: CustomerStatus | ''
+    category?: CustomerCategory | ''
+    verified?: boolean | ''
+    sort_by?: 'created_at' | 'full_name' | 'email' | 'total_orders'
+    sort_direction?: 'asc' | 'desc'
     page?: number
+    per_page?: number
 }
 
 export interface CustomerMeta {

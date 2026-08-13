@@ -86,8 +86,16 @@ function AdminTopbar() {
 
         {/* Admin info */}
         <div className="flex items-center gap-3 border-r border-[var(--color-border)] pr-3 sm:pr-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#45592D] text-sm font-bold text-white sm:h-10 sm:w-10">
-            {adminInitial}
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#45592D] text-sm font-bold text-white sm:h-10 sm:w-10">
+            {admin?.avatar_url ? (
+              <img
+                src={admin.avatar_url}
+                alt={adminName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              adminInitial
+            )}
           </div>
 
           <div className="hidden min-w-0 md:block">

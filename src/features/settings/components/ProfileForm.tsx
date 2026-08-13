@@ -13,6 +13,8 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
     const [firstName, setFirstName] = useState(profile.first_name)
     const [lastName, setLastName] = useState(profile.last_name)
     const [email, setEmail] = useState(profile.email)
+    const [avatarFile, setAvatarFile] = useState<File | null>(null)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url)
 
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -20,18 +22,31 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
     const [showPasswords, setShowPasswords] = useState(false)
     const [passwordError, setPasswordError] = useState('')
 
-    // Reset when profile changes
     useEffect(() => {
         setFirstName(profile.first_name)
         setLastName(profile.last_name)
         setEmail(profile.email)
+        setAvatarPreview(profile.avatar_url)
+        setAvatarFile(null)
     }, [profile])
+
+    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+
+        if (!file) {
+            setAvatarFile(null)
+            setAvatarPreview(profile.avatar_url)
+            return
+        }
+
+        setAvatarFile(file)
+        setAvatarPreview(URL.createObjectURL(file))
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         setPasswordError('')
 
-        // If user typed something in password fields, ensure they filled all three and they match
         if (currentPassword || newPassword || confirmPassword) {
             if (!currentPassword || !newPassword || !confirmPassword) {
                 setPasswordError('لتغيير كلمة المرور، يرجى تعبئة الحقول الثلاثة معاً.')
@@ -47,27 +62,52 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
             first_name: firstName,
             last_name: lastName,
             email,
+            avatar: avatarFile ?? undefined,
             ...(newPassword ? {
                 current_password: currentPassword,
                 new_password: newPassword,
                 new_password_confirmation: confirmPassword
             } : {})
         }, {
-            onSuccess: () => {
-                // Clear password fields on success
+            onSuccess: (updatedProfile) => {
                 setCurrentPassword('')
                 setNewPassword('')
                 setConfirmPassword('')
+                setAvatarFile(null)
+                if (updatedProfile.avatar_url) {
+                    setAvatarPreview(updatedProfile.avatar_url)
+                }
             }
         })
     }
 
     return (
         <form onSubmit={handleSubmit} className="bg-[var(--color-surface-card)] rounded-[24px] border border-[var(--color-border)] p-6 md:p-8 space-y-8" dir="rtl">
-            
-            {/* Basic Info */}
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">المعلومات الشخصية</h2>
+                    <p className="text-sm text-[var(--color-text-muted)]">يمكنك تحديث الصورة الشخصية والبيانات الأساسية.</p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-surface-subtle)]">
+                        {avatarPreview ? (
+                            <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[var(--color-text-secondary)]">
+                                {firstName?.[0] ?? 'A'}{lastName?.[0] ?? ''}
+                            </div>
+                        )}
+                    </div>
+
+                    <label className="cursor-pointer rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)] transition-colors">
+                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                        تغيير الصورة
+                    </label>
+                </div>
+            </div>
+
             <div>
-                <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">المعلومات الشخصية</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">الاسم الأول</label>
