@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import type { ProductCategory } from '../../types/product-category'
 import { useCreateCategory, useUpdateCategory } from '../../hooks/useCategories'
 import { X } from 'lucide-react'
@@ -28,8 +28,8 @@ export default function CategoryFormModal({
 
     useEffect(() => {
         if (categoryToEdit) {
-            setName(categoryToEdit.name)
-            setSlug(categoryToEdit.slug)
+            setName(categoryToEdit.name ?? '')
+            setSlug(categoryToEdit.slug ?? '')
             setParentId(categoryToEdit.parent_id ?? '')
             setImageUrl(categoryToEdit.image_url ?? '')
         } else {

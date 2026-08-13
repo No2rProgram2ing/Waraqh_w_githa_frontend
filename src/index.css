@@ -56,8 +56,8 @@ html.dark {
   /* Text — warm-tinted whites and grays */
   --color-text-primary:   #EDE6DC;
   --color-text-secondary: #C4BCB0;
-  --color-text-muted:     #8A8278;
-  --color-text-faint:     #5E5850;
+  --color-text-muted:     #A69F94;
+  --color-text-faint:     #827C72;
 
   /* Accent — dark olive green tones tuned to warm brown background */
   --color-accent:         #6B8A43;

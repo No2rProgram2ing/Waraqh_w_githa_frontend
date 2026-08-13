@@ -1,4 +1,4 @@
-﻿    import { useEffect, useState } from 'react'
+    import { useEffect, useState } from 'react'
     import { Link, useNavigate, useParams } from 'react-router-dom'
     //import { Pencil, Star, Trash2, X } from 'lucide-react'
     import { useQueryClient } from '@tanstack/react-query'
@@ -43,10 +43,10 @@
         }
 
         setForm({
-        name: product.name,
-        sku: product.sku,
-        description: product.description,
-        price: product.price,
+        name: product.name ?? '',
+        sku: product.sku ?? '',
+        description: product.description ?? '',
+        price: product.price ?? '',
         stock_quantity: product.stock_quantity,
         status: product.status,
         is_customizable: product.is_customizable,

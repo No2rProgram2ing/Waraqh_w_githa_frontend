@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import type { DesignPattern } from '../../types/pattern'
 import { useCreatePattern, useUpdatePattern } from '../../hooks/usePatterns'
@@ -32,7 +32,7 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        const payload = { name, image_url: imageUrl }
+        const payload = { name, preview_image_url: imageUrl }
         if (patternToEdit) {
             updatePattern({ id: patternToEdit.id, data: payload }, { onSuccess: onClose })
         } else {

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
 import type { AdminUser, AdminUserStatus } from '../types/admin-user'
 import { useCreateAdminUser, useUpdateAdminUser } from '../hooks/useAdminUsers'
@@ -23,9 +23,9 @@ export default function AdminUserFormModal({ isOpen, onClose, userToEdit }: Admi
 
     useEffect(() => {
         if (userToEdit) {
-            setFirstName(userToEdit.first_name)
-            setLastName(userToEdit.last_name)
-            setEmail(userToEdit.email)
+            setFirstName(userToEdit.first_name ?? '')
+            setLastName(userToEdit.last_name ?? '')
+            setEmail(userToEdit.email ?? '')
             setStatus(userToEdit.status)
             // Ideally we'd map role_name back to role_id if we had the full roles list, 
             // for now leaving as default 1 since it's a mockup.
@@ -49,8 +49,7 @@ export default function AdminUserFormModal({ isOpen, onClose, userToEdit }: Admi
         e.preventDefault()
         if (userToEdit) {
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
                 email,
                 role_id: roleId,
                 status,
@@ -59,8 +58,7 @@ export default function AdminUserFormModal({ isOpen, onClose, userToEdit }: Admi
             updateUser({ id: userToEdit.id, data: payload }, { onSuccess: onClose })
         } else {
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
                 email,
                 role_id: roleId,
                 password

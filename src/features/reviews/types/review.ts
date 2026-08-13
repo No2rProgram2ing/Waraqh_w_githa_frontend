@@ -1,4 +1,4 @@
-export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+export type ReviewStatus = 'pending' | 'published' | 'rejected'
 
 export interface Review {
     id: number
