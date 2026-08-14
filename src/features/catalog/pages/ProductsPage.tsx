@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import ProductPagination from '../components/ProductPagination'
 import ProductTable from '../components/ProductTable'
 import ProductToolbar from '../components/ProductToolbar'
@@ -16,7 +17,18 @@ function ProductsPage() {
 
   const handleDelete = (productId: number) => {
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.')) {
-      deleteProduct(productId)
+      deleteProduct(productId, {
+        onSuccess: () => showSuccessToast('تم حذف المنتج بنجاح'),
+        onError: (error: any) => {
+          const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+          if (validationErrors) {
+            showValidationErrorToast(validationErrors)
+            return
+          }
+
+          showErrorToast(error?.response?.data?.message || 'فشل في حذف المنتج، يرجى المحاولة مرة أخرى.')
+        },
+      })
     }
   }
 

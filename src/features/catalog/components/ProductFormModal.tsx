@@ -1,5 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { getCurrencyLabel, useSystemCurrency } from '@/lib/currency'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useCategories } from '../hooks/useCategories'
 import { useCreateProduct } from '../hooks/useProducts'
 
@@ -14,6 +16,7 @@ export default function ProductFormModal({
 }: ProductFormModalProps) {
   const { data: categories = [] } = useCategories()
   const { mutate: createProduct, isPending } = useCreateProduct()
+  const { currencyCode } = useSystemCurrency()
 
   const [name, setName] = useState('')
   const [sku, setSku] = useState('')
@@ -63,13 +66,21 @@ export default function ProductFormModal({
       },
       {
         onSuccess: () => {
+          showSuccessToast('تمت إضافة المنتج بنجاح')
           onClose()
         },
         onError: (err: any) => {
+          const validationErrors = err?.response?.data?.errors as Record<string, string[]> | undefined
+          if (validationErrors) {
+            showValidationErrorToast(validationErrors)
+            return
+          }
+
           const msg =
             err?.response?.data?.message ||
             'حدث خطأ أثناء إضافة المنتج. يرجى التأكد من البيانات.'
           setErrorMsg(msg)
+          showErrorToast(msg)
         },
       },
     )
@@ -155,7 +166,7 @@ export default function ProductFormModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                السعر (ر.س) *
+                السعر ({getCurrencyLabel(currencyCode)}) *
               </label>
               <input
                 required

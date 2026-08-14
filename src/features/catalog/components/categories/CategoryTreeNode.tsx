@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { ChevronDown, ChevronRight, Edit2, Plus, Trash2 } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { ProductCategory } from '../../types/product-category'
 import { useDeleteCategory } from '../../hooks/useCategories'
 
@@ -22,7 +23,18 @@ export default function CategoryTreeNode({ node, level, onEdit, onAddChild }: Ca
 
     const handleDelete = () => {
         if (confirm(`هل أنت متأكد من حذف فئة "${node.name}"؟`)) {
-            deleteCategory(node.id)
+            deleteCategory(node.id, {
+                onSuccess: () => showSuccessToast('تم حذف الفئة بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف الفئة، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

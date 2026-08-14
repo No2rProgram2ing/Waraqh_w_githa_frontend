@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useReviews, useUpdateReviewStatus, useDeleteReview } from '../hooks/useReviews'
 import ReviewsTable from '../components/ReviewsTable'
 import ReviewFiltersBar from '../components/ReviewFiltersBar'
@@ -30,13 +31,33 @@ export default function ReviewsPage() {
     const handleUpdateStatus = (id: number, status: 'published' | 'rejected') => {
         const statusLabel = status === 'published' ? 'موافقة ونشر' : 'رفض'
         if (confirm(`هل أنت متأكد من ${statusLabel} هذا التقييم؟`)) {
-            updateStatus({ id, status })
+            updateStatus({ id, status }, {
+                onSuccess: () => showSuccessToast(status === 'published' ? 'تمت الموافقة على التقييم بنجاح' : 'تم رفض التقييم بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث حالة التقييم، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 
     const handleDelete = (review: Review) => {
         if (confirm(`هل أنت متأكد من الحذف النهائي لتقييم العميل ${review.customer_name}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
-            deleteReview(review.id)
+            deleteReview(review.id, {
+                onSuccess: () => showSuccessToast('تم حذف التقييم بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف التقييم، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

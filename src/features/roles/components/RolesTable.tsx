@@ -13,7 +13,17 @@ export default function RolesTable({ roles, onEdit, onManagePermissions }: Roles
 
     const handleDelete = (role: Role) => {
         if (confirm(`هل أنت متأكد من حذف الدور "${role.display_name}"؟`)) {
-            deleteRole(role.id)
+            deleteRole(role.id, {
+                onSuccess: () => showSuccessToast('تم حذف الدور بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف الدور، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

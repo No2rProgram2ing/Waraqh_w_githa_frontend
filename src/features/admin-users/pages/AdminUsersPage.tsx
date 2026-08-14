@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useAdminUsers, useDeleteAdminUser } from '../hooks/useAdminUsers'
 import AdminUsersTable from '../components/AdminUsersTable'
 import AdminUserFormModal from '../components/AdminUserFormModal'
@@ -24,7 +25,17 @@ export default function AdminUsersPage() {
 
     const handleDelete = (user: AdminUser) => {
         if (confirm(`هل أنت متأكد من حذف حساب المدير "${user.first_name} ${user.last_name}"؟`)) {
-            deleteUser(user.id)
+            deleteUser(user.id, {
+                onSuccess: () => showSuccessToast('تم حذف المستخدم الإداري بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف المستخدم الإداري، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

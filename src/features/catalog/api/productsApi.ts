@@ -4,6 +4,7 @@ import type { Product } from '../types/product'
 
 export interface ProductsQueryParams {
   page?: number
+  per_page?: number
   search?: string
 }
 

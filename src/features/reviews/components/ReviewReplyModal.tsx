@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { Review } from '../types/review'
 import { useReplyToReview } from '../hooks/useReviews'
 
@@ -25,7 +26,20 @@ export default function ReviewReplyModal({ isOpen, onClose, review }: ReviewRepl
         e.preventDefault()
         replyToReview(
             { id: review.id, admin_reply: replyText },
-            { onSuccess: onClose }
+            {
+                onSuccess: () => {
+                    showSuccessToast('تم إرسال الرد بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إرسال الرد، يرجى المحاولة مرة أخرى.')
+                },
+            }
         )
     }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { DesignPattern } from '../../types/pattern'
 import { useCreatePattern, useUpdatePattern } from '../../hooks/usePatterns'
 
@@ -61,10 +62,36 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
             formData.append('_method', 'PUT')
             updatePattern(
                 { id: patternToEdit.id, data: formData as unknown as Parameters<typeof updatePattern>[0]['data'] },
-                { onSuccess: onClose }
+                {
+                    onSuccess: () => {
+                        showSuccessToast('تم تحديث النمط بنجاح')
+                        onClose()
+                    },
+                    onError: (error: any) => {
+                        const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                        if (validationErrors) {
+                            showValidationErrorToast(validationErrors)
+                            return
+                        }
+                        showErrorToast(error?.response?.data?.message || 'فشل في تحديث النمط، يرجى المحاولة مرة أخرى.')
+                    },
+                }
             )
         } else {
-            createPattern(formData as unknown as Parameters<typeof createPattern>[0], { onSuccess: onClose })
+            createPattern(formData as unknown as Parameters<typeof createPattern>[0], {
+                onSuccess: () => {
+                    showSuccessToast('تمت إضافة النمط بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إضافة النمط، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

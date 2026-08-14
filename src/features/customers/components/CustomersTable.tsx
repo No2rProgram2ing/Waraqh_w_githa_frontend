@@ -1,9 +1,11 @@
 ﻿import { Link } from 'react-router-dom'
-import { Eye } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { Customer } from '../types/customer'
 
 interface CustomersTableProps {
     customers: Customer[]
+    onEdit: (customer: Customer) => void
+    onDelete: (customer: Customer) => void
 }
 
 function formatDate(iso: string): string {
@@ -14,7 +16,7 @@ function formatDate(iso: string): string {
     }).format(new Date(iso))
 }
 
-export default function CustomersTable({ customers }: CustomersTableProps) {
+export default function CustomersTable({ customers, onEdit, onDelete }: CustomersTableProps) {
     if (!customers.length) {
         return (
             <div className="text-center py-16 text-[var(--color-text-muted)] text-sm bg-[var(--color-surface)] rounded-2xl border border-dashed border-[var(--color-border-muted)]">
@@ -79,6 +81,24 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                                             <Eye size={16} />
                                             <span className="text-xs font-medium">عرض الملف</span>
                                         </Link>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => onEdit(customer)}
+                                            className="p-2 rounded-lg text-[#45592D] hover:bg-[var(--color-accent-subtle)] transition-colors"
+                                            title="تعديل العميل"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => onDelete(customer)}
+                                            className="p-2 rounded-lg text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)] transition-colors"
+                                            title="حذف العميل"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

@@ -1,5 +1,6 @@
     import { useEffect, useState } from 'react'
     import { Link, useNavigate, useParams } from 'react-router-dom'
+    import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
     //import { Pencil, Star, Trash2, X } from 'lucide-react'
     import { useQueryClient } from '@tanstack/react-query'
 
@@ -75,6 +76,8 @@
             data: form,
         })
 
+        showSuccessToast('تم تحديث المنتج بنجاح')
+
         await queryClient.invalidateQueries({
             queryKey: ['admin', 'product', id],
         })
@@ -84,8 +87,13 @@
         })
 
         navigate(`/admin/products/${id}`)
-        } catch {
-        // Error is displayed through updateProduct.isError.
+        } catch (error: any) {
+        const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+        if (validationErrors) {
+            showValidationErrorToast(validationErrors)
+            return
+        }
+        showErrorToast(error?.response?.data?.message || 'فشل في تحديث المنتج، يرجى المحاولة مرة أخرى.')
         }
     }
 

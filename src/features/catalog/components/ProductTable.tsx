@@ -2,6 +2,7 @@ import type { Product } from '../types/product'
 
 import { Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useSystemCurrency } from '@/lib/currency'
 import ProductStatusBadge from './ProductStatusBadge'
 interface ProductTableProps {
   products: Product[]
@@ -16,6 +17,8 @@ function ProductTable({
   //onView,
   onDelete,
 }: ProductTableProps) {
+  const { formatAmount } = useSystemCurrency()
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[900px] text-right">
@@ -89,7 +92,7 @@ function ProductTable({
                 </td>
 
                 <td className="px-5 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
-                  {product.price}
+                  {formatAmount(product.price)}
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">

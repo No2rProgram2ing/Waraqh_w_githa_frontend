@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { Color } from '../../types/color'
 import { useCreateColor, useUpdateColor } from '../../hooks/useColors'
 
@@ -34,9 +35,35 @@ export default function ColorFormModal({ isOpen, onClose, colorToEdit }: ColorFo
         e.preventDefault()
         const payload = { name, hex_code: hexCode }
         if (colorToEdit) {
-            updateColor({ id: colorToEdit.id, data: payload }, { onSuccess: onClose })
+            updateColor({ id: colorToEdit.id, data: payload }, {
+                onSuccess: () => {
+                    showSuccessToast('تم تحديث اللون بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث اللون، يرجى المحاولة مرة أخرى.')
+                },
+            })
         } else {
-            createColor(payload, { onSuccess: onClose })
+            createColor(payload, {
+                onSuccess: () => {
+                    showSuccessToast('تمت إضافة اللون بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إضافة اللون، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

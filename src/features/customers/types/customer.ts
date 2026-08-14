@@ -57,3 +57,14 @@ export interface CustomerListResponse {
     data: Customer[]
     meta: CustomerMeta
 }
+
+export interface CreateCustomerPayload {
+    full_name: string
+    email: string
+    phone_country_code: string
+    phone: string
+    password: string
+    category: CustomerCategory
+}
+
+export type UpdateCustomerPayload = Partial<CreateCustomerPayload>

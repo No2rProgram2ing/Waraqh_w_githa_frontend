@@ -1,4 +1,5 @@
 ﻿import { Mail, Phone, Calendar, ShoppingBag, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { useSystemCurrency } from '@/lib/currency'
 import type { CustomerDetails } from '../types/customer'
 
 interface CustomerProfileProps {
@@ -14,6 +15,7 @@ function formatDate(iso: string): string {
 }
 
 export default function CustomerProfile({ customer }: CustomerProfileProps) {
+    const { formatAmount } = useSystemCurrency()
     const isVerified = !!customer.email_verified_at
     const initials = (customer.full_name || 'ع')
         .split(' ')
@@ -67,7 +69,7 @@ export default function CustomerProfile({ customer }: CustomerProfileProps) {
                     <div className="text-center">
                         <p className="text-xs text-[var(--color-text-muted)] mb-1">إجمالي المدفوعات</p>
                         <p className="text-lg font-bold text-[var(--color-text-primary)]">
-                            {Number(customer.total_purchases ?? 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س
+                            {formatAmount(customer.total_purchases ?? 0)}
                         </p>
                     </div>
                 </div>

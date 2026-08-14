@@ -1,5 +1,12 @@
 import { axiosAdminClient } from '@/api/axiosAdminClient'
-import type { CustomerListResponse, CustomerDetails, CustomerFilters, CustomerStatus } from '../types/customer'
+import type {
+    CustomerListResponse,
+    CustomerDetails,
+    CustomerFilters,
+    CustomerStatus,
+    CreateCustomerPayload,
+    UpdateCustomerPayload,
+} from '../types/customer'
 
 export interface CustomerResponse {
     data: CustomerDetails
@@ -29,6 +36,20 @@ export const customersApi = {
             `/admin/customers/${id}`
         )
         return response.data.data
+    },
+
+    async create(data: CreateCustomerPayload): Promise<CustomerDetails> {
+        const response = await axiosAdminClient.post<CustomerResponse>('/admin/customers', data)
+        return response.data.data
+    },
+
+    async update(id: number, data: UpdateCustomerPayload): Promise<CustomerDetails> {
+        const response = await axiosAdminClient.put<CustomerResponse>(`/admin/customers/${id}`, data)
+        return response.data.data
+    },
+
+    async delete(id: number): Promise<void> {
+        await axiosAdminClient.delete(`/admin/customers/${id}`)
     },
 
     async updateStatus(id: number, status: CustomerStatus): Promise<CustomerDetails> {

@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { Save, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { currencyOptions, normalizeCurrencyCode } from '@/lib/currency'
 import type { SystemSettings } from '../types/settings'
 import { useUpdateSettings } from '../hooks/useSettings'
 
@@ -8,17 +9,6 @@ interface SettingsTabsProps {
 }
 
 type TabType = 'general' | 'finance' | 'maintenance'
-
-const currencyOptions = [
-    { code: 'SAR', label: 'ريال سعودي (SAR)' },
-    { code: 'USD', label: 'دولار أمريكي (USD)' },
-    { code: 'YER', label: 'ريال يمني (YER)' },
-    { code: 'AED', label: 'درهم إماراتي (AED)' },
-    { code: 'EGP', label: 'جنيه مصري (EGP)' },
-    { code: 'JOD', label: 'دينار أردني (JOD)' },
-    { code: 'KWD', label: 'دينار كويتي (KWD)' },
-    { code: 'QAR', label: 'ريال قطري (QAR)' },
-]
 
 export default function SettingsTabs({ settings }: SettingsTabsProps) {
     const { mutate: updateSettings, isPending } = useUpdateSettings()
@@ -31,7 +21,7 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
     const [contactPhone, setContactPhone] = useState(settings.contact_phone ?? '')
     const [taxEnabled, setTaxEnabled] = useState((settings.tax_rate ?? 0) > 0)
     const [taxRate, setTaxRate] = useState(settings.tax_rate)
-    const [defaultCurrency, setDefaultCurrency] = useState(settings.default_currency)
+    const [defaultCurrency, setDefaultCurrency] = useState(() => normalizeCurrencyCode(settings.default_currency || settings.currency))
     const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenance_mode)
     const [maintenanceMessage, setMaintenanceMessage] = useState(settings.maintenance_message ?? '')
 
@@ -42,7 +32,7 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
         setContactPhone(settings.contact_phone ?? '')
         setTaxEnabled((settings.tax_rate ?? 0) > 0)
         setTaxRate(settings.tax_rate)
-        setDefaultCurrency(settings.default_currency)
+        setDefaultCurrency(normalizeCurrencyCode(settings.default_currency || settings.currency))
         setMaintenanceMode(settings.maintenance_mode)
         setMaintenanceMessage(settings.maintenance_message ?? '')
     }, [settings])
