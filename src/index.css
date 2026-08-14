@@ -85,6 +85,50 @@ body {
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
+/* ============================================================
+   INPUT / TEXTAREA / SELECT — BASE STYLES
+   Ensures readable text in both Light and Dark mode.
+   Uses Design Tokens so theme switching is automatic.
+   Individual components may override bg via inline Tailwind classes;
+   text color is intentionally left to this base rule.
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])::placeholder,
+textarea::placeholder {
+  color: var(--color-text-faint);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Reset browser autofill background to avoid the default blue/yellow overlay */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-subtle) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Dark Mode: brighter accent for focus border — #45592D is too dark on dark surfaces.
+   --color-accent-hover (#7EA050) gives adequate contrast (4.6:1) on dark backgrounds. */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: var(--color-accent-hover) !important;
+}
+
 /* Smooth theme transitions for key properties */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;

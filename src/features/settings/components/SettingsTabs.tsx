@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Save, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { currencyOptions, normalizeCurrencyCode } from '@/lib/currency'
 import type { SystemSettings } from '../types/settings'
@@ -180,7 +180,7 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
                                     value={taxRate}
                                     onChange={(e) => setTaxRate(Number(e.target.value))}
                                     disabled={!taxEnabled}
-                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition-colors focus:border-[#45592D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition-colors focus:border-[#45592D]"
                                     dir="ltr"
                                 />
                             </div>
@@ -192,7 +192,7 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
                                     value={defaultCurrency}
                                     onChange={(e) => setDefaultCurrency(e.target.value.toUpperCase())}
                                     placeholder="اكتب اسم العملة أو الرمز"
-                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none focus:border-[#45592D] transition-colors bg-white text-gray-700"
+                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none focus:border-[#45592D] transition-colors"
                                     dir="ltr"
                                 />
                                 <datalist id="currency-options">

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown, ChevronRight, Edit2, Plus, Trash2 } from 'lucide-react'
 import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { ProductCategory } from '../../types/product-category'
@@ -53,7 +53,7 @@ export default function CategoryTreeNode({ node, level, onEdit, onAddChild }: Ca
                     </button>
                     
                     <span className="text-sm font-medium text-[var(--color-text-primary)]">{node.name}</span>
-                    <span className="text-xs text-[var(--color-text-muted)] bg-[#EBE1D7]/50 px-2 py-0.5 rounded-full ml-2">
+                    <span className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-subtle)] border border-[var(--color-border)] px-2 py-0.5 rounded-full ml-2">
                         {node.slug}
                     </span>
                 </div>
@@ -84,7 +84,7 @@ export default function CategoryTreeNode({ node, level, onEdit, onAddChild }: Ca
             </div>
 
             {isExpanded && hasChildren && (
-                <div className="flex flex-col relative before:absolute before:right-6 before:top-0 before:bottom-4 before:w-px before:bg-[#EBE1D7]">
+                <div className="flex flex-col relative before:absolute before:right-6 before:top-0 before:bottom-4 before:w-px before:bg-[var(--color-border)]">
                     {node.children.map(child => (
                         <CategoryTreeNode 
                             key={child.id} 

@@ -1,4 +1,4 @@
-﻿import { Edit2, Trash2 } from 'lucide-react'
+import { Edit2, Trash2 } from 'lucide-react'
 import type { ProductAttribute } from '../../types/product-attribute'
 
 interface AttributesTableProps {
@@ -35,12 +35,12 @@ export default function AttributesTable({ attributes, onEdit, onDelete }: Attrib
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)] text-left">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EBE1D7]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                     {attributes.map((attr) => (
                         <tr key={attr.id} className="hover:bg-[var(--color-surface)] transition-colors group">
                             <td className="px-5 py-4 font-medium text-[var(--color-text-primary)]">{attr.display_name}</td>
                             <td className="px-5 py-4">
-                                <code className="text-xs bg-[#EBE1D7]/60 text-[var(--color-text-secondary)] px-2 py-0.5 rounded">
+                                <code className="text-xs bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[var(--color-text-secondary)] px-2 py-0.5 rounded">
                                     {attr.name}
                                 </code>
                             </td>
@@ -53,7 +53,7 @@ export default function AttributesTable({ attributes, onEdit, onDelete }: Attrib
                                         نعم
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center justify-center rounded-full bg-[#EBE1D7] px-2 py-0.5 text-xs font-semibold text-[var(--color-text-muted)]">
+                                    <span className="inline-flex items-center justify-center rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] px-2 py-0.5 text-xs font-semibold text-[var(--color-text-muted)]">
                                         لا
                                     </span>
                                 )}

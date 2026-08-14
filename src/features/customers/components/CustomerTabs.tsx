@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import type { CustomerDetails } from '../types/customer'
 
 interface CustomerTabsProps {
@@ -70,7 +70,7 @@ export default function CustomerTabs({ customer }: CustomerTabsProps) {
                             addresses.map((address) => (
                                 <div key={address.id} className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] relative">
                                     {address.is_default && (
-                                        <span className="absolute top-4 left-4 inline-flex items-center justify-center rounded-full bg-[#EBE1D7] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-secondary)]">
+                                        <span className="absolute top-4 left-4 inline-flex items-center justify-center rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-secondary)]">
                                             الافتراضي
                                         </span>
                                     )}

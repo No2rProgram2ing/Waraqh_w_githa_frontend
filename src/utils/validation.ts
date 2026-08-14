@@ -6,8 +6,11 @@ export const validatePhone = (phone: string): string | null => {
     if (!/^\d+$/.test(trimmed)) {
         return 'رقم الهاتف يجب أن يتكون من أرقام فقط.'
     }
-    if (trimmed.length < 7 || trimmed.length > 15) {
-        return 'رقم الهاتف غير صحيح، يجب أن يكون الطول بين 7 و 15 رقماً.'
+    if (trimmed.length !== 9) {
+        return 'رقم الهاتف غير صحيح، يجب أن يتكون من 9 أرقام.'
+    }
+    if (!/^(70|71|73|77|78)\d{7}$/.test(trimmed)) {
+        return 'رقم الهاتف يجب أن يكون رقم جوال يمني صحيحاً مكوناً من 9 أرقام ويبدأ بـ 70 أو 71 أو 73 أو 77 أو 78.'
     }
     return null
 }

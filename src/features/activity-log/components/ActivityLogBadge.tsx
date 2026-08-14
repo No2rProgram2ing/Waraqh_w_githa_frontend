@@ -1,4 +1,4 @@
-﻿import type { ActivityLogAction } from '../types/activity-log'
+import type { ActivityLogAction } from '../types/activity-log'
 
 const config: Record<ActivityLogAction, { label: string; className: string }> = {
     created: {
@@ -22,7 +22,7 @@ interface ActivityLogBadgeProps {
 export default function ActivityLogBadge({ action }: ActivityLogBadgeProps) {
     const { label, className } = config[action] ?? {
         label: action,
-        className: 'bg-[#EBE1D7] text-[var(--color-text-secondary)]',
+        className: 'bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[var(--color-text-secondary)]',
     }
 
     return (

@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react'
+import { useMemo } from 'react'
 import type { RolePermission } from '../types/role'
 
 interface PermissionsAccordionProps {
@@ -44,7 +44,7 @@ export default function PermissionsAccordion({
                         <summary className="flex items-center justify-between cursor-pointer select-none py-3 px-1 hover:bg-[var(--color-surface)] rounded-lg list-none">
                             <div className="flex items-center gap-2">
                                 <span className="font-semibold text-sm text-[var(--color-text-primary)]">{group}</span>
-                                <span className="text-xs bg-[#EBE1D7] text-[var(--color-text-secondary)] rounded-full px-2 py-0.5">
+                                <span className="text-xs bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-full px-2 py-0.5">
                                     {groupSelected}/{perms.length}
                                 </span>
                             </div>

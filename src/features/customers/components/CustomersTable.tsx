@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { Customer } from '../types/customer'
 
@@ -39,7 +39,7 @@ export default function CustomersTable({ customers, onEdit, onDelete }: Customer
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)] text-left">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EBE1D7]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                     {customers.map((customer) => {
                         const isVerified = !!customer.email_verified_at
 
@@ -53,7 +53,7 @@ export default function CustomersTable({ customers, onEdit, onDelete }: Customer
                                     {customer.phone ?? '—'}
                                 </td>
                                 <td className="px-5 py-4 text-center">
-                                    <span className="inline-flex items-center justify-center min-w-[28px] h-7 rounded-full bg-[#EBE1D7] text-[var(--color-text-secondary)] text-xs font-bold px-2">
+                                    <span className="inline-flex items-center justify-center min-w-[28px] h-7 rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-bold px-2">
                                         {customer.total_orders}
                                     </span>
                                 </td>

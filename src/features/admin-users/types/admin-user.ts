@@ -2,11 +2,16 @@ export type AdminUserStatus = 'active' | 'inactive'
 
 export interface AdminUser {
     id: number
-    first_name: string
-    last_name: string
+    full_name?: string
+    first_name?: string
+    last_name?: string
     email: string
-    role_name: string // e.g. "مدير عام", "مشرف طلبات"
-    status: AdminUserStatus
+    role?: {
+        id: number
+        name: string
+    }
+    role_name?: string // e.g. "مدير عام", "مشرف طلبات"
+    status?: AdminUserStatus
     created_at: string
 }
 
