@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
 import { useCreateCustomer, useUpdateCustomer } from '../hooks/useCustomers'
 import type { Customer, CustomerCategory } from '../types/customer'
+import { validatePhone, validateEmail, validateFullName } from '../../../utils/validation'
 
 interface CustomerFormModalProps {
     isOpen: boolean
@@ -58,10 +59,17 @@ export default function CustomerFormModal({ isOpen, onClose, customerToEdit }: C
 
         const nextErrors: Record<string, string> = {}
 
-        if (!form.full_name.trim()) nextErrors.full_name = 'يرجى إدخال الاسم الكامل.'
-        if (!form.email.trim()) nextErrors.email = 'يرجى إدخال البريد الإلكتروني.'
+        const nameErr = validateFullName(form.full_name)
+        if (nameErr) nextErrors.full_name = nameErr
+
+        const emailErr = validateEmail(form.email)
+        if (emailErr) nextErrors.email = emailErr
+
         if (!form.phone_country_code.trim()) nextErrors.phone_country_code = 'يرجى إدخال كود الدولة.'
-        if (!form.phone.trim()) nextErrors.phone = 'يرجى إدخال رقم الهاتف.'
+
+        const phoneErr = validatePhone(form.phone)
+        if (phoneErr) nextErrors.phone = phoneErr
+
         if (!form.category) nextErrors.category = 'يرجى اختيار فئة العميل.'
         if (!customerToEdit && !form.password.trim()) nextErrors.password = 'يرجى إدخال كلمة المرور.'
 
