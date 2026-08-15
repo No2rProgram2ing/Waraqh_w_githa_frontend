@@ -7,7 +7,13 @@ interface ReviewFiltersBarProps {
 }
 
 export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewFiltersBarProps) {
-    const hasActiveFilters = !!(filters.search || filters.status || filters.rating)
+    const hasActiveFilters = !!(
+        filters.search ||
+        filters.status ||
+        filters.rating !== '' && filters.rating !== undefined && filters.rating !== null ||
+        filters.date_from ||
+        filters.date_to
+    )
 
     return (
         <div className="flex flex-wrap items-end gap-3" dir="rtl">
@@ -47,9 +53,29 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                 >
                     <option value="">الكل</option>
                     <option value="pending">بانتظار المراجعة</option>
-                    <option value="approved">مقبول</option>
+                    <option value="published">مقبول</option>
                     <option value="rejected">مرفوض</option>
                 </select>
+            </div>
+
+            <div className="min-w-[180px]">
+                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">من تاريخ</label>
+                <input
+                    type="date"
+                    value={filters.date_from ?? ''}
+                    onChange={(e) => onChange({ ...filters, date_from: e.target.value, page: 1 })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                />
+            </div>
+
+            <div className="min-w-[180px]">
+                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">إلى تاريخ</label>
+                <input
+                    type="date"
+                    value={filters.date_to ?? ''}
+                    onChange={(e) => onChange({ ...filters, date_to: e.target.value, page: 1 })}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                />
             </div>
 
             {hasActiveFilters && (

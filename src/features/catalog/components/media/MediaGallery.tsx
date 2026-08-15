@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import type { ProductMedia } from '../../types/product-media'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { 
     useProductMedia, 
     useDeleteProductMedia, 
@@ -58,7 +59,17 @@ export default function MediaGallery({ productId }: MediaGalleryProps) {
         
         const isChanged = currentOrderedIds.some((id, idx) => id !== originalOrderedIds[idx])
         if (isChanged) {
-            reorderMedia({ productId, orderedIds: currentOrderedIds })
+            reorderMedia({ productId, orderedIds: currentOrderedIds }, {
+                onSuccess: () => showSuccessToast('تم تحديث ترتيب الوسائط بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث ترتيب الوسائط.')
+                },
+            })
         }
     }
 
@@ -107,7 +118,17 @@ export default function MediaGallery({ productId }: MediaGalleryProps) {
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             {!media.is_primary && (
                                 <button
-                                    onClick={() => setPrimaryMedia({ productId, mediaId: media.id })}
+                                    onClick={() => setPrimaryMedia({ productId, mediaId: media.id }, {
+                                        onSuccess: () => showSuccessToast('تم تعيين الصورة الرئيسية بنجاح'),
+                                        onError: (error: any) => {
+                                            const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                                            if (validationErrors) {
+                                                showValidationErrorToast(validationErrors)
+                                                return
+                                            }
+                                            showErrorToast(error?.response?.data?.message || 'فشل في تعيين الصورة الرئيسية.')
+                                        },
+                                    })}
                                     className="bg-[var(--color-surface-card)] text-[#45592D] p-2 rounded-full hover:bg-[var(--color-accent-subtle)] transition-colors"
                                     title="تعيين كرئيسية"
                                 >
@@ -117,7 +138,17 @@ export default function MediaGallery({ productId }: MediaGalleryProps) {
                             <button
                                 onClick={() => {
                                     if(confirm('هل أنت متأكد من حذف هذه الوسيلة؟')) {
-                                        deleteMedia(media.id)
+                                        deleteMedia(media.id, {
+                                            onSuccess: () => showSuccessToast('تم حذف الوسيلة بنجاح'),
+                                            onError: (error: any) => {
+                                                const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                                                if (validationErrors) {
+                                                    showValidationErrorToast(validationErrors)
+                                                    return
+                                                }
+                                                showErrorToast(error?.response?.data?.message || 'فشل في حذف الوسيلة.')
+                                            },
+                                        })
                                     }
                                 }}
                                 className="bg-[#A04A3A] text-white p-2 rounded-full hover:bg-red-700 transition-colors"

@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useAttributes, useDeleteAttribute } from '../hooks/useAttributes'
 import AttributesTable from '../components/attributes/AttributesTable'
 import AttributeFormModal from '../components/attributes/AttributeFormModal'
@@ -24,7 +25,18 @@ export default function AttributesPage() {
 
     const handleDelete = (attribute: ProductAttribute) => {
         if (confirm(`هل أنت متأكد من حذف الخاصية "${attribute.display_name}"؟`)) {
-            deleteAttribute(attribute.id)
+            deleteAttribute(attribute.id, {
+                onSuccess: () => showSuccessToast('تم حذف الخاصية بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف الخاصية، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

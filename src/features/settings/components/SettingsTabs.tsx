@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react'
-import { Save, AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Save, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { currencyOptions, normalizeCurrencyCode } from '@/lib/currency'
 import type { SystemSettings } from '../types/settings'
 import { useUpdateSettings } from '../hooks/useSettings'
 
@@ -12,13 +13,15 @@ type TabType = 'general' | 'finance' | 'maintenance'
 export default function SettingsTabs({ settings }: SettingsTabsProps) {
     const { mutate: updateSettings, isPending } = useUpdateSettings()
     const [activeTab, setActiveTab] = useState<TabType>('general')
+    const [showSuccessToast, setShowSuccessToast] = useState(false)
 
     // Local form state
     const [storeName, setStoreName] = useState(settings.store_name)
     const [contactEmail, setContactEmail] = useState(settings.contact_email)
     const [contactPhone, setContactPhone] = useState(settings.contact_phone ?? '')
+    const [taxEnabled, setTaxEnabled] = useState((settings.tax_rate ?? 0) > 0)
     const [taxRate, setTaxRate] = useState(settings.tax_rate)
-    const [defaultCurrency, setDefaultCurrency] = useState(settings.default_currency)
+    const [defaultCurrency, setDefaultCurrency] = useState(() => normalizeCurrencyCode(settings.default_currency || settings.currency))
     const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenance_mode)
     const [maintenanceMessage, setMaintenanceMessage] = useState(settings.maintenance_message ?? '')
 
@@ -27,22 +30,31 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
         setStoreName(settings.store_name)
         setContactEmail(settings.contact_email)
         setContactPhone(settings.contact_phone ?? '')
+        setTaxEnabled((settings.tax_rate ?? 0) > 0)
         setTaxRate(settings.tax_rate)
-        setDefaultCurrency(settings.default_currency)
+        setDefaultCurrency(normalizeCurrencyCode(settings.default_currency || settings.currency))
         setMaintenanceMode(settings.maintenance_mode)
         setMaintenanceMessage(settings.maintenance_message ?? '')
     }, [settings])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        const normalizedTaxRate = taxEnabled ? Number(taxRate || 0) : 0
+
         updateSettings({
             store_name: storeName,
             contact_email: contactEmail,
             contact_phone: contactPhone || null,
-            tax_rate: taxRate,
+            tax_rate: normalizedTaxRate,
+            tax_enabled: taxEnabled,
             default_currency: defaultCurrency,
             maintenance_mode: maintenanceMode,
             maintenance_message: maintenanceMessage || null
+        }, {
+            onSuccess: () => {
+                setShowSuccessToast(true)
+                window.setTimeout(() => setShowSuccessToast(false), 2600)
+            }
         })
     }
 
@@ -58,6 +70,12 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
 
     return (
         <form onSubmit={handleSubmit} className="bg-[var(--color-surface-card)] rounded-[24px] border border-[var(--color-border)] overflow-hidden" dir="rtl">
+            {showSuccessToast && (
+                <div className="pointer-events-none fixed left-1/2 top-5 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 shadow-lg">
+                    <CheckCircle2 className="h-4 w-4" />
+                    تم حفظ الإعدادات بنجاح
+                </div>
+            )}
             {/* Tabs Header */}
             <div className="border-b border-[var(--color-border)] px-6 bg-[var(--color-surface)]">
                 <nav className="flex gap-8">
@@ -136,33 +154,60 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
 
                 {activeTab === 'finance' && (
                     <div className="space-y-5 max-w-2xl">
+                        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+                            <label className="flex cursor-pointer items-center justify-between gap-4">
+                                <div>
+                                    <span className="block text-sm font-medium text-[var(--color-text-secondary)]">تفعيل الضريبة</span>
+                                    <span className="text-xs text-[var(--color-text-muted)]">عند إيقافها، ستُخفي الضريبة من واجهة المتجر تلقائياً</span>
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    checked={taxEnabled}
+                                    onChange={(e) => setTaxEnabled(e.target.checked)}
+                                    className="h-5 w-5 accent-[#45592D]"
+                                />
+                            </label>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">نسبة الضريبة (٪)</label>
                                 <input
-                                    required
                                     type="number"
                                     min="0"
                                     max="100"
                                     step="0.01"
                                     value={taxRate}
                                     onChange={(e) => setTaxRate(Number(e.target.value))}
-                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none focus:border-[#45592D] transition-colors"
+                                    disabled={!taxEnabled}
+                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition-colors focus:border-[#45592D]"
                                     dir="ltr"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">العملة الافتراضية</label>
                                 <input
-                                    required
                                     type="text"
+                                    list="currency-options"
                                     value={defaultCurrency}
-                                    onChange={(e) => setDefaultCurrency(e.target.value)}
-                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none focus:border-[#45592D] transition-colors bg-gray-50 text-gray-500"
+                                    onChange={(e) => setDefaultCurrency(e.target.value.toUpperCase())}
+                                    placeholder="اكتب اسم العملة أو الرمز"
+                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none focus:border-[#45592D] transition-colors"
                                     dir="ltr"
                                 />
+                                <datalist id="currency-options">
+                                    {currencyOptions.map((currency) => (
+                                        <option key={currency.code} value={currency.code} label={currency.label} />
+                                    ))}
+                                </datalist>
                             </div>
                         </div>
+
+                        {!taxEnabled && (
+                            <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[#F8F5F0] px-4 py-3 text-sm text-[var(--color-text-muted)]">
+                                الضريبة متوقفة حاليًا، لذا سيتم إخفاؤها تلقائيًا في واجهة المتجر.
+                            </div>
+                        )}
                     </div>
                 )}
 

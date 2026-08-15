@@ -1,4 +1,4 @@
-﻿import { Edit2, Trash2 } from 'lucide-react'
+import { Edit2, Trash2 } from 'lucide-react'
 import type { AdminUser } from '../types/admin-user'
 
 interface AdminUsersTableProps {
@@ -37,16 +37,16 @@ export default function AdminUsersTable({ users, onEdit, onDelete }: AdminUsersT
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)] text-left">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EBE1D7]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                     {users.map((user) => (
                         <tr key={user.id} className="hover:bg-[var(--color-surface)] transition-colors group">
                             <td className="px-5 py-4 font-medium text-[var(--color-text-primary)] whitespace-nowrap">
-                                {user.first_name} {user.last_name}
+                                {user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || '—'}
                             </td>
                             <td className="px-5 py-4 text-[var(--color-text-muted)]">{user.email}</td>
                             <td className="px-5 py-4">
-                                <span className="inline-flex items-center justify-center rounded-lg bg-[#EBE1D7]/50 border border-[var(--color-border)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-secondary)]">
-                                    {user.role_name}
+                                <span className="inline-flex items-center justify-center rounded-lg bg-[var(--color-surface-subtle)] border border-[var(--color-border)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+                                    {user.role?.name || user.role_name || '—'}
                                 </span>
                             </td>
                             <td className="px-5 py-4 text-center">

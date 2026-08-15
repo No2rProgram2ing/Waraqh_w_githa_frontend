@@ -1,5 +1,6 @@
 ﻿import { useState, useRef } from 'react'
 import type { MediaPreview } from '../../types/product-media'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useUploadProductMedia } from '../../hooks/useProductMedia'
 
 interface MediaUploaderProps {
@@ -45,8 +46,17 @@ export default function MediaUploader({ productId }: MediaUploaderProps) {
             { productId, files },
             {
                 onSuccess: () => {
+                    showSuccessToast('تم رفع الوسائط بنجاح')
                     previews.forEach((p) => URL.revokeObjectURL(p.previewUrl))
                     setPreviews([])
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في رفع الوسائط، يرجى المحاولة مرة أخرى.')
                 },
             }
         )

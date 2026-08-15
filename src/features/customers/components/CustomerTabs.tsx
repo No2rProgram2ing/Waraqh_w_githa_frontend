@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import type { CustomerDetails } from '../types/customer'
 
 interface CustomerTabsProps {
@@ -9,6 +9,7 @@ type TabType = 'orders' | 'addresses' | 'reviews'
 
 export default function CustomerTabs({ customer }: CustomerTabsProps) {
     const [activeTab, setActiveTab] = useState<TabType>('orders')
+    const addresses = Array.isArray(customer.addresses) ? customer.addresses : []
 
     return (
         <div dir="rtl" className="bg-[var(--color-surface-card)] rounded-[24px] border border-[var(--color-border)] overflow-hidden">
@@ -61,15 +62,15 @@ export default function CustomerTabs({ customer }: CustomerTabsProps) {
                 
                 {activeTab === 'addresses' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {!customer.addresses.length ? (
+                        {!addresses.length ? (
                             <div className="col-span-full text-center py-12 text-[var(--color-text-muted)] text-sm bg-[var(--color-surface)] rounded-xl border border-dashed border-[var(--color-border-muted)]">
                                 لا توجد عناوين مسجلة لهذا العميل.
                             </div>
                         ) : (
-                            customer.addresses.map((address) => (
+                            addresses.map((address) => (
                                 <div key={address.id} className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] relative">
                                     {address.is_default && (
-                                        <span className="absolute top-4 left-4 inline-flex items-center justify-center rounded-full bg-[#EBE1D7] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-secondary)]">
+                                        <span className="absolute top-4 left-4 inline-flex items-center justify-center rounded-full bg-[var(--color-surface-subtle)] border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-secondary)]">
                                             الافتراضي
                                         </span>
                                     )}

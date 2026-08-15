@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { AdminUser, AdminUserStatus } from '../types/admin-user'
 import { useCreateAdminUser, useUpdateAdminUser } from '../hooks/useAdminUsers'
 
@@ -23,9 +24,9 @@ export default function AdminUserFormModal({ isOpen, onClose, userToEdit }: Admi
 
     useEffect(() => {
         if (userToEdit) {
-            setFirstName(userToEdit.first_name)
-            setLastName(userToEdit.last_name)
-            setEmail(userToEdit.email)
+            setFirstName(userToEdit.first_name ?? '')
+            setLastName(userToEdit.last_name ?? '')
+            setEmail(userToEdit.email ?? '')
             setStatus(userToEdit.status)
             // Ideally we'd map role_name back to role_id if we had the full roles list, 
             // for now leaving as default 1 since it's a mockup.
@@ -49,23 +50,47 @@ export default function AdminUserFormModal({ isOpen, onClose, userToEdit }: Admi
         e.preventDefault()
         if (userToEdit) {
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
                 email,
                 role_id: roleId,
                 status,
                 ...(password ? { password } : {})
             }
-            updateUser({ id: userToEdit.id, data: payload }, { onSuccess: onClose })
+            updateUser({ id: userToEdit.id, data: payload }, {
+                onSuccess: () => {
+                    showSuccessToast('تم تحديث المستخدم الإداري بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث المستخدم الإداري، يرجى المحاولة مرة أخرى.')
+                },
+            })
         } else {
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
+                full_name: `${firstName} ${lastName}`.trim(),
                 email,
                 role_id: roleId,
                 password
             }
-            createUser(payload, { onSuccess: onClose })
+            createUser(payload, {
+                onSuccess: () => {
+                    showSuccessToast('تمت إضافة المستخدم الإداري بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إضافة المستخدم الإداري، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

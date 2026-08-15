@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useRole, useAllPermissions, useSyncRolePermissions } from '../hooks/useRoles'
 import PermissionsAccordion from './PermissionsAccordion'
 
@@ -39,7 +40,20 @@ export default function RolePermissionsModal({ roleId, onClose }: RolePermission
         if (!roleId) return
         syncPermissions(
             { roleId, permissionIds: Array.from(selectedIds) },
-            { onSuccess: onClose }
+            {
+                onSuccess: () => {
+                    showSuccessToast('تم تحديث صلاحيات الدور بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث صلاحيات الدور، يرجى المحاولة مرة أخرى.')
+                },
+            }
         )
     }
 

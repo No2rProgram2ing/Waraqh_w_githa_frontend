@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { Role } from '../types/role'
 import { useCreateRole, useUpdateRole } from '../hooks/useRoles'
 
@@ -41,9 +42,35 @@ export default function RoleFormModal({ isOpen, onClose, roleToEdit }: RoleFormM
             description: description || null,
         }
         if (roleToEdit) {
-            updateRole({ id: roleToEdit.id, data: payload }, { onSuccess: onClose })
+            updateRole({ id: roleToEdit.id, data: payload }, {
+                onSuccess: () => {
+                    showSuccessToast('تم تحديث الدور بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في تحديث الدور، يرجى المحاولة مرة أخرى.')
+                },
+            })
         } else {
-            createRole(payload, { onSuccess: onClose })
+            createRole(payload, {
+                onSuccess: () => {
+                    showSuccessToast('تمت إضافة الدور بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إضافة الدور، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

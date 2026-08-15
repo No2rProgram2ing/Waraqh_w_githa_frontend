@@ -46,15 +46,15 @@ export default function ActivityLogTable({ logs }: ActivityLogTableProps) {
                             <td className="px-5 py-4">
                                 <ActivityLogBadge action={log.action} />
                             </td>
-                            <td className="px-5 py-4 text-[var(--color-text-secondary)]">
-                                <code className="text-xs bg-[#EBE1D7]/60 px-2 py-0.5 rounded">
+                            <td className="px-5 py-4">
+                                <code className="inline-block rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-primary)]">
                                     {log.subject_type}
                                 </code>
                             </td>
-                            <td className="px-5 py-4 text-[var(--color-text-muted)] text-center">
+                            <td className="px-5 py-4 font-mono text-sm text-[var(--color-text-primary)] text-center">
                                 {log.subject_id ?? '—'}
                             </td>
-                            <td className="px-5 py-4 text-[var(--color-text-secondary)] max-w-xs truncate">
+                            <td className="px-5 py-4 text-[var(--color-text-primary)] max-w-md break-words leading-6">
                                 {log.description ?? '—'}
                             </td>
                             <td className="px-5 py-4 text-[var(--color-text-muted)] text-left whitespace-nowrap text-xs">

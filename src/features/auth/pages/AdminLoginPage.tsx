@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -72,7 +72,7 @@ function AdminLoginPage() {
   return (
     <main
       dir="rtl"
-      className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10"
+      className="flex min-h-screen items-center justify-center bg-[var(--color-surface)] px-4 py-10"
     >
       <div className="w-full max-w-md">
         {/* Brand */}
@@ -83,17 +83,17 @@ function AdminLoginPage() {
             className="mx-auto h-20 w-20 object-contain"
           />
 
-          <h1 className="mt-6 text-2xl font-bold text-slate-900">
+          <h1 className="mt-6 text-2xl font-bold text-[var(--color-text-primary)]">
             تسجيل دخول الإدارة
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
             سجّل الدخول للوصول إلى لوحة الإدارة
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="rounded-2xl bg-[var(--color-surface-card)] p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <div className="rounded-2xl bg-[var(--color-surface-card)] p-6 shadow-sm ring-1 ring-[var(--color-border)] sm:p-8">
           <form
             onSubmit={handleSubmit}
             className="space-y-5"
@@ -112,7 +112,7 @@ function AdminLoginPage() {
             <div>
               <label
                 htmlFor="admin-email"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-[var(--color-text-secondary)]"
               >
                 البريد الإلكتروني
               </label>
@@ -120,7 +120,7 @@ function AdminLoginPage() {
               <div className="relative">
                 <Mail
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--color-text-faint)]"
                 />
 
                 <input
@@ -139,7 +139,7 @@ function AdminLoginPage() {
                   required
                   disabled={isLoading}
                   placeholder="admin@example.com"
-                  className="w-full rounded-xl border border-slate-200 bg-[var(--color-surface-card)] py-3 pl-4 pr-10 text-sm text-slate-900 outline-none transition focus:border-[#45592D] focus:ring-2 focus:ring-[#45592D]/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  className="w-full rounded-xl border border-[var(--color-border)] py-3 pl-4 pr-10 text-sm outline-none transition focus:border-[#45592D] focus:ring-2 focus:ring-[#45592D]/10"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ function AdminLoginPage() {
             <div>
               <label
                 htmlFor="admin-password"
-                className="mb-2 block text-sm font-medium text-slate-700"
+                className="mb-2 block text-sm font-medium text-[var(--color-text-secondary)]"
               >
                 كلمة المرور
               </label>
@@ -156,7 +156,7 @@ function AdminLoginPage() {
               <div className="relative">
                 <Lock
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--color-text-faint)]"
                 />
 
                 <input
@@ -175,7 +175,7 @@ function AdminLoginPage() {
                   required
                   disabled={isLoading}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-slate-200 bg-[var(--color-surface-card)] py-3 pl-11 pr-10 text-sm text-slate-900 outline-none transition focus:border-[#45592D] focus:ring-2 focus:ring-[#45592D]/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  className="w-full rounded-xl border border-[var(--color-border)] py-3 pl-11 pr-10 text-sm outline-none transition focus:border-[#45592D] focus:ring-2 focus:ring-[#45592D]/10"
                 />
 
                 <button
@@ -189,7 +189,7 @@ function AdminLoginPage() {
                       ? 'إخفاء كلمة المرور'
                       : 'إظهار كلمة المرور'
                   }
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:text-slate-600 disabled:cursor-not-allowed"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--color-text-faint)] transition hover:text-[var(--color-text-secondary)] disabled:cursor-not-allowed"
                 >
                   {showPassword ? (
                     <EyeOff

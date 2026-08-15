@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import type { DesignPattern } from '../../types/pattern'
 import { useCreatePattern, useUpdatePattern } from '../../hooks/usePatterns'
 
@@ -14,15 +15,18 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
     const { mutate: updatePattern, isPending: isUpdating } = useUpdatePattern()
 
     const [name, setName] = useState('')
-    const [imageUrl, setImageUrl] = useState('')
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState('')
 
     useEffect(() => {
         if (patternToEdit) {
             setName(patternToEdit.name)
-            setImageUrl(patternToEdit.image_url)
+            setImageFile(null)
+            setImagePreview(patternToEdit.image_url ?? patternToEdit.preview_image_url ?? '')
         } else {
             setName('')
-            setImageUrl('')
+            setImageFile(null)
+            setImagePreview('')
         }
     }, [patternToEdit, isOpen])
 
@@ -30,13 +34,64 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
 
     const isPending = isCreating || isUpdating
 
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+
+        if (!file) {
+            setImageFile(null)
+            setImagePreview(patternToEdit?.image_url ?? patternToEdit?.preview_image_url ?? '')
+            return
+        }
+
+        setImageFile(file)
+        setImagePreview(URL.createObjectURL(file))
+    }
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        const payload = { name, image_url: imageUrl }
+
+        const safeName = (name || patternToEdit?.name || '').trim()
+        const formData = new FormData()
+        formData.append('name', safeName)
+
+        if (imageFile) {
+            formData.append('image', imageFile)
+        }
+
         if (patternToEdit) {
-            updatePattern({ id: patternToEdit.id, data: payload }, { onSuccess: onClose })
+            formData.append('_method', 'PUT')
+            updatePattern(
+                { id: patternToEdit.id, data: formData as unknown as Parameters<typeof updatePattern>[0]['data'] },
+                {
+                    onSuccess: () => {
+                        showSuccessToast('تم تحديث النمط بنجاح')
+                        onClose()
+                    },
+                    onError: (error: any) => {
+                        const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                        if (validationErrors) {
+                            showValidationErrorToast(validationErrors)
+                            return
+                        }
+                        showErrorToast(error?.response?.data?.message || 'فشل في تحديث النمط، يرجى المحاولة مرة أخرى.')
+                    },
+                }
+            )
         } else {
-            createPattern(payload, { onSuccess: onClose })
+            createPattern(formData as unknown as Parameters<typeof createPattern>[0], {
+                onSuccess: () => {
+                    showSuccessToast('تمت إضافة النمط بنجاح')
+                    onClose()
+                },
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في إضافة النمط، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 
@@ -65,19 +120,16 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
                     </div>
                     
                     <div>
-                        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">رابط الصورة</label>
+                        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">صورة النمط</label>
                         <input
-                            required
-                            type="url"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            placeholder="https://example.com/pattern.jpg"
-                            className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
-                            dir="ltr"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
                         />
-                        {imageUrl && (
+                        {imagePreview && (
                             <div className="mt-3 p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex justify-center">
-                                <img src={imageUrl} alt="معاينة" className="max-h-32 object-contain rounded-lg" />
+                                <img src={imagePreview} alt="معاينة النمط" className="max-h-32 object-contain rounded-lg" />
                             </div>
                         )}
                     </div>
@@ -92,7 +144,7 @@ export default function PatternFormModal({ isOpen, onClose, patternToEdit }: Pat
                         </button>
                         <button
                             type="submit"
-                            disabled={isPending || !imageUrl.trim()}
+                            disabled={isPending || !name.trim() || (!imageFile && !imagePreview)}
                             className="px-4 py-2.5 rounded-xl bg-[#45592D] text-white text-sm font-semibold hover:bg-[#5D7243] transition-colors disabled:opacity-50"
                         >
                             {isPending ? 'جاري الحفظ...' : 'حفظ'}

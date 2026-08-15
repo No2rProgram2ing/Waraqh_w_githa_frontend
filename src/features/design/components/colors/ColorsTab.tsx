@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { useColors, useDeleteColor } from '../../hooks/useColors'
 import ColorFormModal from './ColorFormModal'
 import type { Color } from '../../types/color'
@@ -23,7 +24,17 @@ export default function ColorsTab() {
 
     const handleDelete = (color: Color) => {
         if (confirm(`هل أنت متأكد من حذف اللون "${color.name}"؟`)) {
-            deleteColor(color.id)
+            deleteColor(color.id, {
+                onSuccess: () => showSuccessToast('تم حذف اللون بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف اللون، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

@@ -167,8 +167,16 @@ function AdminSidebar() {
         {/* Admin User */}
         <div className="border-t border-white/10 p-3">
           <div className="mb-3 flex items-center gap-3 rounded-xl bg-[var(--color-surface-card)]/5 p-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#45592D] font-bold">
-              {adminInitial}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#45592D] font-bold">
+              {admin?.avatar_url ? (
+                <img
+                  src={admin.avatar_url}
+                  alt={adminName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                adminInitial
+              )}
             </div>
 
             <div

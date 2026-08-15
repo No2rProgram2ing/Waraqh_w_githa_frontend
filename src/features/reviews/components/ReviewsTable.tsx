@@ -1,10 +1,10 @@
-﻿import { Star, MessageSquare, Trash2, CheckCircle, XCircle } from 'lucide-react'
+import { Star, MessageSquare, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import type { Review } from '../types/review'
 
 interface ReviewsTableProps {
     reviews: Review[]
     onReply: (review: Review) => void
-    onUpdateStatus: (id: number, status: 'approved' | 'rejected') => void
+    onUpdateStatus: (id: number, status: 'published' | 'rejected') => void
     onDelete: (review: Review) => void
 }
 
@@ -73,9 +73,9 @@ export default function ReviewsTable({ reviews, onReply, onUpdateStatus, onDelet
                     {/* Actions */}
                     <div className="shrink-0 flex md:flex-col gap-2 items-end justify-center md:border-r border-[var(--color-border)] md:pr-5 pt-4 md:pt-0 border-t md:border-t-0">
                         <div className="flex gap-2">
-                            {review.status !== 'approved' && (
+                            {review.status !== 'published' && (
                                 <button
-                                    onClick={() => onUpdateStatus(review.id, 'approved')}
+                                    onClick={() => onUpdateStatus(review.id, 'published')}
                                     className="p-2 rounded-lg bg-[var(--color-accent-subtle)] text-[#45592D] hover:bg-[var(--color-accent-subtle-hover)] transition-colors"
                                     title="موافقة ونشر"
                                 >

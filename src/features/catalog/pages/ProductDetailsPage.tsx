@@ -1,9 +1,11 @@
 ﻿import { Link, useParams } from 'react-router-dom'
 
+import { useSystemCurrency } from '@/lib/currency'
 import { useProduct } from '../hooks/useProduct'
 
 function ProductDetailsPage() {
     const { productId } = useParams<{ productId: string }>()
+    const { formatAmount } = useSystemCurrency()
 
     const id = Number(productId)
 
@@ -122,7 +124,7 @@ function ProductDetailsPage() {
                 </p>
 
                 <p className="mt-1 text-sm font-semibold text-[var(--color-text-primary)]">
-                {product.price}
+                {formatAmount(product.price)}
                 </p>
             </div>
 

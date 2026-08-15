@@ -1,4 +1,4 @@
-﻿import { Edit2, ShieldCheck, Trash2 } from 'lucide-react'
+import { Edit2, ShieldCheck, Trash2 } from 'lucide-react'
 import type { Role } from '../types/role'
 import { useDeleteRole } from '../hooks/useRoles'
 
@@ -13,7 +13,17 @@ export default function RolesTable({ roles, onEdit, onManagePermissions }: Roles
 
     const handleDelete = (role: Role) => {
         if (confirm(`هل أنت متأكد من حذف الدور "${role.display_name}"؟`)) {
-            deleteRole(role.id)
+            deleteRole(role.id, {
+                onSuccess: () => showSuccessToast('تم حذف الدور بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف الدور، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 
@@ -37,12 +47,12 @@ export default function RolesTable({ roles, onEdit, onManagePermissions }: Roles
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)] text-left">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EBE1D7]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                     {roles.map((role) => (
                         <tr key={role.id} className="hover:bg-[var(--color-surface)] transition-colors group">
-                            <td className="px-5 py-4 font-medium text-[var(--color-text-primary)]">{role.display_name}</td>
+                            <td className="px-5 py-4 font-medium text-[var(--color-text-primary)]">{role.display_name || role.name}</td>
                             <td className="px-5 py-4">
-                                <code className="text-xs bg-[#EBE1D7]/60 text-[var(--color-text-secondary)] px-2 py-0.5 rounded">
+                                <code className="text-xs bg-[var(--color-surface-subtle)] border border-[var(--color-border)] text-[var(--color-text-secondary)] px-2 py-0.5 rounded">
                                     {role.name}
                                 </code>
                             </td>

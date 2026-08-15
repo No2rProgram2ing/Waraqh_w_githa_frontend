@@ -2,18 +2,23 @@ import type { Product } from '../types/product'
 
 import { Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useSystemCurrency } from '@/lib/currency'
 import ProductStatusBadge from './ProductStatusBadge'
 interface ProductTableProps {
   products: Product[]
   isLoading?: boolean
   onView?: (productId: number) => void
+  onDelete?: (productId: number) => void
 }
 
 function ProductTable({
   products,
   isLoading = false,
   //onView,
+  onDelete,
 }: ProductTableProps) {
+  const { formatAmount } = useSystemCurrency()
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[900px] text-right">
@@ -87,7 +92,7 @@ function ProductTable({
                 </td>
 
                 <td className="px-5 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
-                  {product.price}
+                  {formatAmount(product.price)}
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
@@ -117,6 +122,7 @@ function ProductTable({
                     <button
                       type="button"
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-danger)] transition hover:bg-[var(--color-danger-subtle)] hover:text-[#8C382A]"
+                      onClick={() => onDelete?.(product.id)}
                       aria-label="حذف المنتج"
                       title="حذف المنتج"
                     >

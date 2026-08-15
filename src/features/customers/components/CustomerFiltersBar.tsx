@@ -1,4 +1,4 @@
-﻿import type { CustomerFilters, CustomerStatus } from '../types/customer'
+﻿import type { CustomerCategory, CustomerFilters } from '../types/customer'
 
 interface CustomerFiltersBarProps {
     filters: CustomerFilters
@@ -7,7 +7,7 @@ interface CustomerFiltersBarProps {
 }
 
 export default function CustomerFiltersBar({ filters, onChange, onReset }: CustomerFiltersBarProps) {
-    const hasActiveFilters = !!(filters.search || filters.status)
+    const hasActiveFilters = !!(filters.search || filters.category || filters.verified !== undefined && filters.verified !== '')
 
     return (
         <div className="flex flex-wrap items-end gap-3" dir="rtl">
@@ -23,15 +23,35 @@ export default function CustomerFiltersBar({ filters, onChange, onReset }: Custo
             </div>
 
             <div className="min-w-[150px]">
-                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">حالة الحساب</label>
+                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">الفئة</label>
                 <select
-                    value={filters.status ?? ''}
-                    onChange={(e) => onChange({ ...filters, status: e.target.value as CustomerStatus | '', page: 1 })}
+                    value={filters.category ?? ''}
+                    onChange={(e) => onChange({ ...filters, category: e.target.value as CustomerCategory | '', page: 1 })}
                     className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
                 >
                     <option value="">الكل</option>
-                    <option value="active">نشط</option>
-                    <option value="inactive">موقوف</option>
+                    <option value="regular">عادي</option>
+                    <option value="vip">VIP</option>
+                </select>
+            </div>
+
+            <div className="min-w-[150px]">
+                <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">الحالة</label>
+                <select
+                    value={filters.verified === '' ? '' : String(filters.verified ?? '')}
+                    onChange={(e) => {
+                        const value = e.target.value
+                        onChange({
+                            ...filters,
+                            verified: value === '' ? '' : value === 'true' ? true : false,
+                            page: 1,
+                        })
+                    }}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                >
+                    <option value="">الكل</option>
+                    <option value="true">مؤكد</option>
+                    <option value="false">غير مؤكد</option>
                 </select>
             </div>
 

@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
 import { usePatterns, useDeletePattern } from '../../hooks/usePatterns'
 import PatternFormModal from './PatternFormModal'
 import type { DesignPattern } from '../../types/pattern'
@@ -23,7 +24,17 @@ export default function PatternsTab() {
 
     const handleDelete = (pattern: DesignPattern) => {
         if (confirm(`هل أنت متأكد من حذف النمط "${pattern.name}"؟`)) {
-            deletePattern(pattern.id)
+            deletePattern(pattern.id, {
+                onSuccess: () => showSuccessToast('تم حذف النمط بنجاح'),
+                onError: (error: any) => {
+                    const validationErrors = error?.response?.data?.errors as Record<string, string[]> | undefined
+                    if (validationErrors) {
+                        showValidationErrorToast(validationErrors)
+                        return
+                    }
+                    showErrorToast(error?.response?.data?.message || 'فشل في حذف النمط، يرجى المحاولة مرة أخرى.')
+                },
+            })
         }
     }
 

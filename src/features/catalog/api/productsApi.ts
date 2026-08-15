@@ -1,9 +1,10 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+﻿import { axiosAdminClient } from '@/api/axiosAdminClient'
 
 import type { Product } from '../types/product'
 
 export interface ProductsQueryParams {
   page?: number
+  per_page?: number
   search?: string
 }
 
@@ -36,6 +37,18 @@ export interface ProductsResponse {
   data: Product[]
   links: ProductsPaginationLinks
   meta: ProductsPaginationMeta
+}
+
+export interface CreateProductPayload {
+  name: string
+  sku: string
+  slug?: string
+  description?: string | null
+  price: number | string
+  stock_quantity: number
+  status: 'active' | 'inactive'
+  is_customizable?: boolean
+  category_id: number
 }
 
 export interface UpdateProductPayload {
@@ -73,6 +86,16 @@ export const productsApi = {
     return response.data.data
   },
 
+  async create(data: CreateProductPayload): Promise<Product> {
+    const response =
+      await axiosAdminClient.post<{ data: Product }>(
+        '/admin/products',
+        data,
+      )
+
+    return response.data.data
+  },
+
   async update(
     id: number,
     data: UpdateProductPayload,
@@ -82,4 +105,10 @@ export const productsApi = {
       data,
     )
   },
+
+
+  async delete(id: number): Promise<void> {
+    await axiosAdminClient.delete(`/admin/products/${id}`)
+  },
 }
+

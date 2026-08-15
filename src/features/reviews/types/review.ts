@@ -1,4 +1,4 @@
-export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+export type ReviewStatus = 'pending' | 'published' | 'rejected'
 
 export interface Review {
     id: number
@@ -19,6 +19,8 @@ export interface ReviewFilters {
     search?: string
     status?: ReviewStatus | ''
     rating?: number | ''
+    date_from?: string
+    date_to?: string
     page?: number
 }
 
