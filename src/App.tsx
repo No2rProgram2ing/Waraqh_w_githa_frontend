@@ -1,9 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-// import Login from '@/pages/Login'
-// import Placeholder from '@/pages/Placeholder'
-// import NotFound from '@/pages/NotFound'
+import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppRoutes } from "@/routes/AppRoutes";
+import { AdminRoutes } from "@/routes/AdminRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,34 +16,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        {/* مسارات المستخدم أو المسارات العامة */}
         <AppRoutes />
+        
+        {/* مسارات لوحة التحكم */}
+        <AdminRoutes />
       </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
 export default App;
-
-
-// function App() {
-//   return (
-//     <QueryClientProvider client={queryClient}>
-//     <BrowserRouter>
-//       <Routes>
-//         <Route path="/" element={<Login />} />
-//         <Route
-//           path="/signup"
-//           element={<Placeholder title="إنشاء حساب جديد" />}
-//         />
-//         <Route
-//           path="/forgot-password"
-//           element={<Placeholder title="استعادة كلمة المرور" />}
-//         />
-//         <Route path="*" element={<NotFound />} />
-//       </Routes>
-//     </BrowserRouter>
-//     </QueryClientProvider>
-//   )
-// }
-
-// export default App
