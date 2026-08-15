@@ -22,91 +22,29 @@ import SettingsPage from '@/features/settings/pages/SettingsPage'
 export function AdminRoutes() {
   return (
     <Routes>
-      <Route
-        path="/admin/login"
-        element={<AdminLoginPage />}
-      />
+      <Route path="login" element={<AdminLoginPage />} />
 
       <Route element={<AdminProtectedRoute />}>
         <Route element={<AdminLayout />}>
-          <Route
-            path="/admin"
-            element={
-              <Navigate
-                to="/admin/products"
-                replace
-              />
-            }
-          />
-
-          <Route
-            path="/admin/products"
-            element={<ProductsPage />}
-          />
-          <Route
-            path="/admin/products/:productId"
-            element={<ProductDetailsPage />}
-          />
-          <Route
-            path="/admin/products/:productId/edit"
-            element={<ProductEditPage />}
-          />
-          <Route
-            path="/admin/categories"
-            element={<CategoriesPage />}
-          />
-          <Route
-            path="/admin/roles"
-            element={<RolesPage />}
-          />
-          <Route
-            path="/admin/activity-logs"
-            element={<ActivityLogsPage />}
-          />
-          <Route
-            path="/admin/design"
-            element={<DesignPage />}
-          />
-          <Route
-            path="/admin/product-attributes"
-            element={<AttributesPage />}
-          />
-          <Route
-            path="/admin/customers"
-            element={<CustomersPage />}
-          />
-          <Route
-            path="/admin/customers/:id"
-            element={<CustomerDetailsPage />}
-          />
-          <Route
-            path="/admin/reviews"
-            element={<ReviewsPage />}
-          />
-          <Route
-            path="/admin/admin-users"
-            element={<AdminUsersPage />}
-          />
-          <Route
-            path="/admin/profile"
-            element={<ProfilePage />}
-          />
-          <Route
-            path="/admin/settings"
-            element={<SettingsPage />}
-          />
+          <Route index element={<Navigate to="products" replace />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/:productId" element={<ProductDetailsPage />} />
+          <Route path="products/:productId/edit" element={<ProductEditPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="activity-logs" element={<ActivityLogsPage />} />
+          <Route path="design" element={<DesignPage />} />
+          <Route path="product-attributes" element={<AttributesPage />} />
+          <Route path="customers" element={<CustomersPage />} />
+          <Route path="customers/:id" element={<CustomerDetailsPage />} />
+          <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="admin-users" element={<AdminUsersPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>
 
-      <Route
-        path="*"
-        element={
-          <Navigate
-            to="/admin/login"
-            replace
-          />
-        }
-      />
+      <Route path="*" element={<Navigate to="login" replace />} />
     </Routes>
   )
 }

@@ -65,15 +65,16 @@ export function convertYERToCurrency(
   }
 
   const availableRates = rates ?? {}
-  const yemenRate = Number(availableRates.YER)
   const targetRate = Number(availableRates[normalizedTargetCurrency])
 
-  if (!Number.isFinite(yemenRate) || !Number.isFinite(targetRate) || yemenRate === 0) {
+  if (!Number.isFinite(targetRate) || targetRate === 0) {
     return numericAmount
   }
 
-  return numericAmount * (targetRate / yemenRate)
+  return numericAmount / targetRate
 }
+
+
 
 export function formatCurrency(
   amount: number | string | null | undefined,
