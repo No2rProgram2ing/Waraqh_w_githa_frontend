@@ -30,11 +30,33 @@ export const customizationsApi = {
   },
 
   async saveDraft(id: number | null, payload: Record<string, any>) {
-    if (id) {
-      const resp = await axiosAdminClient.put(`/admin/customizations/${id}`, payload)
+    // Prefer server-side draft saving, but gracefully fallback to localStorage when backend is unavailable.
+    try {
+      if (id) {
+        const resp = await axiosAdminClient.put(`/admin/customizations/${id}`, payload)
+        return resp.data
+      }
+      const resp = await axiosAdminClient.post('/admin/customizations/drafts', payload)
       return resp.data
+    } catch (err: any) {
+      // Fallback: save draft to localStorage and return a pseudo-response so UI can continue working offline
+      try {
+        const key = 'local_customization_drafts'
+        const existingJson = localStorage.getItem(key)
+        const existing = existingJson ? JSON.parse(existingJson) : []
+        const draft = {
+          id: Date.now(),
+          ...payload,
+          _local: true,
+          created_at: new Date().toISOString(),
+        }
+        existing.push(draft)
+        localStorage.setItem(key, JSON.stringify(existing))
+        return { data: draft }
+      } catch (storageErr) {
+        // If even localStorage fails, rethrow original error
+        throw err
+      }
     }
-    const resp = await axiosAdminClient.post('/admin/customizations/drafts', payload)
-    return resp.data
   },
 }
