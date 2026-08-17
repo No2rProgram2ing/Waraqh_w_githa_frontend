@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import { CustomizationPriceSummary } from '../components/CustomizationPriceSummary'
 import { CustomizationImageUploader } from '../components/CustomizationImageUploader'
-import { useEstimateCustomization, useCreateCustomization } from '../hooks/useCustomizations'
+import { useEstimateCustomization, useCreateCustomization, useSaveDraft } from '../hooks/useCustomizations'
 
 export default function CustomizationForm() {
   const [form, setForm] = useState({
@@ -22,14 +24,17 @@ export default function CustomizationForm() {
 
   const estimateMutation = useEstimateCustomization(form)
   const createMutation = useCreateCustomization()
+  const saveDraftMutation = useSaveDraft(null)
 
   const runEstimate = async () => {
     try {
       const payload = { ...form }
       const res = await estimateMutation.mutateAsync(payload)
       setEstimate(res)
+      toast.success('تم حساب السعر بنجاح')
     } catch (err) {
       console.error('Estimate error', err)
+      toast.error('حدث خطأ أثناء حساب السعر')
     }
   }
 
@@ -50,15 +55,40 @@ export default function CustomizationForm() {
 
     try {
       await createMutation.mutateAsync(fd)
-      alert('تم إنشاء طلب التخصيص')
+      toast.success('تم إنشاء طلب التخصيص')
     } catch (err) {
       console.error(err)
-      alert('حدث خطأ أثناء إنشاء الطلب')
+      toast.error('حدث خطأ أثناء إنشاء الطلب')
+    }
+  }
+
+  const saveDraft = async () => {
+    try {
+      const payload: Record<string, any> = {
+        customer_name: form.customer_name,
+        customer_phone: form.customer_phone,
+        address: form.address,
+        product_id: form.product_id,
+        quantity: form.quantity,
+        base_price: form.base_price,
+        customization_fee: form.customization_fee,
+        shipping: form.shipping,
+        color: form.color,
+        notes: form.notes,
+        // attachments are not uploaded for draft in this implementation; we store filenames client-side
+        attachments: attachments.map((f) => f.name),
+      }
+
+      await saveDraftMutation.mutateAsync(payload)
+      toast.success('تم حفظ المسودة بنجاح')
+    } catch (err) {
+      console.error('Save draft error', err)
+      toast.error('فشل حفظ المسودة')
     }
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <motion.div dir="rtl" className="grid grid-cols-1 gap-6 lg:grid-cols-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
       <div className="col-span-2 space-y-4">
         <div className="rounded-2xl border bg-white p-6">
           <h2 className="text-lg font-semibold text-right">إضافة طلب تخصيص جديد</h2>
@@ -85,8 +115,9 @@ export default function CustomizationForm() {
             </div>
 
             <div className="flex items-center gap-3 mt-4">
-              <button onClick={runEstimate} className="rounded-md bg-[#3b6a2b] px-4 py-2 text-white">احسب السعر</button>
-              <button onClick={submit} className="rounded-md border px-4 py-2">إرسال طلب التخصيص</button>
+              <button onClick={runEstimate} className="rounded-md bg-[#3b6a2b] px-4 py-2 text-white hover:opacity-95 transition">احسب السعر</button>
+              <button onClick={submit} className="rounded-md border px-4 py-2 hover:bg-gray-50 transition">إرسال طلب التخصيص</button>
+              <button onClick={saveDraft} className="rounded-md bg-[#f3f4f6] px-4 py-2 text-sm text-[#374151] hover:opacity-95 transition">حفظ كمسودة</button>
             </div>
           </div>
         </div>
@@ -95,6 +126,6 @@ export default function CustomizationForm() {
       <aside>
         <CustomizationPriceSummary estimate={estimate} />
       </aside>
-    </div>
+    </motion.div>
   )
 }
