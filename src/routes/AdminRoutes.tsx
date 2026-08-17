@@ -19,6 +19,20 @@ import AdminUsersPage from '@/features/admin-users/pages/AdminUsersPage'
 import ProfilePage from '@/features/settings/pages/ProfilePage'
 import SettingsPage from '@/features/settings/pages/SettingsPage'
 
+// Operations pages
+import DashboardPage from '@/features/operations/pages/DashboardPage'
+import OrdersPage from '@/features/operations/pages/OrdersPage'
+import CreateOrderPage from '@/features/operations/pages/CreateOrderPage'
+import OrderDetailsPage from '@/features/operations/pages/OrderDetailsPage'
+import CustomOrdersPage from '@/features/operations/pages/CustomOrdersPage'
+import CustomizationsPage from '@/features/operations/pages/CustomizationsPage'
+import FreeDesignRequestsPage from '@/features/operations/pages/FreeDesignRequestsPage'
+import ProductionPage from '@/features/operations/pages/ProductionPage'
+import PaymentsPage from '@/features/operations/pages/PaymentsPage'
+import NotificationsPage from '@/features/operations/pages/NotificationsPage'
+import InventoryPage from '@/features/operations/pages/InventoryPage'
+import ReportsPage from '@/features/operations/pages/ReportsPage'
+
 export function AdminRoutes() {
   return (
     <Routes>
@@ -26,7 +40,23 @@ export function AdminRoutes() {
 
       <Route element={<AdminProtectedRoute />}>
         <Route element={<AdminLayout />}>
-          <Route index element={<Navigate to="products" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+
+          {/* Operations */}
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/create" element={<CreateOrderPage />} />
+          <Route path="orders/:orderId" element={<OrderDetailsPage />} />
+          <Route path="custom-orders" element={<CustomOrdersPage />} />
+          <Route path="customizations" element={<CustomizationsPage />} />
+          <Route path="free-design-requests" element={<FreeDesignRequestsPage />} />
+          <Route path="production-stages" element={<ProductionPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="raw-materials" element={<InventoryPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+
+          {/* Existing routes */}
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productId" element={<ProductDetailsPage />} />
           <Route path="products/:productId/edit" element={<ProductEditPage />} />
