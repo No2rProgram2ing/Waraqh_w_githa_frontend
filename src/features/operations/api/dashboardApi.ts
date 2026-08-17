@@ -3,8 +3,25 @@ import type { DashboardStats, DashboardOrder, FeaturedProduct } from '../types/d
 
 export const dashboardApi = {
   async getStats(): Promise<DashboardStats> {
-    const response = await axiosAdminClient.get('/admin/orders-statistics')
-    return response.data
+    // Prefer a dedicated dashboard endpoint if available
+    try {
+      const response = await axiosAdminClient.get('/admin/dashboard/statistics')
+      return response.data.data ?? response.data
+    } catch (err: any) {
+      // Fallback to orders-statistics if dashboard endpoint not available
+      if (err?.response?.status === 404 || err?.response?.status === 400) {
+        const resp = await axiosAdminClient.get('/admin/orders-statistics')
+        const stats = resp.data ?? {}
+        return {
+          total_orders: stats.total_orders ?? 0,
+          pending: stats.pending ?? 0,
+          production: stats.production ?? 0,
+          completed: stats.completed ?? 0,
+        }
+      }
+
+      throw err
+    }
   },
 
   async getLatestOrders(per_page = 5): Promise<DashboardOrder[]> {
@@ -20,6 +37,7 @@ export const dashboardApi = {
       price: p.price,
       image: p.media && p.media.length ? p.media[0].url : undefined,
     }))
+
     return products as FeaturedProduct[]
   },
 }

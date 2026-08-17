@@ -4,12 +4,12 @@ import { useDashboardStats, useLatestOrders, useFeaturedProducts } from '../hook
 import { DashboardKpiCard } from '../components/DashboardKpiCard'
 import { DashboardSalesChart } from '../components/DashboardSalesChart'
 import { LatestOrders } from '../components/LatestOrders'
-import { FeaturedProducts } from '../components/FeaturedProducts'
+import { FeaturedProductsCarousel } from '../components/FeaturedProductsCarousel'
 
 export default function DashboardPage() {
-  const { data: stats } = useDashboardStats()
-  const { data: orders } = useLatestOrders(5)
-  const { data: products } = useFeaturedProducts(6)
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
+  const { data: orders, isLoading: ordersLoading } = useLatestOrders(5)
+  const { data: products, isLoading: productsLoading } = useFeaturedProducts(6)
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -19,9 +19,9 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <DashboardKpiCard title="إجمالي المبيعات" value={stats?.total_revenue ?? '---'} subtitle={stats ? undefined : 'يتطلب endpoint من الباك لإجمالي الإيرادات'} />
-          <DashboardKpiCard title="الطلبات الجديدة" value={stats?.pending ?? '---'} />
-          <DashboardKpiCard title="طلبات قيد التصنيع" value={stats?.production ?? '---'} />
+          <DashboardKpiCard title="إجمالي المبيعات" value={statsLoading ? '...' : stats?.total_revenue ? `${Number(stats.total_revenue).toLocaleString('ar-SA')} ر.س` : '---'} subtitle={stats ? undefined : 'يتطلب endpoint من الباك لإجمالي الإيرادات'} percent={stats ? undefined as any : null} />
+          <DashboardKpiCard title="الطلبات الجديدة" value={statsLoading ? '...' : stats?.pending ?? '---'} />
+          <DashboardKpiCard title="طلبات قيد التصنيع" value={statsLoading ? '...' : stats?.production ?? '---'} />
           <DashboardKpiCard title="بانتظار موافقة الجودة" value={0} subtitle={"معلومة غير متوفرة حالياً"} />
         </div>
 
@@ -37,7 +37,7 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-lg font-bold text-right">المنتجات المميزة</h2>
               <div className="mt-3">
-                <FeaturedProducts products={products} />
+                <FeaturedProductsCarousel products={products} />
               </div>
             </div>
           </div>
