@@ -19,3 +19,13 @@ export const customizationsKeys = {
   create: ['admin', 'customizations', 'create'] as const,
   drafts: (params = {}) => ['admin', 'customizations', 'drafts', params] as const,
 }
+
+export const qualityKeys = {
+  list: (params = {}) => ['admin', 'quality-reviews', params] as const,
+  detail: (id: string | number) => ['admin', 'quality-reviews', 'detail', id] as const,
+}
+
+export const inventoryKeys = {
+  materials: (params = {}) => ['admin', 'inventory', 'materials', params] as const,
+  movements: (params = {}) => ['admin', 'inventory', 'movements', params] as const,
+}
