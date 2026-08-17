@@ -1,0 +1,19 @@
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { reportsApi } from '../api/reportsApi'
+import { reportsKeys } from './keys'
+
+export function useReports(params: Record<string, any> = {}){
+  return useQuery({
+    queryKey: reportsKeys.list(params),
+    queryFn: () => reportsApi.fetch(params),
+    staleTime: 60 * 1000,
+    keepPreviousData: true,
+  })
+}
+
+export function useExportReport(){
+  return useMutation(({ params, type }: { params?: Record<string, any>; type: 'csv' | 'pdf' }) => {
+    if (type === 'pdf') return reportsApi.exportPdf(params)
+    return reportsApi.exportCsv(params)
+  })
+}
