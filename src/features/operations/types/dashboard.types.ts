@@ -1,9 +1,16 @@
+export interface SalesPoint {
+  date: string
+  revenue: number
+  orders_count?: number
+}
+
 export interface DashboardStats {
   total_orders: number
   pending: number
   production: number
   completed: number
   total_revenue?: number
+  sales_timeseries?: SalesPoint[]
 }
 
 export interface DashboardOrderCustomer {
