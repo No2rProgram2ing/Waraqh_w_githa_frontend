@@ -7,3 +7,8 @@ export const dashboardKeys = {
 export const ordersKeys = {
   all: (params = {}) => ['admin', 'orders', params] as const,
 }
+
+export const paymentsKeys = {
+  list: (params = {}) => ['admin', 'payments', params] as const,
+  detail: (id: string | number) => ['admin', 'payments', 'detail', id] as const,
+}
