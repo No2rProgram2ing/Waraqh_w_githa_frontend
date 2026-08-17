@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Helmet } from 'react-helmet'
 import { useReturns, useCreateReturn } from '../hooks/useReturns'
 import { ReturnsTable } from '../components/ReturnsTable'
+import { ReturnDetailsDrawer } from '../components/ReturnDetailsDrawer'
 
 export default function ReturnsPage(){
   const [params] = useState({ per_page: 20 })
@@ -11,6 +12,7 @@ export default function ReturnsPage(){
 
   const [form, setForm] = useState({ order_number: '', customer_name: '', reason: '' })
   const [attachments, setAttachments] = useState<File[]>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const submit = async () => {
     const fd = new FormData()
@@ -37,7 +39,7 @@ export default function ReturnsPage(){
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="col-span-2">
-          <ReturnsTable returnsList={returnsList} onOpen={(id) => { /* open drawer in future */ }} />
+          <ReturnsTable returnsList={returnsList} onOpen={(id) => setSelectedId(id)} />
         </div>
 
         <aside className="space-y-4">
@@ -53,6 +55,8 @@ export default function ReturnsPage(){
           </div>
         </aside>
       </div>
+
+      {selectedId && <ReturnDetailsDrawer id={selectedId} onClose={() => setSelectedId(null)} />}
     </div>
   )
 }
