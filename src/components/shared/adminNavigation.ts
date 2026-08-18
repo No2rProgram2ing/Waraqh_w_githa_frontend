@@ -99,7 +99,7 @@ export const adminNavigation: AdminNavigationSection[] = [
       },
       {
         label: 'فئات المنتجات',
-        path: '/admin/categories',
+        path: '/admin/product-categories',
         icon: FolderTree,
       },
       {

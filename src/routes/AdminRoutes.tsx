@@ -30,7 +30,7 @@ export function AdminRoutes() {
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productId" element={<ProductDetailsPage />} />
           <Route path="products/:productId/edit" element={<ProductEditPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="product-categories" element={<CategoriesPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="activity-logs" element={<ActivityLogsPage />} />
           <Route path="design" element={<DesignPage />} />
@@ -44,7 +44,7 @@ export function AdminRoutes() {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="login" replace />} />
+      <Route path="*" element={<Navigate to="/admin/login" replace />} />
     </Routes>
   )
 }

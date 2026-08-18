@@ -166,7 +166,7 @@ export default function ProductFormModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                السعر ({getCurrencyLabel(currencyCode)}) *
+                السعر (ريال يمني - الطبعة القديمة) 
               </label>
               <input
                 required

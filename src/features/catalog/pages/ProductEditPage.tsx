@@ -225,7 +225,7 @@
                     htmlFor="product-price"
                     className="text-sm font-medium text-[var(--color-text-secondary)]"
                 >
-                    السعر
+                السعر (ريال يمني - الطبعة القديمة) 
                 </label>
 
                 <input
