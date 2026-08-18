@@ -10,20 +10,26 @@ export interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: "bg-emerald-100/90 text-emerald-800 border-emerald-200",
-  warning: "bg-amber-100/90 text-amber-900 border-amber-200",
-  info: "bg-sky-100/90 text-sky-800 border-sky-200",
-  neutral: "bg-stone-200/80 text-stone-700 border-stone-300",
-  danger: "bg-red-100/90 text-red-800 border-red-200",
+  success:
+    "border-[var(--color-success)]/30 bg-[var(--color-success-subtle)] text-[var(--color-success)]",
+  warning:
+    "border-[var(--color-warning)]/30 bg-[var(--color-warning-subtle)] text-[var(--color-warning)]",
+  info:
+    "border-[var(--color-info)]/30 bg-[var(--color-info-subtle)] text-[var(--color-info)]",
+  neutral:
+    "border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-text-secondary)]",
+  danger:
+    "border-[var(--color-danger)]/30 bg-[var(--color-danger-subtle)] text-[var(--color-danger)]",
 };
 
 export function Badge({ variant = "neutral", children, className }: BadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-xs transition-all duration-200",
+        "inline-flex items-center rounded-full border px-3 py-1",
+        "text-xs font-semibold transition-colors duration-200",
         variantStyles[variant],
-        className
+        className,
       )}
     >
       {children}

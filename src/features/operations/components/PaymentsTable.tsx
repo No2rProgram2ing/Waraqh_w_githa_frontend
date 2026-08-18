@@ -1,53 +1,103 @@
 import type { Payment } from '../types/payments.types'
+import { Badge, type BadgeVariant } from '@/components/ui/Badge'
+import { TableShell } from '@/components/shared/TableShell'
 
-function statusClass(status: Payment['status']) {
+function getPaymentStatusVariant(status: Payment['status']): BadgeVariant {
   switch (status) {
     case 'success':
-      return 'bg-emerald-100 text-emerald-700'
+      return 'success'
     case 'pending':
-      return 'bg-amber-100 text-amber-700'
+      return 'warning'
     case 'failed':
-      return 'bg-red-100 text-red-700'
+      return 'danger'
     case 'refunded':
-      return 'bg-slate-100 text-slate-700'
+      return 'neutral'
     default:
-      return 'bg-gray-100 text-gray-700'
+      return 'info'
   }
 }
 
-export function PaymentsTable({ payments, onOpenDetails }: { payments: Payment[]; onOpenDetails: (id: number) => void }) {
+export function PaymentsTable({
+  payments,
+  onOpenDetails,
+}: {
+  payments: Payment[]
+  onOpenDetails: (id: number) => void
+}) {
   return (
-    <div className="rounded-2xl border bg-white p-4">
-      <table className="w-full text-right">
-        <thead>
-          <tr className="text-sm text-[#6d6d6d]">
-            <th className="p-3">رقم الطلب</th>
-            <th>اسم العميل</th>
-            <th>طريقة الدفع</th>
-            <th>المبلغ</th>
-            <th>الحالة</th>
-            <th>تاريخ الدفع</th>
-            <th>تفاصيل</th>
+    <TableShell minWidth="900px">
+      <thead className="bg-[var(--color-surface)]">
+        <tr className="border-b border-[var(--color-border)]">
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            رقم الطلب
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            اسم العميل
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            طريقة الدفع
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            المبلغ
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            الحالة
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            تاريخ الدفع
+          </th>
+          <th className="px-5 py-4 text-sm font-semibold text-[var(--color-text-secondary)]">
+            تفاصيل
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {payments.map((payment) => (
+          <tr
+            key={payment.id}
+            className="border-b border-[var(--color-border)] last:border-b-0 transition-colors hover:bg-[var(--color-surface-subtle)]"
+          >
+            <td className="px-5 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
+              {payment.order_number}
+            </td>
+
+            <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
+              {payment.customer_name}
+            </td>
+
+            <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
+              {payment.method}
+            </td>
+
+            <td className="px-5 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
+              {payment.amount.toLocaleString('ar-SA')} ر.س
+            </td>
+
+            <td className="px-5 py-4">
+              <Badge variant={getPaymentStatusVariant(payment.status)}>
+                {payment.status}
+              </Badge>
+            </td>
+
+            <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
+              {payment.paid_at
+                ? new Date(payment.paid_at).toLocaleString('ar-SA')
+                : '—'}
+            </td>
+
+            <td className="px-5 py-4">
+              <button
+                type="button"
+                onClick={() => onOpenDetails(payment.id)}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent-subtle)] hover:text-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              >
+                عرض
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {payments.map((p) => (
-            <tr key={p.id} className="border-t">
-              <td className="p-3 text-sm font-semibold">{p.order_number}</td>
-              <td className="p-3 text-sm">{p.customer_name}</td>
-              <td className="p-3 text-sm">{p.method}</td>
-              <td className="p-3 text-sm">{p.amount.toLocaleString('ar-SA')} ر.س</td>
-              <td className="p-3 text-sm">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs ${statusClass(p.status)}`}>{p.status}</span>
-              </td>
-              <td className="p-3 text-sm">{p.paid_at ? new Date(p.paid_at).toLocaleString('ar-SA') : '-'}</td>
-              <td className="p-3 text-sm">
-                <button onClick={() => onOpenDetails(p.id)} className="text-sm text-[#2563eb]">عرض</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </TableShell>
   )
 }

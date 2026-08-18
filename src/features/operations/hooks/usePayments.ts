@@ -19,7 +19,14 @@ export function usePayments(params: Record<string, unknown> = {}) {
 export function usePayment(id?: number | null) {
   return useQuery({
     queryKey: paymentsKeys.detail(id ?? 'null'),
-    queryFn: () => paymentsApi.getById(id as number),
+    queryFn: async () => {
+      if (id == null) {
+        return null
+      }
+
+      const response = await paymentsApi.getById(id)
+      return response.data
+    },
     enabled: id != null,
     staleTime: 5 * 60 * 1000,
   })

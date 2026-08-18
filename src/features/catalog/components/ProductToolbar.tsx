@@ -26,7 +26,7 @@ function ProductToolbar({
           value={searchValue}
           onChange={(event) => onSearchChange?.(event.target.value)}
           placeholder="البحث عن منتج..."
-          className="w-64 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[#45592D]"
+          className="w-64 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent-subtle)]"
           aria-label="البحث عن منتج"
         />
       </div>

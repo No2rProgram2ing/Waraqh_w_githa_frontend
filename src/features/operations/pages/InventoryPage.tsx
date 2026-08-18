@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { useMaterials, useMovements, useAdjustStock } from '../hooks/useInventory'
+import { useMaterials } from '../hooks/useInventory'
 import { InventoryTable } from '../components/InventoryTable'
 import { InventoryForm } from '../components/InventoryForm'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { Button } from '@/components/ui/Button'
 
-export default function InventoryPage(){
+export default function InventoryPage() {
   const [params] = useState({ per_page: 50 })
   const { data: matData, refetch } = useMaterials(params)
   const materials = matData?.data ?? []
@@ -12,14 +14,18 @@ export default function InventoryPage(){
 
   return (
     <div dir="rtl" className="space-y-6">
-      <Helmet><title>المخزون — لوحة الإدارة</title></Helmet>
+      <Helmet>
+        <title>المخزون — لوحة الإدارة</title>
+      </Helmet>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">المخزون والمواد الخام</h1>
-        <div>
-          <button onClick={() => setEditing(null)} className="rounded-md bg-[#3b6a2b] px-3 py-2 text-white">إضافة مادة جديدة</button>
-        </div>
-      </div>
+      <PageHeader
+        title="المخزون والمواد الخام"
+        action={
+          <Button onClick={() => setEditing(null)}>
+            إضافة مادة جديدة
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="col-span-2">
@@ -27,7 +33,10 @@ export default function InventoryPage(){
         </div>
 
         <aside>
-          <InventoryForm material={editing} onSaved={() => refetch()} />
+          <InventoryForm
+            material={editing}
+            onSaved={() => refetch()}
+          />
         </aside>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { Customer } from '../types/customer'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TableShell } from '@/components/shared/TableShell'
 
 interface CustomersTableProps {
     customers: Customer[]
@@ -18,16 +20,11 @@ function formatDate(iso: string): string {
 
 export default function CustomersTable({ customers, onEdit, onDelete }: CustomersTableProps) {
     if (!customers.length) {
-        return (
-            <div className="text-center py-16 text-[var(--color-text-muted)] text-sm bg-[var(--color-surface)] rounded-2xl border border-dashed border-[var(--color-border-muted)]">
-                لا يوجد عملاء.
-            </div>
-        )
+        return <EmptyState>لا يوجد عملاء.</EmptyState>
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]" dir="rtl">
-            <table className="w-full text-sm">
+        <TableShell>
                 <thead>
                     <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-right">
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)]">الاسم</th>
@@ -105,7 +102,6 @@ export default function CustomersTable({ customers, onEdit, onDelete }: Customer
                         )
                     })}
                 </tbody>
-            </table>
-        </div>
+        </TableShell>
     )
 }

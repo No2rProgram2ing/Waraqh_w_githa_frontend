@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useFreeDesigns, useAssignFreeDesign } from '../hooks/useFreeDesigns'
 import { FreeDesignList } from '../components/FreeDesignList'
-export default function FreeDesignsPage(){
+import { PageHeader } from '@/components/shared/PageHeader'
+
+export default function FreeDesignsPage() {
   const [params] = useState({ per_page: 30 })
   const { data } = useFreeDesigns(params)
   const items = data?.data ?? []
@@ -11,8 +13,12 @@ export default function FreeDesignsPage(){
   const assign = async (id: number) => {
     const assignee = prompt('أدخل اسم الموظف لتعيينه:')
     if (!assignee) return
+
     try {
-      await assignMutation.mutateAsync({ id, payload: { assignee, status: 'assigned' } })
+      await assignMutation.mutateAsync({
+        id,
+        payload: { assignee, status: 'assigned' },
+      })
       alert('تم التعيين')
     } catch (err) {
       console.error(err)
@@ -22,13 +28,13 @@ export default function FreeDesignsPage(){
 
   return (
     <div dir="rtl" className="space-y-6">
-      <Helmet><title>طلبات التصميم الحر — لوحة الإدارة</title></Helmet>
+      <Helmet>
+        <title>طلبات التصميم الحر — لوحة الإدارة</title>
+      </Helmet>
 
-      <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">طلبات التصميم الحر</h1></div>
+      <PageHeader title="طلبات التصميم الحر" />
 
-      <div>
-        <FreeDesignList items={items} onAssign={assign} />
-      </div>
+      <FreeDesignList items={items} onAssign={assign} />
     </div>
   )
 }

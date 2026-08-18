@@ -1,28 +1,58 @@
-import React from 'react'
-import type { CustomizationEstimate } from '../types/customizations.types'
 import { motion } from 'framer-motion'
+import type { CustomizationEstimate } from '../types/customizations.types'
 
-export function CustomizationPriceSummary({ estimate }: { estimate?: CustomizationEstimate | null }) {
-  if (!estimate) {
-    return (
-      <motion.div className="rounded-2xl bg-[#24321d] p-4 text-white" initial={{ scale: 0.98 }} animate={{ scale: 1 }} transition={{ duration: 0.2 }}>
-        <div className="text-sm">ملخّص تقدير السعر</div>
-        <div className="mt-3 text-lg font-bold">0 ر.س</div>
-        <div className="mt-2 text-xs opacity-80">سعر المنتج الأساسي + رسوم التخصيص + الشحن</div>
-      </motion.div>
-    )
-  }
+export function CustomizationPriceSummary({
+  estimate,
+}: {
+  estimate?: CustomizationEstimate | null
+}) {
+  const hasEstimate = Boolean(estimate)
 
   return (
-    <motion.div className="rounded-2xl bg-[#24321d] p-4 text-white" initial={{ scale: 0.98 }} animate={{ scale: 1 }} transition={{ duration: 0.2 }}>
-      <div className="text-sm">ملخّص تقدير السعر</div>
-      <div className="mt-3 text-lg font-bold">{Number(estimate.total).toLocaleString('ar-SA')} ر.س</div>
-
-      <div className="mt-3 text-xs">
-        <div className="flex justify-between"><span>سعر المنتج الأساسي</span><span>{Number(estimate.base_price).toLocaleString('ar-SA')} ر.س</span></div>
-        <div className="flex justify-between"><span>رسوم التخصيص</span><span>{Number(estimate.customization_fee).toLocaleString('ar-SA')} ر.س</span></div>
-        <div className="flex justify-between"><span>الشحن والتكاليف الأخرى</span><span>{Number(estimate.shipping).toLocaleString('ar-SA')} ر.س</span></div>
+    <motion.div
+      className="rounded-2xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)] p-5 text-white shadow-sm"
+      initial={{ scale: 0.98 }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="text-sm font-medium opacity-90">
+        ملخّص تقدير السعر
       </div>
+
+      <div className="mt-3 text-2xl font-bold">
+        {hasEstimate
+          ? `${Number(estimate?.total).toLocaleString('ar-SA')} ر.س`
+          : '0 ر.س'}
+      </div>
+
+      {!hasEstimate ? (
+        <p className="mt-2 text-xs opacity-80">
+          سعر المنتج الأساسي + رسوم التخصيص + الشحن
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3 border-t border-white/15 pt-4 text-xs">
+          <div className="flex items-center justify-between gap-4">
+            <span className="opacity-80">سعر المنتج الأساسي</span>
+            <span className="font-semibold">
+              {Number(estimate.base_price).toLocaleString('ar-SA')} ر.س
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="opacity-80">رسوم التخصيص</span>
+            <span className="font-semibold">
+              {Number(estimate.customization_fee).toLocaleString('ar-SA')} ر.س
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <span className="opacity-80">الشحن والتكاليف الأخرى</span>
+            <span className="font-semibold">
+              {Number(estimate.shipping).toLocaleString('ar-SA')} ر.س
+            </span>
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }

@@ -1,11 +1,16 @@
 import { Helmet } from 'react-helmet-async'
 import { InventoryMovements } from '../components/InventoryMovements'
+import { PageHeader } from '@/components/shared/PageHeader'
 
-export default function InventoryMovementsPage(){
+export default function InventoryMovementsPage() {
   return (
     <div dir="rtl" className="space-y-6">
-      <Helmet><title>حركات المخزون — لوحة الإدارة</title></Helmet>
-      <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">حركات المخزون</h1></div>
+      <Helmet>
+        <title>حركات المخزون — لوحة الإدارة</title>
+      </Helmet>
+
+      <PageHeader title="حركات المخزون" />
+
       <InventoryMovements />
     </div>
   )

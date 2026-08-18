@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { CustomizationPriceSummary } from '../components/CustomizationPriceSummary'
 import { CustomizationImageUploader } from '../components/CustomizationImageUploader'
-import { useEstimateCustomization, useCreateCustomization, useSaveDraft } from '../hooks/useCustomizations'
+import {
+  useEstimateCustomization,
+  useCreateCustomization,
+  useSaveDraft,
+} from '../hooks/useCustomizations'
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 export default function CustomizationForm() {
   const [form, setForm] = useState({
@@ -40,6 +47,7 @@ export default function CustomizationForm() {
 
   const submit = async () => {
     const fd = new FormData()
+
     fd.append('customer_name', form.customer_name)
     fd.append('customer_phone', form.customer_phone)
     fd.append('address', form.address)
@@ -51,7 +59,9 @@ export default function CustomizationForm() {
     fd.append('customization_fee', String(form.customization_fee))
     fd.append('shipping', String(form.shipping))
 
-    attachments.forEach((f) => fd.append('attachments[]', f))
+    attachments.forEach((file) => {
+      fd.append('attachments[]', file)
+    })
 
     try {
       await createMutation.mutateAsync(fd)
@@ -75,8 +85,7 @@ export default function CustomizationForm() {
         shipping: form.shipping,
         color: form.color,
         notes: form.notes,
-        // attachments are not uploaded for draft in this implementation; we store filenames client-side
-        attachments: attachments.map((f) => f.name),
+        attachments: attachments.map((file) => file.name),
       }
 
       await saveDraftMutation.mutateAsync(payload)
@@ -88,39 +97,163 @@ export default function CustomizationForm() {
   }
 
   return (
-    <motion.div dir="rtl" className="grid grid-cols-1 gap-6 lg:grid-cols-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
-      <div className="col-span-2 space-y-4">
-        <div className="rounded-2xl border bg-white p-6">
-          <h2 className="text-lg font-semibold text-right">إضافة طلب تخصيص جديد</h2>
+    <motion.div
+      dir="rtl"
+      className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28 }}
+    >
+      <div className="col-span-2">
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            إضافة طلب تخصيص جديد
+          </h2>
 
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            <input className="w-full rounded-md border p-3" placeholder="اسم العميل" value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
-            <input className="w-full rounded-md border p-3" placeholder="هاتف العميل" value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
-            <input className="w-full rounded-md border p-3" placeholder="عنوان التوصيل" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <div className="mt-5 space-y-4">
+            <Input
+              label="اسم العميل"
+              value={form.customer_name}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  customer_name: event.target.value,
+                })
+              }
+            />
 
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" className="rounded-md border p-3" placeholder="الكمية" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-              <input type="number" className="rounded-md border p-3" placeholder="سعر المنتج الأساسي" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: Number(e.target.value) })} />
+            <Input
+              label="هاتف العميل"
+              value={form.customer_phone}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  customer_phone: event.target.value,
+                })
+              }
+            />
+
+            <Input
+              label="عنوان التوصيل"
+              value={form.address}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  address: event.target.value,
+                })
+              }
+            />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
+                type="number"
+                label="الكمية"
+                value={form.quantity}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    quantity: Number(event.target.value),
+                  })
+                }
+              />
+
+              <Input
+                type="number"
+                label="سعر المنتج الأساسي"
+                value={form.base_price}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    base_price: Number(event.target.value),
+                  })
+                }
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" className="rounded-md border p-3" placeholder="رسوم التخصيص" value={form.customization_fee} onChange={(e) => setForm({ ...form, customization_fee: Number(e.target.value) })} />
-              <input type="number" className="rounded-md border p-3" placeholder="الشحن" value={form.shipping} onChange={(e) => setForm({ ...form, shipping: Number(e.target.value) })} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
+                type="number"
+                label="رسوم التخصيص"
+                value={form.customization_fee}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    customization_fee: Number(event.target.value),
+                  })
+                }
+              />
+
+              <Input
+                type="number"
+                label="الشحن"
+                value={form.shipping}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    shipping: Number(event.target.value),
+                  })
+                }
+              />
             </div>
 
-            <textarea className="w-full rounded-md border p-3" placeholder="ملاحظات إضافية" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            <div>
+              <label
+                htmlFor="customization-notes"
+                className="mb-2 block text-sm font-medium text-[var(--color-text-primary)]"
+              >
+                ملاحظات إضافية
+              </label>
 
-            <div className="mt-2">
-              <CustomizationImageUploader onChange={(files) => setAttachments(files)} />
+              <textarea
+                id="customization-notes"
+                value={form.notes}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    notes: event.target.value,
+                  })
+                }
+                rows={4}
+                className="w-full resize-y rounded-[var(--radius-field)] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-4 py-3.5 text-[15px] text-[var(--color-text-primary)] outline-none transition-colors placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-accent)] focus:bg-[var(--color-surface-card)] focus:ring-2 focus:ring-[var(--color-accent-subtle)]"
+                placeholder="ملاحظات إضافية"
+              />
             </div>
 
-            <div className="flex items-center gap-3 mt-4">
-              <button onClick={runEstimate} className="rounded-md bg-[#3b6a2b] px-4 py-2 text-white hover:opacity-95 transition">احسب السعر</button>
-              <button onClick={submit} className="rounded-md border px-4 py-2 hover:bg-gray-50 transition">إرسال طلب التخصيص</button>
-              <button onClick={saveDraft} className="rounded-md bg-[#f3f4f6] px-4 py-2 text-sm text-[#374151] hover:opacity-95 transition">حفظ كمسودة</button>
+            <div>
+              <CustomizationImageUploader
+                onChange={(files) => setAttachments(files)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
+              <Button
+                type="button"
+                onClick={runEstimate}
+                isLoading={estimateMutation.isPending}
+              >
+                احسب السعر
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={submit}
+                isLoading={createMutation.isPending}
+              >
+                إرسال طلب التخصيص
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={saveDraft}
+                isLoading={saveDraftMutation.isPending}
+              >
+                حفظ كمسودة
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       <aside>

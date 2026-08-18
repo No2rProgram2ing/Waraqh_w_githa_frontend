@@ -6,7 +6,6 @@ export function useOrders(params: Record<string, any> = {}) {
   return useQuery({
     queryKey: ordersKeys.all(params),
     queryFn: () => ordersApi.list(params),
-    keepPreviousData: true,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
   })

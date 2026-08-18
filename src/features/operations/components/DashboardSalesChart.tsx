@@ -1,6 +1,8 @@
-import  { useMemo } from 'react'
+import { useMemo } from 'react'
 import ReactApexChart from 'react-apexcharts'
 import type { DashboardStats } from '../types/dashboard.types'
+import { Card } from '@/components/ui/Card'
+import { EmptyState } from '@/components/shared/EmptyState'
 
 interface Props {
   data?: DashboardStats | null
@@ -31,6 +33,7 @@ export function DashboardSalesChart({ data }: Props) {
         toolbar: { show: false },
         zoom: { enabled: false },
         animations: { enabled: true },
+        background: 'transparent',
       },
       stroke: {
         curve: 'smooth' as const,
@@ -40,26 +43,46 @@ export function DashboardSalesChart({ data }: Props) {
         categories,
         labels: {
           rotate: -45,
+          style: {
+            colors: 'var(--color-text-muted)',
+          },
+        },
+        axisBorder: {
+          color: 'var(--color-border)',
+        },
+        axisTicks: {
+          color: 'var(--color-border)',
         },
       },
       yaxis: {
         labels: {
+          style: {
+            colors: 'var(--color-text-muted)',
+          },
           formatter: (value: number) =>
             value.toLocaleString('ar-SA'),
         },
       },
       tooltip: {
+        theme: 'auto',
         y: {
           formatter: (value: number) =>
             `${value.toLocaleString('ar-SA')} ر.س`,
         },
       },
-      colors: ['#6B8E23'],
+      colors: ['var(--color-accent)'],
       grid: {
-        borderColor: '#ebe8e1',
+        borderColor: 'var(--color-border)',
       },
       dataLabels: {
         enabled: false,
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          opacityFrom: 0.25,
+          opacityTo: 0.02,
+        },
       },
     }),
     [categories],
@@ -67,36 +90,36 @@ export function DashboardSalesChart({ data }: Props) {
 
   if (timeseries.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#e6e2d8] bg-[#f8f6f1] p-6 text-center">
-        <div className="mb-2 text-lg font-semibold">
-          أداء المبيعات للمنتجات الحرفية — آخر 30 يوم
-        </div>
+      <EmptyState className="min-h-[260px] flex-col gap-2">
+        <p className="text-lg font-semibold text-[var(--color-text-primary)]">
+          أداء المبيعات للمنتجات الحرفية
+        </p>
 
-        <p className="text-sm text-[#6d6d6d]">
+        <p className="text-sm text-[var(--color-text-muted)]">
           لا توجد بيانات زمنية كافية لعرض المخطط.
           يرجى تزويد الخدمة ببيانات المبيعات اليومية.
         </p>
-      </div>
+      </EmptyState>
     )
   }
 
   const revenues = timeseries.map((point) => point.revenue)
 
   return (
-    <div className="rounded-2xl border border-[#e6e2d8] bg-[#f8f6f1] p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <Card className="p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             أداء المبيعات للمنتجات الحرفية
           </h3>
 
-          <p className="text-sm text-[#6d6d6d]">
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             آخر {timeseries.length} يوم
           </p>
         </div>
 
         <div className="text-right">
-          <div className="text-xl font-extrabold text-[#1e241d]">
+          <div className="text-xl font-extrabold text-[var(--color-text-primary)]">
             {data?.total_revenue
               ? `${Number(data.total_revenue).toLocaleString('ar-SA')} ر.س`
               : ''}
@@ -104,16 +127,14 @@ export function DashboardSalesChart({ data }: Props) {
         </div>
       </div>
 
-      <div>
-        <ReactApexChart
-          options={options}
-          series={seriesData}
-          type="area"
-          height={260}
-        />
-      </div>
+      <ReactApexChart
+        options={options}
+        series={seriesData}
+        type="area"
+        height={260}
+      />
 
-      <div className="mt-3 grid grid-cols-3 gap-3 text-sm text-[#6d6d6d]">
+      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-[var(--color-text-secondary)] sm:grid-cols-3">
         <div className="text-center">
           نقطة عالية:{' '}
           {Math.max(...revenues).toLocaleString('ar-SA')} ر.س
@@ -132,6 +153,6 @@ export function DashboardSalesChart({ data }: Props) {
           ر.س
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
