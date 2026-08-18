@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MapPinIcon, PhoneIcon, CheckCircleIcon } from "@/components/ui/icons";
+import { CheckCircle2, MapPin, Phone,} from 'lucide-react'
 import type { AddressItem } from "@/features/addresses/types";
 
 interface AddressCardProps {
@@ -27,7 +27,7 @@ export function AddressCard({ address }: AddressCardProps) {
             </span>
             {isPrimary && (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#dfe9d5] px-2 py-1 text-[10px] font-bold text-[#587040]">
-                <CheckCircleIcon className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 مفضل
               </span>
             )}
@@ -44,7 +44,7 @@ export function AddressCard({ address }: AddressCardProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e9eadf] text-[#3d4d2f]">
-              <MapPinIcon className="h-4 w-4" />
+              <MapPin className="h-4 w-4" aria-hidden="true"/>
             </div>
             <div>
               <p className="text-[15px] font-bold text-[#21261d]">{address.title}</p>
@@ -55,7 +55,7 @@ export function AddressCard({ address }: AddressCardProps) {
           <p className="text-[13px] leading-7 text-[#51574d]">{address.address}</p>
 
           <div className="flex items-center gap-3 rounded-2xl border border-[#e5e1d9] bg-white/70 px-3 py-2 text-[13px] text-[#3d423a]">
-            <PhoneIcon className="h-4 w-4 text-[#4b5d39]" />
+            <Phone className="h-4 w-4 text-[#4b5d39]" aria-hidden="true"/>
             <span dir="ltr">{address.phone}</span>
           </div>
         </div>

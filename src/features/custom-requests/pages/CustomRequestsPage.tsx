@@ -2,10 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { Button } from "@/components/ui/Button";
-import { PlusIcon, SparkleIcon } from "@/components/ui/icons";
+import { Plus, Sparkles } from 'lucide-react';
 import { ShowcaseCard } from "@/features/custom-requests/components/ShowcaseCard";
 import type { ShowcaseCardData } from "@/features/custom-requests/types";
-import { RequestCard } from "@/features/custom-requests/components/RequestCard";
 import { NewRequestModal } from "@/features/custom-requests/components/NewRequestModal";
 import { useCustomRequests } from "@/features/custom-requests/hooks/useCustomRequests";
 import type { CreateCustomRequestInput } from "@/api/customRequestsApi";
@@ -37,7 +36,7 @@ const cards: ShowcaseCardData[] = [
 
 export function CustomRequestsPage() {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const { requests, isLoading, createRequest, isCreating } = useCustomRequests();
+  const { createRequest, isCreating } = useCustomRequests();
 
   const handleCreateRequest = async (input: CreateCustomRequestInput) => {
     await createRequest(input);
@@ -63,7 +62,7 @@ export function CustomRequestsPage() {
             className="h-12 rounded-xl bg-[#4f5f3d] px-5 text-[15px] font-bold text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] hover:bg-[#465734]"
           >
             <span>طلب جديد</span>
-            <PlusIcon className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true"/>
           </Button>
         </div>
 
@@ -81,7 +80,7 @@ export function CustomRequestsPage() {
             className="flex min-h-57.5 flex-col items-center justify-center gap-5 rounded-3xl border border-[#d7d1c8] bg-[#4f5f3d] p-6 text-center text-white shadow-[0_16px_28px_-18px_rgba(44,57,35,0.4)]"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-white/10">
-              <SparkleIcon className="h-7 w-7 text-[#f7e3b7]" />
+              <Sparkles className="h-7 w-7 text-[#f7e3b7]" />
             </div>
 
             <div className="space-y-2">
@@ -109,7 +108,7 @@ export function CustomRequestsPage() {
           >
             <div className="flex items-center justify-between">
               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4cabd] bg-white text-[#4f5f3d]">
-                <SparkleIcon className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
               </div>
               <span className="text-[11px] font-medium text-[#7c7b74]">سبت ١٢ يوليو</span>
             </div>

@@ -38,8 +38,8 @@ export function useUpdateAttribute() {
     return useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateAttributePayload }) =>
             attributesApi.update(id, data),
-        onSuccess: async (_, variables) => {
-            await queryClient.invalidateQueries({ queryKey: attributeKeys.detail(variables.id) })
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: attributeKeys.all })
             await queryClient.invalidateQueries({ queryKey: attributeKeys.list() })
         },
     })

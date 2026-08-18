@@ -9,8 +9,10 @@ interface AttributesTableProps {
 
 const typeLabels: Record<string, string> = {
     text: 'نص',
+    number: 'رقم',
     select: 'قائمة منسدلة',
     boolean: 'نعم/لا',
+    color: 'لون',
 }
 
 export default function AttributesTable({ attributes, onEdit, onDelete }: AttributesTableProps) {

@@ -1,7 +1,11 @@
 ﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { getCurrencyLabel, useSystemCurrency } from '@/lib/currency'
-import { showErrorToast, showSuccessToast, showValidationErrorToast } from '@/lib/toast'
+import { useSystemCurrency } from '@/lib/currency'
+import {
+  showErrorToast,
+  showSuccessToast,
+  showValidationErrorToast,
+} from '@/lib/toast'
 import { useCategories } from '../hooks/useCategories'
 import { useCreateProduct } from '../hooks/useProducts'
 
@@ -16,7 +20,7 @@ export default function ProductFormModal({
 }: ProductFormModalProps) {
   const { data: categories = [] } = useCategories()
   const { mutate: createProduct, isPending } = useCreateProduct()
-  const { currencyCode } = useSystemCurrency()
+  useSystemCurrency()
 
   const [name, setName] = useState('')
   const [sku, setSku] = useState('')
@@ -70,7 +74,10 @@ export default function ProductFormModal({
           onClose()
         },
         onError: (err: any) => {
-          const validationErrors = err?.response?.data?.errors as Record<string, string[]> | undefined
+          const validationErrors = err?.response?.data?.errors as
+            | Record<string, string[]>
+            | undefined
+
           if (validationErrors) {
             showValidationErrorToast(validationErrors)
             return
@@ -79,6 +86,7 @@ export default function ProductFormModal({
           const msg =
             err?.response?.data?.message ||
             'حدث خطأ أثناء إضافة المنتج. يرجى التأكد من البيانات.'
+
           setErrorMsg(msg)
           showErrorToast(msg)
         },
@@ -87,75 +95,84 @@ export default function ProductFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div
-        className="bg-[var(--color-surface-card)] rounded-2xl w-full max-w-lg overflow-hidden shadow-xl"
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-[var(--color-surface-card)] shadow-xl"
         dir="rtl"
       >
-        <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] p-5">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             إضافة منتج جديد
           </h2>
 
           <button
+            type="button"
             onClick={onClose}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            aria-label="إغلاق"
           >
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="max-h-[80vh] space-y-4 overflow-y-auto p-5"
+        >
           {errorMsg && (
-            <div className="rounded-xl bg-[#FDF0ED] px-4 py-3 text-sm text-[#A44938]">
+            <div className="rounded-xl bg-[var(--color-danger-subtle)] px-4 py-3 text-sm text-[var(--color-danger)]">
               {errorMsg}
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
                 اسم المنتج *
               </label>
+
               <input
                 required
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="أدخل اسم المنتج"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
                 رمز المنتج (SKU) *
               </label>
+
               <input
                 required
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="مثال: PRD-1001"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
                 الفئة *
               </label>
+
               <select
                 required
                 value={categoryId}
                 onChange={(e) => setCategoryId(Number(e.target.value))}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               >
                 <option value="" disabled>
                   اختر الفئة
                 </option>
+
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -165,9 +182,10 @@ export default function ProductFormModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                السعر (ريال يمني - الطبعة القديمة) 
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
+                السعر (ريال يمني - الطبعة القديمة)
               </label>
+
               <input
                 required
                 type="number"
@@ -175,35 +193,39 @@ export default function ProductFormModal({
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="0.00"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
                 الكمية المتوفرة *
               </label>
+
               <input
                 required
                 type="number"
                 min="0"
                 value={stockQuantity}
                 onChange={(e) => setStockQuantity(Number(e.target.value))}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
                 حالة المنتج
               </label>
+
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')}
-                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                onChange={(e) =>
+                  setStatus(e.target.value as 'active' | 'inactive')
+                }
+                className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               >
                 <option value="active">نشط</option>
                 <option value="inactive">غير نشط</option>
@@ -212,14 +234,15 @@ export default function ProductFormModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+            <label className="mb-1 block text-sm font-medium text-[var(--color-text-secondary)]">
               الوصف (اختياري)
             </label>
+
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors resize-none"
+              className="w-full resize-none rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               placeholder="وصف مختصر للمنتج..."
             />
           </div>
@@ -230,8 +253,9 @@ export default function ProductFormModal({
               type="checkbox"
               checked={isCustomizable}
               onChange={(e) => setIsCustomizable(e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--color-border)] text-[#45592D] focus:ring-[#45592D]"
+              className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
             />
+
             <label
               htmlFor="modal-is-customizable"
               className="text-sm font-medium text-[var(--color-text-secondary)]"
@@ -240,18 +264,19 @@ export default function ProductFormModal({
             </label>
           </div>
 
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-[var(--color-border)] mt-6">
+          <div className="mt-6 flex items-center justify-end gap-3 border-t border-[var(--color-border)] pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm font-medium hover:bg-[var(--color-surface)] transition-colors"
+              className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
               إلغاء
             </button>
+
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2.5 rounded-xl bg-[#45592D] text-white text-sm font-semibold hover:bg-[#5D7243] transition-colors disabled:opacity-50"
+              className="rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? 'جاري الإضافة...' : 'حفظ المنتج'}
             </button>
