@@ -14,9 +14,11 @@ export interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children">
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-brand-olive-700 text-brand-cream hover:bg-brand-olive-900 disabled:bg-brand-olive-400/60 shadow-sm shadow-brand-olive-900/10",
-  ghost: "bg-transparent text-brand-olive-700 hover:bg-brand-olive-50",
-  outline: "bg-transparent border border-brand-border text-brand-ink hover:border-brand-olive-600",
+    "bg-[var(--color-accent)] text-[var(--color-surface-card)] hover:bg-[var(--color-accent-hover)] disabled:bg-[var(--color-accent)] disabled:opacity-50 shadow-sm shadow-black/10",
+  ghost:
+    "bg-transparent text-[var(--color-accent)] hover:bg-[var(--color-accent-subtle)]",
+  outline:
+    "bg-transparent border border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)]",
 };
 
 /**

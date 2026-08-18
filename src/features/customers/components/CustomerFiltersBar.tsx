@@ -1,5 +1,5 @@
 ﻿import type { CustomerCategory, CustomerFilters } from '../types/customer'
-
+import { FilterToolbar } from '@/components/shared/FilterToolbar'
 interface CustomerFiltersBarProps {
     filters: CustomerFilters
     onChange: (filters: CustomerFilters) => void
@@ -10,7 +10,7 @@ export default function CustomerFiltersBar({ filters, onChange, onReset }: Custo
     const hasActiveFilters = !!(filters.search || filters.category || filters.verified !== undefined && filters.verified !== '')
 
     return (
-        <div className="flex flex-wrap items-end gap-3" dir="rtl">
+        <FilterToolbar>
             <div className="flex-1 min-w-[250px]">
                 <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">بحث بالاسم أو البريد أو الجوال</label>
                 <input
@@ -64,6 +64,6 @@ export default function CustomerFiltersBar({ filters, onChange, onReset }: Custo
                     إعادة ضبط
                 </button>
             )}
-        </div>
+        </FilterToolbar>
     )
 }

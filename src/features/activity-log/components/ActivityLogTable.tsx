@@ -1,5 +1,7 @@
 ﻿import type { ActivityLog } from '../types/activity-log'
 import ActivityLogBadge from './ActivityLogBadge'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TableShell } from '@/components/shared/TableShell'
 
 interface ActivityLogTableProps {
     logs: ActivityLog[]
@@ -17,16 +19,10 @@ function formatDate(iso: string): string {
 
 export default function ActivityLogTable({ logs }: ActivityLogTableProps) {
     if (!logs.length) {
-        return (
-            <div className="text-center py-16 text-[var(--color-text-muted)] text-sm bg-[var(--color-surface)] rounded-2xl border border-dashed border-[var(--color-border-muted)]">
-                لا توجد سجلات نشاط.
-            </div>
-        )
+        return <EmptyState>لا توجد سجلات نشاط.</EmptyState>
     }
-
     return (
-        <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]" dir="rtl">
-            <table className="w-full text-sm">
+        <TableShell>
                 <thead>
                     <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-right">
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)]">المستخدم</th>
@@ -37,7 +33,7 @@ export default function ActivityLogTable({ logs }: ActivityLogTableProps) {
                         <th className="px-5 py-3.5 font-semibold text-[var(--color-text-secondary)] text-left whitespace-nowrap">الوقت</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EBE1D7]">
+                <tbody className="divide-y divide-[var(--color-border)]">
                     {logs.map((log) => (
                         <tr key={log.id} className="hover:bg-[var(--color-surface)] transition-colors">
                             <td className="px-5 py-4 font-medium text-[var(--color-text-primary)] whitespace-nowrap">
@@ -63,7 +59,6 @@ export default function ActivityLogTable({ logs }: ActivityLogTableProps) {
                         </tr>
                     ))}
                 </tbody>
-            </table>
-        </div>
+            </TableShell>
     )
 }

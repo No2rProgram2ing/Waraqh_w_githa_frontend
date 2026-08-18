@@ -1,5 +1,5 @@
 ﻿import type { ReviewFilters, ReviewStatus } from '../types/review'
-
+import { FilterToolbar } from '@/components/shared/FilterToolbar'
 interface ReviewFiltersBarProps {
     filters: ReviewFilters
     onChange: (filters: ReviewFilters) => void
@@ -16,7 +16,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
     )
 
     return (
-        <div className="flex flex-wrap items-end gap-3" dir="rtl">
+        <FilterToolbar>
             <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">بحث برقم الطلب، المنتج، أو العميل</label>
                 <input
@@ -24,7 +24,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                     value={filters.search ?? ''}
                     onChange={(e) => onChange({ ...filters, search: e.target.value, page: 1 })}
                     placeholder="بحث..."
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
                 />
             </div>
 
@@ -33,7 +33,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                 <select
                     value={filters.rating ?? ''}
                     onChange={(e) => onChange({ ...filters, rating: e.target.value ? Number(e.target.value) : '', page: 1 })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
                 >
                     <option value="">جميع التقييمات</option>
                     <option value="5">5 نجوم</option>
@@ -49,7 +49,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                 <select
                     value={filters.status ?? ''}
                     onChange={(e) => onChange({ ...filters, status: e.target.value as ReviewStatus | '', page: 1 })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
                 >
                     <option value="">الكل</option>
                     <option value="pending">بانتظار المراجعة</option>
@@ -64,7 +64,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                     type="date"
                     value={filters.date_from ?? ''}
                     onChange={(e) => onChange({ ...filters, date_from: e.target.value, page: 1 })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
                 />
             </div>
 
@@ -74,7 +74,7 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                     type="date"
                     value={filters.date_to ?? ''}
                     onChange={(e) => onChange({ ...filters, date_to: e.target.value, page: 1 })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)] transition-colors"
                 />
             </div>
 
@@ -87,6 +87,6 @@ export default function ReviewFiltersBar({ filters, onChange, onReset }: ReviewF
                     إعادة ضبط
                 </button>
             )}
-        </div>
+        </FilterToolbar>
     )
 }

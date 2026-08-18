@@ -2,84 +2,73 @@
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN TOKENS & TYPOGRAPHY — Light Mode (Default)
+  DESIGN TOKENS & TYPOGRAPHY — Light Mode (Default)
    ============================================================ */
-:root {
-  /* Typography */
+@theme {
   --font-display: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
 
-  /* Surfaces */
-  --color-surface:        #FAF8F5;
-  --color-surface-card:   #FFFFFF;
-  --color-surface-subtle: #F5F2EE;
+  --radius-field: 0.75rem;
 
-  /* Brand Palette / Olive Options */
-  --color-brand-cream:    #fdfcfa;
-  --color-brand-surface:  #f6f5f0;
-  --color-brand-border:   #e6e4db;
-  --color-brand-ink:      #23261f;
-  --color-brand-muted:    #8b8d80;
+  --color-brand-cream: #fdfcfa;
+  --color-brand-surface: #f6f5f0;
+  --color-brand-border: #e6e4db;
+  --color-brand-ink: #23261f;
+  --color-brand-muted: #8b8d80;
+
   --color-brand-olive-50: #eef0e7;
-  --color-brand-olive-400:#6b7c52;
-  --color-brand-olive-600:#4a5a37;
-  --color-brand-olive-700:#3c4a2c;
-  --color-brand-olive-900:#262f1a;
+  --color-brand-olive-400: #6b7c52;
+  --color-brand-olive-600: #4a5a37;
+  --color-brand-olive-700: #3c4a2c;
+  --color-brand-olive-900: #262f1a;
+}
 
-  /* Borders */
-  --color-border:         #EBE1D7;
-  --color-border-muted:   #DCCFC1;
+:root {
+    /* Status */
+  --color-success: #2f7d32;
+  --color-success-subtle: #eaf6eb;
+  --color-success-subtle-hover: #d6edd8;
 
-  /* Text */
-  --color-text-primary:   #1F1B15;
-  --color-text-secondary: #44483E;
-  --color-text-muted:     #75786D;
-  --color-text-faint:     #A5A096;
+  --color-info: #2f6f9f;
+  --color-info-subtle: #eaf4fb;
+  --color-info-subtle-hover: #d7eaf6;
 
-  /* Accent (brand green) */
-  --color-accent:         #45592D;
-  --color-accent-hover:   #5D7243;
-  --color-accent-subtle:  #EEF4E8;
-  --color-accent-subtle-hover: #D5E6C9;
-
-  /* Danger & Warning */
-  --color-danger:         #A04A3A;
-  --color-danger-subtle:  #FBEDEA;
-  --color-danger-subtle-hover: #F3D7D3;
-  --color-warning:        #E8B92A;
-  --color-warning-subtle: #FEF9EC;
+  /* Admin Sidebar */
+  --color-sidebar: #2B2620;
+  --color-sidebar-text: #FFFFFF;
+  --color-sidebar-muted: rgb(255 255 255 / 0.70);
+  --color-sidebar-faint: rgb(255 255 255 / 0.40);
+  --color-sidebar-border: rgb(255 255 255 / 0.10);
+  --color-sidebar-hover: rgb(255 255 255 / 0.10);
+  --color-sidebar-active: #45592D;
+  --color-sidebar-panel: rgb(255 255 255 / 0.05);
 }
 
 /* ============================================================
-   DESIGN TOKENS — Dark Mode
+  DESIGN TOKENS — Dark Mode
    ============================================================ */
 html.dark {
-  --color-surface:        #1A1612;
-  --color-surface-card:   #231E19;
-  --color-surface-subtle: #2C2620;
+  --color-success: #72c276;
+  --color-success-subtle: #163119;
+  --color-success-subtle-hover: #1e4022;
 
-  --color-border:         #3D342C;
-  --color-border-muted:   #493E35;
+  --color-info: #70b4dc;
+  --color-info-subtle: #142a36;
+  --color-info-subtle-hover: #1b3a4a;
 
-  --color-text-primary:   #EDE6DC;
-  --color-text-secondary: #C4BCB0;
-  --color-text-muted:     #A69F94;
-  --color-text-faint:     #827C72;
-
-  --color-accent:         #6B8A43;
-  --color-accent-hover:   #7EA050;
-  --color-accent-subtle:  #262F1C;
-  --color-accent-subtle-hover: #323E24;
-
-  --color-danger:         #C0614F;
-  --color-danger-subtle:  #2A1714;
-  --color-danger-subtle-hover: #3A201C;
-  --color-warning:        #E8B92A;
-  --color-warning-subtle: #2A2510;
+  /* Admin Sidebar */
+  --color-sidebar: #17130F;
+  --color-sidebar-text: #F5F0E8;
+  --color-sidebar-muted: rgb(245 240 232 / 0.70);
+  --color-sidebar-faint: rgb(245 240 232 / 0.40);
+  --color-sidebar-border: rgb(245 240 232 / 0.10);
+  --color-sidebar-hover: rgb(245 240 232 / 0.10);
+  --color-sidebar-active: #6B8A43;
+  --color-sidebar-panel: rgb(245 240 232 / 0.05);
 }
 
 /* ============================================================
-   GLOBAL BASE STYLES
+  GLOBAL BASE STYLES
    ============================================================ */
 @layer base {
   html {

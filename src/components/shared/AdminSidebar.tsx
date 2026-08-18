@@ -56,7 +56,7 @@ function AdminSidebar() {
       <aside
         dir="rtl"
         className={[
-          'fixed inset-y-0 right-0 z-50 flex h-screen w-64 shrink-0 flex-col bg-[#2B2620] text-white shadow-xl',
+          'fixed inset-y-0 right-0 z-50 flex h-screen w-64 shrink-0 flex-col bg-[var(--color-sidebar)] text-[var(--color-sidebar-text)] shadow-xl',
           'transition-[width,transform] duration-300 ease-in-out',
           'lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0',
           isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64',
@@ -66,7 +66,7 @@ function AdminSidebar() {
         ].join(' ')}
       >
         {/* Header */}
-        <div className="border-b border-white/10 px-4 py-5">
+        <div className="border-b border-[var(--color-sidebar-border)] px-4 py-5">
           <div className="flex items-center gap-3">
             <img
               src={logo}
@@ -86,7 +86,7 @@ function AdminSidebar() {
                 ورقة وجذع
               </h1>
 
-              <p className="mt-1 whitespace-nowrap text-xs text-white/60">
+              <p className="mt-1 whitespace-nowrap text-xs text-[var(--color-sidebar-muted)]">
                 لوحة الإدارة
               </p>
             </div>
@@ -95,7 +95,7 @@ function AdminSidebar() {
             <button
               type="button"
               onClick={closeMobileSidebar}
-              className="mr-auto rounded-lg p-2 text-white/60 transition hover:bg-[var(--color-surface-card)]/10 hover:text-white lg:hidden"
+              className="mr-auto rounded-lg p-2 text-[var(--color-sidebar-muted)] transition hover:bg-[var(--color-sidebar-hover)] hover:text-white lg:hidden"
               aria-label="إغلاق القائمة"
             >
               <X className="h-5 w-5" />
@@ -111,7 +111,7 @@ function AdminSidebar() {
                 key={section.label ?? `section-${sectionIndex}`}
               >
                 {section.label && !isSidebarCollapsed && (
-                  <h2 className="mb-2 px-3 text-xs font-semibold text-white/40">
+                  <h2 className="mb-2 px-3 text-xs font-semibold text-[var(--color-sidebar-faint)]">
                     {section.label}
                   </h2>
                 )}
@@ -135,8 +135,8 @@ function AdminSidebar() {
                           [
                             'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                             isActive
-                              ? 'bg-[#45592D] text-white shadow-sm'
-                              : 'text-white/70 hover:bg-[var(--color-surface-card)]/10 hover:text-white',
+                              ? 'bg-[var(--color-sidebar-active)] text-white shadow-sm'
+                              : 'text-white/70 hover:bg-[var(--color-sidebar-hover)] hover:text-white',
                             isSidebarCollapsed
                               ? 'lg:justify-center'
                               : '',
@@ -165,9 +165,9 @@ function AdminSidebar() {
         </nav>
 
         {/* Admin User */}
-        <div className="border-t border-white/10 p-3">
-          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[var(--color-surface-card)]/5 p-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#45592D] font-bold">
+        <div className="border-t border-[var(--color-sidebar-border)] p-3">
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[var(--color-sidebar-panel)] p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--color-sidebar-active)] font-bold">
               {admin?.avatar_url ? (
                 <img
                   src={admin.avatar_url}
@@ -203,7 +203,7 @@ function AdminSidebar() {
             disabled={isLoading}
             className={[
               'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70',
-              'transition-all duration-200 hover:bg-[var(--color-surface-card)]/10 hover:text-white',
+              'transition-all duration-200 hover:bg-[var(--color-sidebar-hover)] hover:text-white',
               'disabled:cursor-not-allowed disabled:opacity-50',
               isSidebarCollapsed
                 ? 'lg:justify-center'

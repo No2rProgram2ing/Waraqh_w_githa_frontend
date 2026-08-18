@@ -45,7 +45,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = "lg" }: Mod
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
             aria-hidden="true"
           />
 
@@ -55,16 +55,21 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = "lg" }: Mod
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className={`relative w-full ${maxWidthMap[maxWidth]} rounded-3xl bg-brand-cream border border-brand-border p-6 sm:p-8 shadow-2xl shadow-stone-950/15 z-10`}
+            className={`relative z-10 w-full ${maxWidthMap[maxWidth]} rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface-card)] p-6 shadow-2xl shadow-black/15 sm:p-8`}
             role="dialog"
             aria-modal="true"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-brand-border/60 pb-4 mb-6">
-              {title && <h3 className="text-xl font-bold text-brand-ink">{title}</h3>}
+            <div className="mb-6 flex items-center justify-between border-b border-[var(--color-border)] pb-4">
+              {title && (
+                <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
+                  {title}
+                </h3>
+              )}
               <button
+                type="button"
                 onClick={onClose}
-                className="mr-auto text-brand-muted hover:text-brand-ink p-1.5 rounded-full hover:bg-brand-surface transition-colors"
+                className="ms-auto rounded-full p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-subtle)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
                 aria-label="إغلاق"
               >
                 <XMarkIcon />
