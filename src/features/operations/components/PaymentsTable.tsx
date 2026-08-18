@@ -1,6 +1,4 @@
 import type { Payment } from '../types/payments.types'
-import { format } from 'date-fns'
-import { useState } from 'react'
 
 function statusClass(status: Payment['status']) {
   switch (status) {

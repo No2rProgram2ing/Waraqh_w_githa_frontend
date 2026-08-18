@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
-import { Helmet } from 'react-helmet'
+import  { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { usePayments, usePayment } from '../hooks/usePayments'
 import { PaymentsTable } from '../components/PaymentsTable'
 import { PaymentDetailsDrawer } from '../components/PaymentDetailsDrawer'
@@ -12,7 +12,7 @@ function toCsv(rows: any[], columns: string[]) {
 }
 
 export default function PaymentsPage() {
-  const [params, setParams] = useState<Record<string, any>>({ per_page: 10, page: 1 })
+  const [params ] = useState<Record<string, any>>({ per_page: 10, page: 1 })
   const { data, isLoading } = usePayments(params)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const { data: selectedPayment } = usePayment(selectedId)

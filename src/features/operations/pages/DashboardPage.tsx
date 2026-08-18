@@ -1,5 +1,4 @@
-import React from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet-async'
 import { useDashboardStats, useLatestOrders, useFeaturedProducts } from '../hooks/useDashboard'
 import { DashboardKpiCard } from '../components/DashboardKpiCard'
 import { DashboardSalesChart } from '../components/DashboardSalesChart'
@@ -7,7 +6,7 @@ import { LatestOrders } from '../components/LatestOrders'
 import { FeaturedProductsCarousel } from '../components/FeaturedProductsCarousel'
 
 export default function DashboardPage() {
-  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
+  const { data: stats, isLoading: statsLoading, } = useDashboardStats()
   const { data: orders, isLoading: ordersLoading } = useLatestOrders(5)
   const { data: products, isLoading: productsLoading } = useFeaturedProducts(6)
 

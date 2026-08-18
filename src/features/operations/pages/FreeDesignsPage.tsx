@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
-import { Helmet } from 'react-helmet'
+import { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { useFreeDesigns, useAssignFreeDesign } from '../hooks/useFreeDesigns'
 import { FreeDesignList } from '../components/FreeDesignList'
-
 export default function FreeDesignsPage(){
   const [params] = useState({ per_page: 30 })
   const { data } = useFreeDesigns(params)

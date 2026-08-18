@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet-async'
 import { useOrders, useOrder } from '../hooks/useOrders'
 import { OrdersTable } from '../components/OrdersTable'
 import { OrderDetailsDrawer } from '../components/OrderDetailsDrawer'

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Helmet } from 'react-helmet'
+import { useState, useEffect } from 'react'
+import { Helmet } from 'react-helmet-async'
 
 export default function FreeDesignDetailsPage({ id }: { id?: number | null }){
   const [item, setItem] = useState<any | null>(null)

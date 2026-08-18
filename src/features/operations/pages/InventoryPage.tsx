@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet } from 'react-helmet-async'
 import { useMaterials, useMovements, useAdjustStock } from '../hooks/useInventory'
 import { InventoryTable } from '../components/InventoryTable'
 import { InventoryForm } from '../components/InventoryForm'
