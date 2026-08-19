@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query'
 import { reportsApi } from '../api/reportsApi'
 import { reportsKeys } from './keys'
 
@@ -7,7 +7,7 @@ export function useReports(params: Record<string, any> = {}){
     queryKey: reportsKeys.list(params),
     queryFn: () => reportsApi.fetch(params),
     staleTime: 60 * 1000,
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   })
 }
 

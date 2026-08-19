@@ -24,7 +24,7 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
         if (attributeToEdit) {
             setName(attributeToEdit.name)
             setDisplayName(attributeToEdit.display_name)
-            setType(attributeToEdit.type)
+            setType(attributeToEdit.input_type)
             setIsRequired(attributeToEdit.is_required)
             setOptions(attributeToEdit.options ?? [])
         } else {
@@ -63,7 +63,6 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
         const payload = {
             name: safeName,
             display_name: safeDisplayName,
-            type: safeType,
             input_type: safeType,
             is_required: isRequired,
             options: safeType === 'select' ? options : null,

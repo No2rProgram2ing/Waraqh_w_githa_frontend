@@ -47,7 +47,7 @@ export default function AttributesTable({ attributes, onEdit, onDelete }: Attrib
                                 </code>
                             </td>
                             <td className="px-5 py-4 text-[var(--color-text-secondary)]">
-                                {typeLabels[attr.type] ?? attr.type}
+                                {typeLabels[attr.input_type] ?? attr.input_type}
                             </td>
                             <td className="px-5 py-4 text-center">
                                 {attr.is_required ? (
@@ -61,7 +61,7 @@ export default function AttributesTable({ attributes, onEdit, onDelete }: Attrib
                                 )}
                             </td>
                             <td className="px-5 py-4 text-[var(--color-text-muted)] max-w-xs truncate">
-                                {attr.type === 'select' && attr.options?.length ? (
+                                {attr.input_type === 'select' && attr.options?.length ? (
                                     <span className="text-xs">{attr.options.join(' ، ')}</span>
                                 ) : (
                                     '—'

@@ -1,6 +1,7 @@
-import  { useMemo } from 'react'
+import { useMemo } from 'react'
 import ReactApexChart from 'react-apexcharts'
 import type { DashboardStats } from '../types/dashboard.types'
+import { TrendingUp } from 'lucide-react'
 
 interface Props {
   data?: DashboardStats | null
@@ -30,81 +31,129 @@ export function DashboardSalesChart({ data }: Props) {
         id: 'sales-timeseries',
         toolbar: { show: false },
         zoom: { enabled: false },
-        animations: { enabled: true },
+        animations: { enabled: true, speed: 600 },
+        background: 'transparent',
+        fontFamily: 'inherit',
+      },
+      theme: {
+        mode: 'light' as const,
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.28,
+          opacityTo: 0.02,
+          stops: [0, 100],
+        },
       },
       stroke: {
         curve: 'smooth' as const,
-        width: 3,
+        width: 2.5,
       },
       xaxis: {
         categories,
+        axisBorder: { show: false },
+        axisTicks: { show: false },
         labels: {
-          rotate: -45,
+          style: {
+            colors: 'var(--color-text-muted)',
+            fontSize: '11px',
+          },
         },
       },
       yaxis: {
         labels: {
-          formatter: (value: number) =>
-            value.toLocaleString('ar-SA'),
+          formatter: (value: number) => value.toLocaleString('ar-SA'),
+          style: {
+            colors: 'var(--color-text-muted)',
+            fontSize: '11px',
+          },
         },
       },
       tooltip: {
+        theme: 'dark',
         y: {
-          formatter: (value: number) =>
-            `${value.toLocaleString('ar-SA')} ر.س`,
+          formatter: (value: number) => `${value.toLocaleString('ar-SA')} ر.س`,
         },
       },
-      colors: ['#6B8E23'],
+      colors: ['#45592D'],
       grid: {
-        borderColor: '#ebe8e1',
+        borderColor: 'var(--color-border)',
+        strokeDashArray: 4,
+        padding: { left: 0, right: 0 },
       },
-      dataLabels: {
-        enabled: false,
+      dataLabels: { enabled: false },
+      markers: {
+        size: 0,
+        hover: { size: 5 },
       },
     }),
     [categories],
   )
 
+  const revenues = timeseries.map((p) => p.revenue)
+  const total = revenues.reduce((s, r) => s + r, 0)
+  const maxRev = revenues.length ? Math.max(...revenues) : 0
+  const minRev = revenues.length ? Math.min(...revenues) : 0
+
+  /* ── Empty state ── */
   if (timeseries.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#e6e2d8] bg-[#f8f6f1] p-6 text-center">
-        <div className="mb-2 text-lg font-semibold">
-          أداء المبيعات للمنتجات الحرفية — آخر 30 يوم
+      <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
+        {/* Card header */}
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+          <div>
+            <h2 className="text-base font-bold text-[var(--color-text-primary)]">
+              أداء المبيعات
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+              آخر 30 يوم
+            </p>
+          </div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+            <TrendingUp size={18} strokeWidth={1.8} aria-hidden="true" />
+          </div>
         </div>
 
-        <p className="text-sm text-[#6d6d6d]">
-          لا توجد بيانات زمنية كافية لعرض المخطط.
-          يرجى تزويد الخدمة ببيانات المبيعات اليومية.
-        </p>
+        <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            لا توجد بيانات زمنية كافية لعرض المخطط.
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            سيظهر المخطط تلقائياً بعد تسجيل مبيعات.
+          </p>
+        </div>
       </div>
     )
   }
 
-  const revenues = timeseries.map((point) => point.revenue)
-
   return (
-    <div className="rounded-2xl border border-[#e6e2d8] bg-[#f8f6f1] p-4">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
+      {/* Card header */}
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
         <div>
-          <h3 className="text-lg font-semibold">
-            أداء المبيعات للمنتجات الحرفية
-          </h3>
-
-          <p className="text-sm text-[#6d6d6d]">
-            آخر {timeseries.length} يوم
+          <h2 className="text-base font-bold text-[var(--color-text-primary)]">
+            أداء المبيعات
+          </h2>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+            آخر {timeseries.length} يوم — المنتجات الحرفية
           </p>
         </div>
 
-        <div className="text-right">
-          <div className="text-xl font-extrabold text-[#1e241d]">
-            {data?.total_revenue
-              ? `${Number(data.total_revenue).toLocaleString('ar-SA')} ر.س`
-              : ''}
+        {data?.total_revenue && (
+          <div className="text-right">
+            <p className="text-xs text-[var(--color-text-muted)]">الإجمالي</p>
+            <p className="text-xl font-extrabold tabular-nums text-[var(--color-text-primary)]">
+              {Number(data.total_revenue).toLocaleString('ar-SA')}
+              <span className="mr-1 text-sm font-semibold text-[var(--color-text-muted)]">ر.س</span>
+            </p>
           </div>
-        </div>
+        )}
       </div>
 
-      <div>
+      {/* Chart */}
+      <div className="px-2 pt-2">
         <ReactApexChart
           options={options}
           series={seriesData}
@@ -113,23 +162,25 @@ export function DashboardSalesChart({ data }: Props) {
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-3 text-sm text-[#6d6d6d]">
-        <div className="text-center">
-          نقطة عالية:{' '}
-          {Math.max(...revenues).toLocaleString('ar-SA')} ر.س
+      {/* Summary metrics row */}
+      <div className="grid grid-cols-3 divide-x divide-x-reverse divide-[var(--color-border)] border-t border-[var(--color-border)]">
+        <div className="px-5 py-3.5 text-center">
+          <p className="text-xs text-[var(--color-text-muted)]">أعلى قيمة</p>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]">
+            {maxRev.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          </p>
         </div>
-
-        <div className="text-center">
-          نقطة منخفضة:{' '}
-          {Math.min(...revenues).toLocaleString('ar-SA')} ر.س
+        <div className="px-5 py-3.5 text-center">
+          <p className="text-xs text-[var(--color-text-muted)]">أدنى قيمة</p>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]">
+            {minRev.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          </p>
         </div>
-
-        <div className="text-center">
-          مجموع:{' '}
-          {revenues
-            .reduce((sum, revenue) => sum + revenue, 0)
-            .toLocaleString('ar-SA')}{' '}
-          ر.س
+        <div className="px-5 py-3.5 text-center">
+          <p className="text-xs text-[var(--color-text-muted)]">مجموع الفترة</p>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+            {total.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          </p>
         </div>
       </div>
     </div>

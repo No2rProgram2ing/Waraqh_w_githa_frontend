@@ -1,4 +1,4 @@
-﻿import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { LogOut, X } from 'lucide-react'
 import logo from '@/assets/images/logo.png'
 import { adminNavigation } from './adminNavigation'
@@ -166,7 +166,13 @@ function AdminSidebar() {
 
         {/* Admin User */}
         <div className="border-t border-white/10 p-3">
-          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[var(--color-surface-card)]/5 p-3">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/profile')}
+            title="الملف الشخصي"
+            aria-label="انتقل إلى الملف الشخصي"
+            className="mb-3 flex w-full items-center gap-3 rounded-xl bg-[var(--color-surface-card)]/5 p-3 transition-all duration-200 hover:bg-[var(--color-surface-card)]/15"
+          >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#45592D] font-bold">
               {admin?.avatar_url ? (
                 <img
@@ -181,7 +187,7 @@ function AdminSidebar() {
 
             <div
               className={[
-                'min-w-0 overflow-hidden transition-all duration-300',
+                'min-w-0 overflow-hidden text-right transition-all duration-300',
                 isSidebarCollapsed
                   ? 'lg:w-0 lg:opacity-0'
                   : 'w-auto opacity-100',
@@ -195,7 +201,7 @@ function AdminSidebar() {
                 {adminEmail}
               </p>
             </div>
-          </div>
+          </button>
 
           <button
             type="button"

@@ -1,6 +1,7 @@
 import React from 'react'
+import { Download, FileText } from 'lucide-react'
 
-export function ReportsExport({ rows }: { rows: any[] }){
+export function ReportsExport({ rows }: { rows: any[] }) {
   const exportCsv = () => {
     if (!rows || !rows.length) return
     const cols = Object.keys(rows[0])
@@ -20,7 +21,18 @@ export function ReportsExport({ rows }: { rows: any[] }){
   const exportPdf = () => {
     // Client-side PDF fallback: open printable window and invoke print (user can save as PDF)
     try {
-      const html = [`<html dir="rtl"><head><title>تقرير</title><style>table{width:100%;border-collapse:collapse;}td,th{border:1px solid #e5e7eb;padding:8px;text-align:right}</style></head><body><h2>تقرير</h2><table><thead><tr>${Object.keys(rows[0]).map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${Object.keys(r).map(k => `<td>${String(r[k] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></body></html>`].join('\n')
+      const html = [
+        `<html dir="rtl"><head><title>تقرير</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}td,th{border:1px solid #e5e7eb;padding:8px;text-align:right}</style></head><body><h2>تقرير</h2><table><thead><tr>${Object.keys(rows[0] ?? {})
+          .map((c) => `<th>${c}</th>`)
+          .join('')}</tr></thead><tbody>${rows
+          .map(
+            (r) =>
+              `<tr>${Object.keys(r)
+                .map((k) => `<td>${String(r[k] ?? '')}</td>`)
+                .join('')}</tr>`
+          )
+          .join('')}</tbody></table></body></html>`,
+      ].join('\n')
       const w = window.open('', '_blank')
       if (!w) {
         alert('فشل فتح نافذة الطباعة — الرجاء السماح بالنوافذ المنبثقة أو حاول التصدير مرة أخرى.')
@@ -41,9 +53,21 @@ export function ReportsExport({ rows }: { rows: any[] }){
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button onClick={exportCsv} className="rounded-md bg-[#3b6a2b] px-3 py-2 text-white">تصدير CSV</button>
-      <button onClick={exportPdf} className="rounded-md border px-3 py-2">تصدير PDF</button>
+    <div className="flex shrink-0 items-center gap-2">
+      <button
+        onClick={exportCsv}
+        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)]"
+      >
+        <Download size={15} strokeWidth={2} aria-hidden="true" />
+        تصدير CSV
+      </button>
+      <button
+        onClick={exportPdf}
+        className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] shadow-sm transition hover:bg-[var(--color-surface-subtle)]"
+      >
+        <FileText size={15} strokeWidth={2} aria-hidden="true" />
+        تصدير PDF
+      </button>
     </div>
   )
 }

@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import type { RawMaterial } from '../types/inventory.types'
-import { useMaterials } from '../hooks/useInventory'
 import { inventoryApi } from '../api/inventoryApi'
 
-export function InventoryForm({ material, onSaved }: { material?: RawMaterial | null; onSaved?: (m: RawMaterial) => void }){
+export function InventoryForm({
+  material,
+  onSaved,
+}: {
+  material?: RawMaterial | null
+  onSaved?: (m: RawMaterial) => void
+}) {
   const [form, setForm] = useState<Partial<RawMaterial>>({
     name: '',
     sku: '',
@@ -13,7 +18,11 @@ export function InventoryForm({ material, onSaved }: { material?: RawMaterial | 
   })
 
   useEffect(() => {
-    if (material) setForm(material)
+    if (material) {
+      setForm(material)
+    } else {
+      setForm({ name: '', sku: '', unit: '', stock_level: 0, reorder_level: 0 })
+    }
   }, [material])
 
   const save = async () => {
@@ -54,40 +63,124 @@ export function InventoryForm({ material, onSaved }: { material?: RawMaterial | 
     }
   }
 
+  const isEditing = !!(material && material.id)
+
   return (
-    <div className="rounded-2xl border bg-white p-4">
-      <div className="text-right space-y-3">
-        <div>
-          <label className="text-sm">اسم المادة</label>
-          <input className="w-full rounded-md border p-2 mt-1" value={form.name ?? ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+    <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
+      {/* Form header */}
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h2 className="text-base font-bold text-[var(--color-text-primary)]">
+          {isEditing ? 'تعديل المادة' : 'إضافة مادة جديدة'}
+        </h2>
+        <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+          {isEditing ? `تعديل بيانات: ${material?.name}` : 'أدخل بيانات المادة الخام الجديدة'}
+        </p>
+      </div>
+
+      {/* Form body */}
+      <div className="space-y-4 p-5" dir="rtl">
+        {/* Name */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="inv-name"
+            className="text-sm font-medium text-[var(--color-text-primary)]"
+          >
+            اسم المادة
+          </label>
+          <input
+            id="inv-name"
+            type="text"
+            value={form.name ?? ''}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="مثال: قماش قطني"
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+          />
         </div>
 
+        {/* SKU + Unit */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm">رمز المادة (SKU)</label>
-            <input className="w-full rounded-md border p-2 mt-1" value={form.sku ?? ''} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="inv-sku"
+              className="text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              رمز المادة (SKU)
+            </label>
+            <input
+              id="inv-sku"
+              type="text"
+              value={form.sku ?? ''}
+              onChange={(e) => setForm({ ...form, sku: e.target.value })}
+              placeholder="مثال: FAB-001"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+            />
           </div>
 
-          <div>
-            <label className="text-sm">الوحدة</label>
-            <input className="w-full rounded-md border p-2 mt-1" value={form.unit ?? ''} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="inv-unit"
+              className="text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              الوحدة
+            </label>
+            <input
+              id="inv-unit"
+              type="text"
+              value={form.unit ?? ''}
+              onChange={(e) => setForm({ ...form, unit: e.target.value })}
+              placeholder="مثال: متر، كجم"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+            />
           </div>
         </div>
 
+        {/* Stock level + Reorder level */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm">الكمية المتاحة</label>
-            <input type="number" className="w-full rounded-md border p-2 mt-1" value={String(form.stock_level ?? 0)} onChange={(e) => setForm({ ...form, stock_level: Number(e.target.value) })} />
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="inv-stock"
+              className="text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              الكمية المتاحة
+            </label>
+            <input
+              id="inv-stock"
+              type="number"
+              min="0"
+              value={String(form.stock_level ?? 0)}
+              onChange={(e) => setForm({ ...form, stock_level: Number(e.target.value) })}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+            />
           </div>
-          <div>
-            <label className="text-sm">نقطة إعادة الطلب</label>
-            <input type="number" className="w-full rounded-md border p-2 mt-1" value={String(form.reorder_level ?? 0)} onChange={(e) => setForm({ ...form, reorder_level: Number(e.target.value) })} />
-          </div>
-        </div>
 
-        <div className="flex justify-end">
-          <button onClick={save} className="rounded-md bg-[#3b6a2b] px-4 py-2 text-white">حفظ</button>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="inv-reorder"
+              className="text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              نقطة إعادة الطلب
+            </label>
+            <input
+              id="inv-reorder"
+              type="number"
+              min="0"
+              value={String(form.reorder_level ?? 0)}
+              onChange={(e) => setForm({ ...form, reorder_level: Number(e.target.value) })}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+            />
+          </div>
         </div>
+      </div>
+
+      {/* Form footer / actions */}
+      <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border)] px-5 py-4">
+        <button
+          id="inv-form-save-btn"
+          onClick={save}
+          className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)]"
+        >
+          {isEditing ? 'حفظ التعديلات' : 'إضافة المادة'}
+        </button>
       </div>
     </div>
   )

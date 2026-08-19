@@ -13,7 +13,7 @@ import {
   Package,
   Palette,
   Settings,
-  ShieldCheck,
+  //ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
   Users,
@@ -43,7 +43,7 @@ export const adminNavigation: AdminNavigationSection[] = [
     items: [
       {
         label: 'الرئيسية',
-        path: '/admin',
+        path: '/admin/dashboard',
         icon: LayoutDashboard,
       },
       {
@@ -139,7 +139,7 @@ export const adminNavigation: AdminNavigationSection[] = [
         path: '/admin/profile',
         icon: UserCog,
       },
-      {
+      /*{
         label: 'المستخدمون الإداريون',
         path: '/admin/admin-users',
         icon: ShieldCheck,
@@ -148,7 +148,7 @@ export const adminNavigation: AdminNavigationSection[] = [
         label: 'الأدوار والصلاحيات',
         path: '/admin/roles',
         icon: ShieldCheck,
-      },
+      },*/
       {
         label: 'سجل النشاط',
         path: '/admin/activity-logs',

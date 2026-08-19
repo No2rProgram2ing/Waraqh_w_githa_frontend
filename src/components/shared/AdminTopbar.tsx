@@ -205,14 +205,22 @@ function AdminTopbar() {
 
         <button
           type="button"
+          onClick={() => navigate('/admin/notifications')}
           className="relative rounded-xl p-2.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
           aria-label="الإشعارات"
+          title="الإشعارات"
         >
           <Bell className="h-5 w-5" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 animate-pulse rounded-full bg-red-500" />
         </button>
 
-        <div className="flex items-center gap-3 border-r border-[var(--color-border)] pr-3 sm:pr-4">
+        <button
+          type="button"
+          onClick={() => navigate('/admin/profile')}
+          title="الملف الشخصي"
+          aria-label="انتقل إلى الملف الشخصي"
+          className="flex items-center gap-3 rounded-xl border-r border-[var(--color-border)] pr-3 transition-all duration-200 hover:opacity-80 sm:pr-4"
+        >
           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#45592D] text-sm font-bold text-white sm:h-10 sm:w-10">
             {admin?.avatar_url ? (
               <img
@@ -231,7 +239,7 @@ function AdminTopbar() {
             </p>
             <p className="text-xs text-[var(--color-text-faint)]">مدير النظام</p>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   )
