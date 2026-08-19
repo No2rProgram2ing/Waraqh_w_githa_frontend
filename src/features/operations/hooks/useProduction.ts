@@ -7,5 +7,7 @@ export function useProductionHistory(orderId?: number | null){
 }
 
 export function useUpdateProductionStage(){
-  return useMutation(({ orderId, stageKey, payload }: { orderId: number; stageKey: string; payload: Record<string, any> }) => productionApi.updateStage(orderId, stageKey, payload))
+  return useMutation({
+    mutationFn: ({ orderId, stageKey, payload }: { orderId: number; stageKey: string; payload: Record<string, any> }) => productionApi.updateStage(orderId, stageKey, payload)
+  })
 }

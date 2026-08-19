@@ -1,10 +1,10 @@
-import React from 'react'
-import type { OrderProductionStage } from '../types/orders.types'
+
+import type { ProductionStage } from '../types/orders.types'
 import { useUpdateProductionStage, useProductionHistory } from '../hooks/useProduction'
 
 export function ProductionStageManager({ orderId }: { orderId: number }) {
   const { data, refetch } = useProductionHistory(orderId)
-  const stages: OrderProductionStage[] = data?.data ?? []
+  const stages: ProductionStage[] = data?.data ?? []
   const update = useUpdateProductionStage()
 
   const handleUpdate = async (stageKey: string, status: string) => {

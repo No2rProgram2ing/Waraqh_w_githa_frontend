@@ -90,7 +90,7 @@ export default function PaymentsPage() {
 
       {selectedId && (
         <PaymentDetailsDrawer
-          payment={selectedPayment ?? null}
+          payment={selectedPayment?.data ?? null}
           onClose={() => setSelectedId(null)}
         />
       )}

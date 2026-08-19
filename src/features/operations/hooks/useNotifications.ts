@@ -1,11 +1,13 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, keepPreviousData } from '@tanstack/react-query'
 import { notificationsApi } from '../api/notificationsApi'
 import { notificationsKeys } from './keys'
 
 export function useNotifications(params: Record<string, any> = {}){
-  return useQuery({ queryKey: notificationsKeys.list(params), queryFn: () => notificationsApi.list(params), keepPreviousData: true })
+  return useQuery({ queryKey: notificationsKeys.list(params), queryFn: () => notificationsApi.list(params), placeholderData: keepPreviousData })
 }
 
 export function useMarkRead(){
-  return useMutation((ids: number[]) => notificationsApi.markRead(ids))
+  return useMutation({
+    mutationFn: (ids: number[]) => notificationsApi.markRead(ids)
+  })
 }

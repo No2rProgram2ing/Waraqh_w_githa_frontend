@@ -12,8 +12,10 @@ export function useReports(params: Record<string, any> = {}){
 }
 
 export function useExportReport(){
-  return useMutation(({ params, type }: { params?: Record<string, any>; type: 'csv' | 'pdf' }) => {
-    if (type === 'pdf') return reportsApi.exportPdf(params)
-    return reportsApi.exportCsv(params)
+  return useMutation({
+    mutationFn: ({ params, type }: { params?: Record<string, any>; type: 'csv' | 'pdf' }) => {
+      if (type === 'pdf') return reportsApi.exportPdf(params)
+      return reportsApi.exportCsv(params)
+    }
   })
 }
