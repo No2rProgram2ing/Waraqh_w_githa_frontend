@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useOrders, useOrder } from '../hooks/useOrders'
 import { OrdersTable, OrdersToolbar } from '../components/OrdersTable'
 import { OrderDetailsDrawer } from '../components/OrderDetailsDrawer'
 
 export default function OrdersPage() {
-  const [params, setParams] = useState<Record<string, any>>({ per_page: 10, page: 1 })
+  const [params] = useState<Record<string, any>>({ per_page: 10, page: 1 })
   const [search, setSearch] = useState('')
   const { data, isLoading } = useOrders(params)
   const [selectedId, setSelectedId] = useState<number | null>(null)

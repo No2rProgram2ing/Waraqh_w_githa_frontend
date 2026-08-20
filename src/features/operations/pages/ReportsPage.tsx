@@ -5,22 +5,16 @@ import { useReports } from '../hooks/useReports'
 import { ReportsExport } from '../components/ReportsExport'
 import { ReportsKpiCards } from '../components/ReportsKpiCards'
 import { OpPageHeader } from '../components/OpPageHeader'
-import { Search } from 'lucide-react'
+//import { Search } from 'lucide-react'
 
 export default function ReportsPage() {
-  const [params, setParams] = useState({ per_page: 50, q: '' })
-  const { data, refetch, isLoading } = useReports(params)
-  const rows = data?.data ?? []
+  const [params, setParams] = useState({ from: '', to: '' })
+  const { data: stats, refetch, isLoading } = useReports(params)
   
-  // Calculate mock KPIs since the API might not provide them directly yet
-  const totalRevenue = rows.reduce((sum: number, r: any) => sum + Number(r.value ?? r.amount ?? 0), 0)
-  const totalOrders = rows.length
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-  
-  const mockKpi = {
-    total_orders: totalOrders,
-    total_revenue: totalRevenue,
-    avg_order_value: avgOrderValue,
+  const kpi = {
+    total_orders: stats?.paid_orders_count ?? 0,
+    total_revenue: stats?.total_revenue ?? 0,
+    avg_order_value: stats?.avg_order_value ?? 0,
   }
 
   useEffect(() => {
@@ -37,11 +31,11 @@ export default function ReportsPage() {
       <OpPageHeader
         title="التقارير"
         description="استعرض أداء المتجر والإحصائيات وتصدير البيانات"
-        action={<ReportsExport rows={rows} />}
+        action={<ReportsExport rows={stats?.sales_timeseries ?? []} />}
       />
 
       {/* KPI Cards */}
-      <ReportsKpiCards kpi={mockKpi} />
+      <ReportsKpiCards kpi={kpi} />
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -52,12 +46,7 @@ export default function ReportsPage() {
                 <p className="text-sm font-medium text-[var(--color-text-muted)]">جارٍ تحميل التقارير...</p>
              </div>
           ) : (
-            <ReportsChart
-              rows={rows.map((r: any) => ({
-                label: r.name ?? r.label ?? 'عنصر',
-                value: r.value ?? r.amount ?? 0,
-              }))}
-            />
+            <ReportsChart stats={stats ?? null} />
           )}
         </div>
 
@@ -73,24 +62,34 @@ export default function ReportsPage() {
             <div className="p-5 space-y-4">
               <div className="flex flex-col gap-1.5">
                 <label
-                  htmlFor="reports-search"
+                  htmlFor="filter-from"
                   className="text-sm font-medium text-[var(--color-text-primary)]"
                 >
-                  بحث
+                  من تاريخ
                 </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Search className="h-4 w-4 text-[var(--color-text-faint)]" aria-hidden="true" />
-                  </div>
-                  <input
-                    id="reports-search"
-                    type="search"
-                    placeholder="ابحث في التقارير..."
-                    value={params.q}
-                    onChange={(e) => setParams({ ...params, q: e.target.value })}
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-4 pr-10 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
-                  />
-                </div>
+                <input
+                  id="filter-from"
+                  type="date"
+                  value={params.from}
+                  onChange={(e) => setParams({ ...params, from: e.target.value })}
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 px-4 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="filter-to"
+                  className="text-sm font-medium text-[var(--color-text-primary)]"
+                >
+                  إلى تاريخ
+                </label>
+                <input
+                  id="filter-to"
+                  type="date"
+                  value={params.to}
+                  onChange={(e) => setParams({ ...params, to: e.target.value })}
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 px-4 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]"
+                />
               </div>
             </div>
           </div>

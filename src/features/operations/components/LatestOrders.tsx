@@ -1,11 +1,14 @@
 import type { Order } from '../types/orders.types'
 import { OpStatusBadge } from './OpStatusBadge'
+import { useSystemCurrency } from '@/lib/currency'
 
 interface LatestOrdersProps {
   orders?: Order[]
 }
 
 export function LatestOrders({ orders = [] }: LatestOrdersProps) {
+  const { formatAmount } = useSystemCurrency()
+
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
@@ -52,8 +55,8 @@ export function LatestOrders({ orders = [] }: LatestOrdersProps) {
                 {order.customer?.name ?? 'عميل'}
               </td>
 
-              <td className="px-5 py-4 text-sm font-semibold tabular-nums text-[var(--color-text-primary)]">
-                {Number(order.total).toLocaleString('ar-SA')} ر.س
+              <td className="px-5 py-4 text-sm font-semibold tabular-nums text-[var(--color-text-primary)]" dir="ltr" style={{textAlign: "right"}}>
+                {formatAmount(order.total)}
               </td>
 
               <td className="px-5 py-4">

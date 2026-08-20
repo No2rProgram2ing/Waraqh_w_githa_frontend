@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import type { FeaturedProduct } from '../types/dashboard.types'
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react'
+import { useSystemCurrency } from '@/lib/currency'
 
 interface Props {
   products?: FeaturedProduct[] | null
@@ -8,6 +9,7 @@ interface Props {
 
 export function FeaturedProductsCarousel({ products }: Props) {
   const ref = useRef<HTMLDivElement | null>(null)
+  const { formatAmount } = useSystemCurrency()
 
   const scroll = (dir: 'left' | 'right') => {
     if (!ref.current) return
@@ -27,7 +29,7 @@ export function FeaturedProductsCarousel({ products }: Props) {
             أحدث المنتجات في الكتالوج
           </p>
         </div>
-        
+
         {products && products.length > 0 && (
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -91,9 +93,8 @@ export function FeaturedProductsCarousel({ products }: Props) {
                     {p.name}
                   </p>
                   {p.price && (
-                    <p className="mt-1 text-sm font-bold text-[#45592D]">
-                      {Number(p.price).toLocaleString('ar-SA')}
-                      <span className="mr-1 text-xs font-normal text-[var(--color-text-muted)]">ر.س</span>
+                    <p className="mt-1 text-sm font-bold text-[#45592D]" dir="ltr" style={{ textAlign: "right" }}>
+                      {formatAmount(p.price)}
                     </p>
                   )}
                 </div>

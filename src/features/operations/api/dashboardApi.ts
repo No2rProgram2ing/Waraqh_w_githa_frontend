@@ -2,31 +2,26 @@ import { axiosAdminClient } from '@/api/axiosAdminClient'
 import type { DashboardStats, DashboardOrder, FeaturedProduct } from '../types/dashboard.types'
 
 export const dashboardApi = {
-  async getStats(): Promise<DashboardStats> {
-    // Prefer a dedicated dashboard endpoint if available
-    try {
-      const response = await axiosAdminClient.get('/admin/dashboard/statistics')
-      return response.data.data ?? response.data
-    } catch (err: any) {
-      // Fallback to orders-statistics if dashboard endpoint not available
-      if (err?.response?.status === 404 || err?.response?.status === 400) {
-        const resp = await axiosAdminClient.get('/admin/orders-statistics')
-        const stats = resp.data ?? {}
-        return {
-          total_orders: stats.total_orders ?? 0,
-          pending: stats.pending ?? 0,
-          production: stats.production ?? 0,
-          completed: stats.completed ?? 0,
-        }
-      }
-
-      throw err
+  async getStats(params?: { from?: string; to?: string }): Promise<DashboardStats> {
+    const response = await axiosAdminClient.get('/admin/orders-statistics', { params })
+    const stats = response.data.data ?? response.data ?? {}
+    
+    return {
+      total_orders: stats.total_orders ?? 0,
+      pending: stats.pending ?? 0,
+      production: stats.production ?? 0,
+      completed: stats.completed ?? 0,
+      total_revenue: stats.total_revenue,
+      paid_orders_count: stats.paid_orders_count ?? 0,
+      avg_order_value: stats.avg_order_value ?? 0,
+      sales_timeseries: stats.sales_timeseries,
     }
   },
 
   async getLatestOrders(per_page = 5): Promise<DashboardOrder[]> {
     const response = await axiosAdminClient.get('/admin/orders', { params: { per_page } })
-    return (response.data.data ?? []) as DashboardOrder[]
+    const orders = (response.data.data ?? []) as DashboardOrder[]
+    return orders
   },
 
   async getFeaturedProducts(per_page = 6): Promise<FeaturedProduct[]> {

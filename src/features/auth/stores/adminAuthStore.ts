@@ -7,8 +7,10 @@ interface AdminAuthState {
   admin: AdminUser | null
   isAuthenticated: boolean
   isLoading: boolean
+  isInitialized: boolean
   error: string | null
 
+  initialize: () => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   clearError: () => void
@@ -16,11 +18,58 @@ interface AdminAuthState {
   updateAdmin: (admin: Partial<AdminUser>) => void
 }
 
-export const useAdminAuthStore = create<AdminAuthState>((set) => ({
+export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   admin: null,
-  isAuthenticated: Boolean(adminAuthStorage.getToken()),
+  isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
+
+  initialize: async (): Promise<void> => {
+    if (get().isInitialized || get().isLoading) {
+      return
+    }
+
+    const token = adminAuthStorage.getToken()
+
+    if (!token) {
+      set({
+        admin: null,
+        isAuthenticated: false,
+        isInitialized: true,
+        isLoading: false,
+      })
+
+      return
+    }
+
+    set({
+      isLoading: true,
+      error: null,
+    })
+
+    try {
+      const response = await adminAuthApi.getProfile()
+
+      set({
+        admin: response.data,
+        isAuthenticated: true,
+        isInitialized: true,
+        isLoading: false,
+        error: null,
+      })
+    } catch (error) {
+      adminAuthStorage.clearToken()
+
+      set({
+        admin: null,
+        isAuthenticated: false,
+        isInitialized: true,
+        isLoading: false,
+        error: null,
+      })
+    }
+  },
 
   login: async (email: string, password: string): Promise<void> => {
     set({
@@ -39,6 +88,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       set({
         admin: response.data.admin,
         isAuthenticated: true,
+        isInitialized: true,
         isLoading: false,
         error: null,
       })
@@ -80,6 +130,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       set({
         admin: null,
         isAuthenticated: false,
+        isInitialized: true,
         isLoading: false,
         error: null,
       })

@@ -85,15 +85,30 @@ export function formatCurrency(
   const currencyCode = normalizeCurrencyCode(currencyCodeOverride ?? 'YER')
   const locale = getCurrencyLocale(currencyCode)
 
+  const defaultFractionDigits = currencyCode === 'YER' ? 0 : 2
+
+  let minimumFractionDigits =
+    options.minimumFractionDigits ?? defaultFractionDigits
+
+  let maximumFractionDigits =
+    options.maximumFractionDigits ?? defaultFractionDigits
+
+  // Intl.NumberFormat requires min <= max and both values in 0..20.
+  minimumFractionDigits = Math.min(Math.max(minimumFractionDigits, 0), 20)
+  maximumFractionDigits = Math.min(Math.max(maximumFractionDigits, 0), 20)
+
+  if (minimumFractionDigits > maximumFractionDigits) {
+    minimumFractionDigits = maximumFractionDigits
+  }
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
-    minimumFractionDigits: currencyCode === 'YER' ? 0 : 2,
-    maximumFractionDigits: currencyCode === 'YER' ? 0 : 2,
     ...options,
+    minimumFractionDigits,
+    maximumFractionDigits,
   }).format(Number.isFinite(numericAmount) ? numericAmount : 0)
 }
-
 export const exchangeRateKeys = {
   all: ['exchange-rates'] as const,
 }

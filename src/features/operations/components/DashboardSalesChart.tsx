@@ -2,12 +2,20 @@ import { useMemo } from 'react'
 import ReactApexChart from 'react-apexcharts'
 import type { DashboardStats } from '../types/dashboard.types'
 import { TrendingUp } from 'lucide-react'
+import {
+  convertYERToCurrency,
+  formatCurrency,
+  useExchangeRates,
+  useSystemCurrency,
+} from '@/lib/currency'
 
 interface Props {
   data?: DashboardStats | null
 }
 
 export function DashboardSalesChart({ data }: Props) {
+  const { formatAmount, currencyCode } = useSystemCurrency()
+  const { data: exchangeRates } = useExchangeRates()
   const timeseries = data?.sales_timeseries ?? []
 
   const categories = useMemo(
@@ -19,10 +27,16 @@ export function DashboardSalesChart({ data }: Props) {
     () => [
       {
         name: 'الإيرادات',
-        data: timeseries.map((point) => point.revenue),
+        data: timeseries.map((point) =>
+          convertYERToCurrency(
+            point.revenue,
+            currencyCode,
+            exchangeRates?.rates,
+          ),
+        ),
       },
     ],
-    [timeseries],
+    [timeseries, currencyCode, exchangeRates?.rates],
   )
 
   const options = useMemo(
@@ -64,7 +78,7 @@ export function DashboardSalesChart({ data }: Props) {
       },
       yaxis: {
         labels: {
-          formatter: (value: number) => value.toLocaleString('ar-SA'),
+          formatter: (value: number) => formatCurrency(value, currencyCode, { maximumFractionDigits: 0, }),
           style: {
             colors: 'var(--color-text-muted)',
             fontSize: '11px',
@@ -74,7 +88,7 @@ export function DashboardSalesChart({ data }: Props) {
       tooltip: {
         theme: 'dark',
         y: {
-          formatter: (value: number) => `${value.toLocaleString('ar-SA')} ر.س`,
+          formatter: (value: number) => formatCurrency(value, currencyCode),
         },
       },
       colors: ['#45592D'],
@@ -85,18 +99,29 @@ export function DashboardSalesChart({ data }: Props) {
       },
       dataLabels: { enabled: false },
       markers: {
-        size: 0,
-        hover: { size: 5 },
+        size: categories.length === 1 ? 5 : 0,
+        colors: ['#45592D'],
+        hover: { size: 6 },
       },
     }),
-    [categories],
+    [categories, currencyCode],
   )
 
-  const revenues = timeseries.map((p) => p.revenue)
-  const total = revenues.reduce((s, r) => s + r, 0)
+  const revenues = useMemo(
+    () =>
+      timeseries.map((point) =>
+        convertYERToCurrency(
+          point.revenue,
+          currencyCode,
+          exchangeRates?.rates,
+        ),
+      ),
+    [timeseries, currencyCode, exchangeRates?.rates],
+  )
+
+  const total = revenues.reduce((sum, revenue) => sum + revenue, 0)
   const maxRev = revenues.length ? Math.max(...revenues) : 0
   const minRev = revenues.length ? Math.min(...revenues) : 0
-
   /* ── Empty state ── */
   if (timeseries.length === 0) {
     return (
@@ -142,11 +167,10 @@ export function DashboardSalesChart({ data }: Props) {
         </div>
 
         {data?.total_revenue && (
-          <div className="text-right">
-            <p className="text-xs text-[var(--color-text-muted)]">الإجمالي</p>
+          <div className="text-right" dir="ltr">
+            <p className="text-xs text-[var(--color-text-muted)] text-right">الإجمالي</p>
             <p className="text-xl font-extrabold tabular-nums text-[var(--color-text-primary)]">
-              {Number(data.total_revenue).toLocaleString('ar-SA')}
-              <span className="mr-1 text-sm font-semibold text-[var(--color-text-muted)]">ر.س</span>
+              {formatAmount(data.total_revenue)}
             </p>
           </div>
         )}
@@ -159,6 +183,7 @@ export function DashboardSalesChart({ data }: Props) {
           series={seriesData}
           type="area"
           height={260}
+          width="100%"
         />
       </div>
 
@@ -166,20 +191,20 @@ export function DashboardSalesChart({ data }: Props) {
       <div className="grid grid-cols-3 divide-x divide-x-reverse divide-[var(--color-border)] border-t border-[var(--color-border)]">
         <div className="px-5 py-3.5 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">أعلى قيمة</p>
-          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]">
-            {maxRev.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]" dir="ltr">
+            {formatCurrency(maxRev, currencyCode)}
           </p>
         </div>
         <div className="px-5 py-3.5 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">أدنى قيمة</p>
-          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]">
-            {minRev.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-[var(--color-text-primary)]" dir="ltr">
+            {formatCurrency(minRev, currencyCode)}
           </p>
         </div>
         <div className="px-5 py-3.5 text-center">
           <p className="text-xs text-[var(--color-text-muted)]">مجموع الفترة</p>
-          <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-            {total.toLocaleString('ar-SA')} <span className="text-xs font-normal">ر.س</span>
+          <p className="mt-0.5 text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400" dir="ltr">
+            {formatCurrency(total, currencyCode)}
           </p>
         </div>
       </div>

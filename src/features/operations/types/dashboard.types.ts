@@ -10,6 +10,8 @@ export interface DashboardStats {
   production: number
   completed: number
   total_revenue?: number
+  paid_orders_count?: number
+  avg_order_value?: number
   sales_timeseries?: SalesPoint[]
 }
 

@@ -1,13 +1,19 @@
-import React from 'react'
 import { Download, FileText } from 'lucide-react'
 
 export function ReportsExport({ rows }: { rows: any[] }) {
   const exportCsv = () => {
     if (!rows || !rows.length) return
-    const cols = Object.keys(rows[0])
+    
+    // Map keys to Arabic
+    const translatedRows = rows.map((r) => ({
+      'التاريخ': r.date,
+      'الإيرادات': r.revenue,
+    }))
+
+    const cols = Object.keys(translatedRows[0])
     const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`
     const header = cols.map(esc).join(',')
-    const body = rows.map((r) => cols.map((c) => esc(r[c])).join(',')).join('\n')
+    const body = translatedRows.map((r: any) => cols.map((c) => esc(r[c])).join(',')).join('\n')
     const csv = header + '\n' + body
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -21,12 +27,17 @@ export function ReportsExport({ rows }: { rows: any[] }) {
   const exportPdf = () => {
     // Client-side PDF fallback: open printable window and invoke print (user can save as PDF)
     try {
+      const translatedRows = rows?.map((r) => ({
+        'التاريخ': r.date,
+        'الإيرادات': r.revenue,
+      })) ?? []
+
       const html = [
-        `<html dir="rtl"><head><title>تقرير</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}td,th{border:1px solid #e5e7eb;padding:8px;text-align:right}</style></head><body><h2>تقرير</h2><table><thead><tr>${Object.keys(rows[0] ?? {})
+        `<html dir="rtl"><head><title>تقرير</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}td,th{border:1px solid #e5e7eb;padding:8px;text-align:right}</style></head><body><h2>تقرير</h2><table><thead><tr>${Object.keys(translatedRows[0] ?? {})
           .map((c) => `<th>${c}</th>`)
-          .join('')}</tr></thead><tbody>${rows
+          .join('')}</tr></thead><tbody>${translatedRows
           .map(
-            (r) =>
+            (r: any) =>
               `<tr>${Object.keys(r)
                 .map((k) => `<td>${String(r[k] ?? '')}</td>`)
                 .join('')}</tr>`

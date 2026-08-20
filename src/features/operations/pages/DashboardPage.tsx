@@ -14,11 +14,13 @@ import {
   Factory,
   CircleDot,
 } from 'lucide-react'
+import { useSystemCurrency } from '@/lib/currency'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: orders } = useLatestOrders(5)
   const { data: products } = useFeaturedProducts(6)
+  const { formatAmount } = useSystemCurrency()
 
   return (
     <div dir="rtl" className="space-y-7">
@@ -47,14 +49,16 @@ export default function DashboardPage() {
           value={
             statsLoading
               ? '...'
-              : stats?.total_revenue
-                ? `${Number(stats.total_revenue).toLocaleString('ar-SA')} ر.س`
+              : stats?.total_revenue !== undefined
+                ? formatAmount(stats.total_revenue)
                 : '---'
           }
           subtitle={
-            !stats && !statsLoading
-              ? 'يتطلب endpoint من الباك'
-              : undefined
+            stats && stats.total_revenue === undefined && !statsLoading
+              ? 'الإيرادات غير مدعومة حالياً من الباك'
+              : !stats && !statsLoading
+                ? 'يتطلب endpoint من الباك'
+                : undefined
           }
           percent={null}
           variant="positive"
