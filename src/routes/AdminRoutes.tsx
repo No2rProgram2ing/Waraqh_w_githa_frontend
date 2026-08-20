@@ -1,80 +1,197 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import AdminLayout from '@/components/shared/AdminLayout'
 import AdminProtectedRoute from './AdminProtectedRoute'
 
-import AdminLoginPage from '@/features/auth/pages/AdminLoginPage'
-import ProductsPage from '@/features/catalog/pages/ProductsPage'
-import ProductDetailsPage from '@/features/catalog/pages/ProductDetailsPage'
-import ProductEditPage from '@/features/catalog/pages/ProductEditPage'
-import CategoriesPage from '@/features/catalog/pages/CategoriesPage'
-import RolesPage from '@/features/roles/pages/RolesPage'
-import ActivityLogsPage from '@/features/activity-log/pages/ActivityLogsPage'
-import DesignPage from '@/features/design/pages/DesignPage'
-import AttributesPage from '@/features/catalog/pages/AttributesPage'
-import CustomersPage from '@/features/customers/pages/CustomersPage'
-import CustomerDetailsPage from '@/features/customers/pages/CustomerDetailsPage'
-import ReviewsPage from '@/features/reviews/pages/ReviewsPage'
-import AdminUsersPage from '@/features/admin-users/pages/AdminUsersPage'
-import ProfilePage from '@/features/settings/pages/ProfilePage'
-import SettingsPage from '@/features/settings/pages/SettingsPage'
+const AdminLoginPage = lazy(() =>
+  import('@/features/auth/pages/AdminLoginPage')
+)
 
-// Operations pages
-import DashboardPage from '@/features/operations/pages/DashboardPage'
-import OrdersPage from '@/features/operations/pages/OrdersPage'
-import CreateOrderPage from '@/features/operations/pages/CreateOrderPage'
-import OrderDetailsPage from '@/features/operations/pages/OrderDetailsPage'
-import CustomOrdersPage from '@/features/operations/pages/CustomOrdersPage'
-import CustomizationsPage from '@/features/operations/pages/CustomizationsPage'
-import FreeDesignRequestsPage from '@/features/operations/pages/FreeDesignRequestsPage'
-import ProductionPage from '@/features/operations/pages/ProductionPage'
-import PaymentsPage from '@/features/operations/pages/PaymentsPage'
-import NotificationsPage from '@/features/operations/pages/NotificationsPage'
-import InventoryPage from '@/features/operations/pages/InventoryPage'
-import ReportsPage from '@/features/operations/pages/ReportsPage'
+const ProductsPage = lazy(() =>
+  import('@/features/catalog/pages/ProductsPage')
+)
+
+const ProductDetailsPage = lazy(() =>
+  import('@/features/catalog/pages/ProductDetailsPage')
+)
+
+const ProductEditPage = lazy(() =>
+  import('@/features/catalog/pages/ProductEditPage')
+)
+
+const CategoriesPage = lazy(() =>
+  import('@/features/catalog/pages/CategoriesPage')
+)
+
+const RolesPage = lazy(() =>
+  import('@/features/roles/pages/RolesPage')
+)
+
+const ActivityLogsPage = lazy(() =>
+  import('@/features/activity-log/pages/ActivityLogsPage')
+)
+
+const DesignPage = lazy(() =>
+  import('@/features/design/pages/DesignPage')
+)
+
+const AttributesPage = lazy(() =>
+  import('@/features/catalog/pages/AttributesPage')
+)
+
+const CustomersPage = lazy(() =>
+  import('@/features/customers/pages/CustomersPage')
+)
+
+const CustomerDetailsPage = lazy(() =>
+  import('@/features/customers/pages/CustomerDetailsPage')
+)
+
+const ReviewsPage = lazy(() =>
+  import('@/features/reviews/pages/ReviewsPage')
+)
+
+const AdminUsersPage = lazy(() =>
+  import('@/features/admin-users/pages/AdminUsersPage')
+)
+
+const ProfilePage = lazy(() =>
+  import('@/features/settings/pages/ProfilePage')
+)
+
+const SettingsPage = lazy(() =>
+  import('@/features/settings/pages/SettingsPage')
+)
+
+// Operations
+const DashboardPage = lazy(() =>
+  import('@/features/operations/pages/DashboardPage')
+)
+
+const OrdersPage = lazy(() =>
+  import('@/features/operations/pages/OrdersPage')
+)
+
+const CreateOrderPage = lazy(() =>
+  import('@/features/operations/pages/CreateOrderPage')
+)
+
+const OrderDetailsPage = lazy(() =>
+  import('@/features/operations/pages/OrderDetailsPage')
+)
+
+const CustomOrdersPage = lazy(() =>
+  import('@/features/operations/pages/CustomOrdersPage')
+)
+
+const CustomizationsPage = lazy(() =>
+  import('@/features/operations/pages/CustomizationsPage')
+)
+
+const FreeDesignRequestsPage = lazy(() =>
+  import('@/features/operations/pages/FreeDesignRequestsPage')
+)
+
+const ProductionPage = lazy(() =>
+  import('@/features/operations/pages/ProductionPage')
+)
+
+const PaymentsPage = lazy(() =>
+  import('@/features/operations/pages/PaymentsPage')
+)
+
+const NotificationsPage = lazy(() =>
+  import('@/features/operations/pages/NotificationsPage')
+)
+
+const InventoryPage = lazy(() =>
+  import('@/features/operations/pages/InventoryPage')
+)
+
+const ReportsPage = lazy(() =>
+  import('@/features/operations/pages/ReportsPage')
+)
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--color-text-muted)]">
+      جاري تحميل الصفحة...
+    </div>
+  )
+}
 
 export function AdminRoutes() {
   return (
-    <Routes>
-      <Route path="login" element={<AdminLoginPage />} />
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="login" element={<AdminLoginPage />} />
 
-      <Route element={<AdminProtectedRoute />}>
-        <Route element={<AdminLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+        <Route element={<AdminProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
 
-          {/* Operations */}
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="orders/create" element={<CreateOrderPage />} />
-          <Route path="orders/:orderId" element={<OrderDetailsPage />} />
-          <Route path="custom-orders" element={<CustomOrdersPage />} />
-          <Route path="customizations" element={<CustomizationsPage />} />
-          <Route path="free-design-requests" element={<FreeDesignRequestsPage />} />
-          <Route path="production-stages" element={<ProductionPage />} />
-          <Route path="payments" element={<PaymentsPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="raw-materials" element={<InventoryPage />} />
-          <Route path="reports" element={<ReportsPage />} />
+            {/* Operations */}
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/create" element={<CreateOrderPage />} />
+            <Route path="orders/:orderId" element={<OrderDetailsPage />} />
+            <Route path="custom-orders" element={<CustomOrdersPage />} />
+            <Route path="customizations" element={<CustomizationsPage />} />
+            <Route
+              path="free-design-requests"
+              element={<FreeDesignRequestsPage />}
+            />
+            <Route
+              path="production-stages"
+              element={<ProductionPage />}
+            />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="raw-materials" element={<InventoryPage />} />
+            <Route path="reports" element={<ReportsPage />} />
 
-          {/* Existing routes */}
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="products/:productId" element={<ProductDetailsPage />} />
-          <Route path="products/:productId/edit" element={<ProductEditPage />} />
-          <Route path="product-categories" element={<CategoriesPage />} />
-          <Route path="roles" element={<RolesPage />} />
-          <Route path="activity-logs" element={<ActivityLogsPage />} />
-          <Route path="design" element={<DesignPage />} />
-          <Route path="product-attributes" element={<AttributesPage />} />
-          <Route path="customers" element={<CustomersPage />} />
-          <Route path="customers/:id" element={<CustomerDetailsPage />} />
-          <Route path="reviews" element={<ReviewsPage />} />
-          <Route path="admin-users" element={<AdminUsersPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
+            {/* Existing routes */}
+            <Route path="products" element={<ProductsPage />} />
+            <Route
+              path="products/:productId"
+              element={<ProductDetailsPage />}
+            />
+            <Route
+              path="products/:productId/edit"
+              element={<ProductEditPage />}
+            />
+            <Route
+              path="product-categories"
+              element={<CategoriesPage />}
+            />
+            <Route path="roles" element={<RolesPage />} />
+            <Route
+              path="activity-logs"
+              element={<ActivityLogsPage />}
+            />
+            <Route path="design" element={<DesignPage />} />
+            <Route
+              path="product-attributes"
+              element={<AttributesPage />}
+            />
+            <Route path="customers" element={<CustomersPage />} />
+            <Route
+              path="customers/:id"
+              element={<CustomerDetailsPage />}
+            />
+            <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="admin-users" element={<AdminUsersPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/admin/login" replace />} />
-    </Routes>
+        <Route
+          path="*"
+          element={<Navigate to="/admin/login" replace />}
+        />
+      </Routes>
+    </Suspense>
   )
 }

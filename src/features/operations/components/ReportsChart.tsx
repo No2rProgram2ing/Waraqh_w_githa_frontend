@@ -1,5 +1,7 @@
+import type { ApexOptions } from 'apexcharts'
 import  { useMemo } from 'react'
-import ReactApexChart from 'react-apexcharts'
+import ReactApexChart from 'react-apexcharts/core'
+import 'apexcharts/line'
 import type { DashboardStats } from '../types/dashboard.types'
 import { TrendingUp } from 'lucide-react'
 import { useSystemCurrency } from '@/lib/currency'
@@ -27,7 +29,7 @@ export function ReportsChart({ stats }: ReportsChartProps) {
     [timeseries],
   )
 
-  const options = useMemo(
+  const options = useMemo<ApexOptions>(
     () => ({
       chart: {
         id: 'reports-sales-timeseries',
@@ -74,7 +76,7 @@ export function ReportsChart({ stats }: ReportsChartProps) {
         },
       },
       tooltip: {
-        theme: 'dark',
+        theme: 'dark' ,
         y: {
           formatter: (value: number) => formatAmount(value),
         },

@@ -1,5 +1,7 @@
+import type { ApexOptions } from 'apexcharts'
 import { useMemo } from 'react'
-import ReactApexChart from 'react-apexcharts'
+import ReactApexChart from 'react-apexcharts/core'
+import 'apexcharts/line'
 import type { DashboardStats } from '../types/dashboard.types'
 import { TrendingUp } from 'lucide-react'
 import {
@@ -39,7 +41,7 @@ export function DashboardSalesChart({ data }: Props) {
     [timeseries, currencyCode, exchangeRates?.rates],
   )
 
-  const options = useMemo(
+  const options = useMemo<ApexOptions>(
     () => ({
       chart: {
         id: 'sales-timeseries',

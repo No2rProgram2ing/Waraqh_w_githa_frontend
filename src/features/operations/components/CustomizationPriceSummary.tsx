@@ -1,4 +1,3 @@
-import React from 'react'
 import type { CustomizationEstimate } from '../types/customizations.types'
 import { motion } from 'framer-motion'
 
