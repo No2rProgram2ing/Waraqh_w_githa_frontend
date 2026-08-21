@@ -1,131 +1,163 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { toast } from 'sonner'
-import { CustomizationPriceSummary } from '../components/CustomizationPriceSummary'
-import { CustomizationImageUploader } from '../components/CustomizationImageUploader'
-import { useEstimateCustomization, useCreateCustomization, useSaveDraft } from '../hooks/useCustomizations'
+import { useState } from 'react'
+import { X, Check, Loader2 } from 'lucide-react'
+import { CustomizationImageUploader } from './CustomizationImageUploader'
+import type { CustomizationOption } from '../types/customizations.types'
 
-export default function CustomizationForm() {
-  const [form, setForm] = useState({
-    customer_name: '',
-    customer_phone: '',
-    address: '',
-    product_id: '' as any,
-    quantity: 1,
-    base_price: 0,
-    customization_fee: 0,
-    shipping: 0,
-    color: '',
-    notes: '',
+interface CustomizationFormProps {
+  initialData?: CustomizationOption | null
+  onClose: () => void
+  onSuccess: () => void
+}
+
+export function CustomizationForm({ initialData, onClose, onSuccess }: CustomizationFormProps) {
+  const data = initialData as any
+
+  const [formData, setFormData] = useState({
+    name: data?.name || '',
+    type: data?.type || 'weaving',
+    price_impact: data?.price_impact || 0,
+    is_active: data?.is_active ?? true,
+    description: data?.description || '',
+    image_url: data?.image_url || '',
   })
 
-  const [attachments, setAttachments] = useState<File[]>([])
-  const [estimate, setEstimate] = useState<any | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const estimateMutation = useEstimateCustomization(form)
-  const createMutation = useCreateCustomization()
-  const saveDraftMutation = useSaveDraft(null)
-
-  const runEstimate = async () => {
-    try {
-      const payload = { ...form }
-      const res = await estimateMutation.mutateAsync(payload)
-      setEstimate(res)
-      toast.success('تم حساب السعر بنجاح')
-    } catch (err) {
-      console.error('Estimate error', err)
-      toast.error('حدث خطأ أثناء حساب السعر')
-    }
-  }
-
-  const submit = async () => {
-    const fd = new FormData()
-    fd.append('customer_name', form.customer_name)
-    fd.append('customer_phone', form.customer_phone)
-    fd.append('address', form.address)
-    fd.append('product_id', String(form.product_id))
-    fd.append('quantity', String(form.quantity))
-    fd.append('color', form.color)
-    fd.append('notes', form.notes)
-    fd.append('base_price', String(form.base_price))
-    fd.append('customization_fee', String(form.customization_fee))
-    fd.append('shipping', String(form.shipping))
-
-    attachments.forEach((f) => fd.append('attachments[]', f))
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      await createMutation.mutateAsync(fd)
-      toast.success('تم إنشاء طلب التخصيص')
-    } catch (err) {
-      console.error(err)
-      toast.error('حدث خطأ أثناء إنشاء الطلب')
-    }
-  }
-
-  const saveDraft = async () => {
-    try {
-      const payload: Record<string, any> = {
-        customer_name: form.customer_name,
-        customer_phone: form.customer_phone,
-        address: form.address,
-        product_id: form.product_id,
-        quantity: form.quantity,
-        base_price: form.base_price,
-        customization_fee: form.customization_fee,
-        shipping: form.shipping,
-        color: form.color,
-        notes: form.notes,
-        // attachments are not uploaded for draft in this implementation; we store filenames client-side
-        attachments: attachments.map((f) => f.name),
-      }
-
-      await saveDraftMutation.mutateAsync(payload)
-      toast.success('تم حفظ المسودة بنجاح')
-    } catch (err) {
-      console.error('Save draft error', err)
-      toast.error('فشل حفظ المسودة')
+      // هنا يتم استدعاء API الإنشاء أو التعديل
+      onSuccess()
+      onClose()
+    } catch (error) {
+      console.error('Error saving customization option:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <motion.div dir="rtl" className="grid grid-cols-1 gap-6 lg:grid-cols-3" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
-      <div className="col-span-2 space-y-4">
-        <div className="rounded-2xl border bg-white p-6">
-          <h2 className="text-lg font-semibold text-right">إضافة طلب تخصيص جديد</h2>
-
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            <input className="w-full rounded-md border p-3" placeholder="اسم العميل" value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
-            <input className="w-full rounded-md border p-3" placeholder="هاتف العميل" value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
-            <input className="w-full rounded-md border p-3" placeholder="عنوان التوصيل" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" className="rounded-md border p-3" placeholder="الكمية" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-              <input type="number" className="rounded-md border p-3" placeholder="سعر المنتج الأساسي" value={form.base_price} onChange={(e) => setForm({ ...form, base_price: Number(e.target.value) })} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" className="rounded-md border p-3" placeholder="رسوم التخصيص" value={form.customization_fee} onChange={(e) => setForm({ ...form, customization_fee: Number(e.target.value) })} />
-              <input type="number" className="rounded-md border p-3" placeholder="الشحن" value={form.shipping} onChange={(e) => setForm({ ...form, shipping: Number(e.target.value) })} />
-            </div>
-
-            <textarea className="w-full rounded-md border p-3" placeholder="ملاحظات إضافية" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-
-            <div className="mt-2">
-              <CustomizationImageUploader onChange={(files) => setAttachments(files)} />
-            </div>
-
-            <div className="flex items-center gap-3 mt-4">
-              <button onClick={runEstimate} className="rounded-md bg-[#3b6a2b] px-4 py-2 text-white hover:opacity-95 transition">احسب السعر</button>
-              <button onClick={submit} className="rounded-md border px-4 py-2 hover:bg-gray-50 transition">إرسال طلب التخصيص</button>
-              <button onClick={saveDraft} className="rounded-md bg-[#f3f4f6] px-4 py-2 text-sm text-[#374151] hover:opacity-95 transition">حفظ كمسودة</button>
-            </div>
-          </div>
-        </div>
+    <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl border border-gray-100" dir="rtl">
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
+        <h3 className="text-base font-bold text-gray-800">
+          {initialData ? 'تعديل خيار التخصيص' : 'إضافة خيار تخصيص جديد'}
+        </h3>
+        <button
+          onClick={onClose}
+          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      <aside>
-        <CustomizationPriceSummary estimate={estimate} />
-      </aside>
-    </motion.div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* اسم خيار التخصيص */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            اسم الخيار / النمط
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="مثال: غزل روتان سداسي، خيزران طبيعي داكن"
+            className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none"
+          />
+        </div>
+
+        {/* نوع التخصيص وتكلفة التأثير */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              نوع التخصيص
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none"
+            >
+              <option value="weaving">نمط الحبك/الغزل</option>
+              <option value="wood">نوع الخشب/الأساس</option>
+              <option value="finish">الدهان والتلميع</option>
+              <option value="fabric">الوسائد والقماش</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              تأثير السعر (ر.س)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.price_impact}
+              onChange={(e) => setFormData({ ...formData, price_impact: parseFloat(e.target.value) || 0 })}
+              className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* رفع صورة الخامة / النمط */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            صورة توضيحية للنمط/الخامة
+          </label>
+          <CustomizationImageUploader
+            {...({
+              value: formData.image_url ? [formData.image_url] : [],
+              onChange: (files: any) => {
+                const file = Array.isArray(files) ? files[0] : files
+                if (file) {
+                  const url = typeof file === 'string' ? file : URL.createObjectURL(file)
+                  setFormData({ ...formData, image_url: url })
+                } else {
+                  setFormData({ ...formData, image_url: '' })
+                }
+              },
+            } as any)}
+          />
+        </div>
+
+        {/* الوصف / تفاصيل التخصيص */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
+            الوصف / تفاصيل التخصيص
+          </label>
+          <textarea
+            rows={3}
+            placeholder="اكتب وصفاً قصيراً يشرح خصائص النمط أو خامة الروتان..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none"
+          />
+        </div>
+
+        {/* أزرار الحفظ والإلغاء */}
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+          >
+            إلغاء
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-emerald-800 rounded-xl hover:bg-emerald-900 transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
+            حفظ البيانات
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }

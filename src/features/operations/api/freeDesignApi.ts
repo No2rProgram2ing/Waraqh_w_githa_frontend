@@ -26,7 +26,7 @@ export const freeDesignApi = {
   ): Promise<FreeDesignListResponse> {
     try {
       const resp = await axiosAdminClient.get<FreeDesignListResponse>(
-        '/admin/free-designs',
+        '/admin/free-design-requests',
         { params },
       )
 
@@ -47,7 +47,7 @@ export const freeDesignApi = {
   ): Promise<AssignFreeDesignResponse> {
     try {
       const resp = await axiosAdminClient.post<AssignFreeDesignResponse>(
-        `/admin/free-designs/${id}/assign`,
+        `/admin/free-design-requests/${id}/assign`,
         payload,
       )
 

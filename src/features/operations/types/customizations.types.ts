@@ -7,7 +7,12 @@ export interface CustomizationDimensions {
 export interface CustomizationOption {
   id: number
   name: string
+  type?: 'weaving' | 'wood' | 'finish' | 'fabric' | string
   price?: number
+  price_impact?: number
+  is_active?: boolean
+  description?: string
+  image_url?: string
 }
 
 export interface CustomizationEstimate {

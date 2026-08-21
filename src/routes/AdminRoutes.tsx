@@ -4,6 +4,11 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminLayout from '@/components/shared/AdminLayout'
 import AdminProtectedRoute from './AdminProtectedRoute'
 
+const CustomizationForm = lazy(() =>
+  import('@/features/operations/components/CustomizationForm')
+)
+
+
 const AdminLoginPage = lazy(() =>
   import('@/features/auth/pages/AdminLoginPage')
 )
@@ -138,6 +143,8 @@ export function AdminRoutes() {
             <Route path="orders/:orderId" element={<OrderDetailsPage />} />
             <Route path="custom-orders" element={<CustomOrdersPage />} />
             <Route path="customizations" element={<CustomizationsPage />} />
+            <Route path="customizations/create" element={<CustomizationForm />} />
+
             <Route
               path="free-design-requests"
               element={<FreeDesignRequestsPage />}
