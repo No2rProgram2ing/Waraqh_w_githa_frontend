@@ -1,133 +1,118 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Filter, RefreshCw } from 'lucide-react'
-import { useOrders } from '../hooks/useOrders'
-
+import { Plus, RefreshCw } from 'lucide-react'
+import { useDeleteOrder, useOrders } from '../hooks/useOrders'
+import { OpButton } from '../components/OpButton'
+import { OpCard, OpCardSection } from '../components/OpCard'
+import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
-import { OpCard } from '../components/OpCard'
+import { OpSearch } from '../components/OpSearch'
+import { OpPagination } from '../components/OpPagination'
 import { OrdersTable } from '../components/OrdersTable'
 import { OrdersTableSkeleton } from '../components/OrdersTableSkeleton'
-import { OrderDetailsDrawer } from '../components/OrderDetailsDrawer'
-import type { Order } from '../types/orders.types'
 
 export default function OrdersPage() {
   const navigate = useNavigate()
-
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const { data, isLoading, isFetching, isError, refetch } = useOrders({ page, per_page: 20 })
+  const deleteOrder = useDeleteOrder()
+  const orders = data?.data ?? []
+  const meta = data?.meta
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm.trim())
-      setPage(1)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+  const filteredOrders = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return orders.filter((order) => {
+      const matchesSearch = !q || [order.order_number, order.customer?.name, order.type, order.product?.name]
+        .filter(Boolean).some((value) => String(value).toLowerCase().includes(q))
+      return matchesSearch && (!status || String(order.status) === status)
+    })
+  }, [orders, search, status])
 
-  const { data: responseData, isLoading, isFetching, isError, refetch } = useOrders({
-    page,
-    limit: 10,
-    search: debouncedSearch || undefined,
-    status: statusFilter !== 'all' ? statusFilter : undefined,
-  })
-
-  const orders: Order[] = responseData?.data || (Array.isArray(responseData) ? responseData : [])
+  const handleDelete = (id: number, orderNumber: string | number) => {
+    if (!window.confirm(`هل أنت متأكد من حذف الطلب #${orderNumber}؟ لا يمكن التراجع عن هذا الإجراء.`)) return
+    deleteOrder.mutate(id)
+  }
 
   return (
     <div dir="rtl" className="space-y-6">
-      {/* 1. هيدر الصفحة */}
       <OpPageHeader
         title="إدارة الطلبات"
-        description="عرض ومتابعة كافة طلبات المبيعات الخامات والمنتجات وإدارتها"
+        description="عرض ومتابعة كافة طلبات المبيعات وإدارتها"
         action={
-          <div className="flex items-center gap-3">
-            <button
+          <div className="flex flex-wrap items-center gap-2">
+            <OpButton
               type="button"
-              onClick={() => void refetch()}
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition shadow-sm cursor-pointer"
-            >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin text-[#45592D]' : 'text-gray-500'}`} />
-              تحديث
-            </button>
-            <button
-              type="button"
+              size="sm"
+              variant="primary"
               onClick={() => navigate('/admin/orders/create')}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#45592D] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#384824] transition shadow-sm cursor-pointer"
+              icon={<Plus className="h-4 w-4" />}
             >
-              <Plus className="h-4 w-4" />
-              إنشاء طلب جديد
-            </button>
+              إضافة طلب
+            </OpButton>
+            <OpButton type="button" size="sm" onClick={() => void refetch()} icon={<RefreshCw className={isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />}>
+              تحديث
+            </OpButton>
           </div>
         }
       />
 
-      {/* 2. شريط البحث والفلترة */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            placeholder="ابحث برقم الطلب، اسم العميل..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-10 pl-4 text-xs text-gray-800 placeholder-gray-400 focus:border-[#45592D] focus:ring-1 focus:ring-[#45592D] focus:outline-none transition"
-          />
-        </div>
+      <OpCard variant="table">
+        <OpCardSection className="items-stretch">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+            <OpSearch value={search} onChange={(value) => { setPage(1); setSearch(value) }} placeholder="ابحث برقم الطلب أو العميل أو المنتج..." className="w-full sm:max-w-[430px]" />
+            <select
+              value={status}
+              onChange={(e) => { setPage(1); setStatus(e.target.value) }}
+              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
+              aria-label="فلترة حسب الحالة"
+            >
+              <option value="">جميع الحالات</option>
+              <option value="received">مُستلم</option>
+              <option value="in_production">قيد التصنيع</option>
+              <option value="in_transit">قيد التوصيل</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+            <span className="mr-auto whitespace-nowrap rounded-full bg-[var(--color-surface-subtle)] px-3 py-1 text-xs text-[var(--color-text-muted)]">
+              {meta?.total ?? orders.length} طلب
+            </span>
+          </div>
+        </OpCardSection>
 
-        <div className="flex w-full items-center justify-end gap-2 md:w-auto">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value)
-              setPage(1)
+        {isError ? (
+          <OpEmptyState tone="error">
+            <p>حدث خطأ أثناء تحميل الطلبات.</p>
+            <OpButton type="button" variant="primary" size="sm" className="mt-4" onClick={() => void refetch()}>إعادة المحاولة</OpButton>
+          </OpEmptyState>
+        ) : isLoading ? (
+          <OrdersTableSkeleton />
+        ) : filteredOrders.length ? (
+          <OrdersTable
+            orders={filteredOrders}
+            onOpen={(id) => navigate(`/admin/orders/${id}`)}
+            onEdit={(id) => navigate(`/admin/orders/${id}`)}
+            onDelete={(id) => {
+              const order = filteredOrders.find((item) => item.id === id)
+              if (order) handleDelete(id, order.order_number)
             }}
-            className="rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-700 focus:border-[#45592D] focus:outline-none transition cursor-pointer"
-          >
-            <option value="all">جميع الحالات</option>
-            <option value="pending">جديد</option>
-            <option value="in_production">قيد التصنيع</option>
-            <option value="completed">مكتمل</option>
-          </select>
-        </div>
-      </div>
+            deletingId={deleteOrder.isPending ? deleteOrder.variables : null}
+          />
+        ) : (
+          <OpEmptyState>لا توجد نتائج مطابقة للبحث أو الفلترة.</OpEmptyState>
+        )}
 
-      {/* 3. حاوية الجدول */}
-      {isError ? (
-        <div className="rounded-2xl border border-gray-200/80 bg-white p-12 text-center shadow-sm">
-          <p className="text-sm font-semibold text-red-600">حدث خطأ أثناء تحميل البيانات.</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-4 rounded-xl bg-[#45592D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#384824] transition shadow-sm cursor-pointer"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden">
-          <OpCard variant="table">
-            {isLoading ? (
-              <OrdersTableSkeleton />
-            ) : (
-              <OrdersTable
-                orders={orders}
-                onViewDetails={(order: Order) => setSelectedOrder(order)}
-              />
-            )}
-          </OpCard>
-        </div>
-      )}
-
-      {/* 4. النافذة الجانبية للتفاصيل */}
-      <OrderDetailsDrawer
-        order={selectedOrder}
-        open={Boolean(selectedOrder)}
-        onOpenChange={(open: boolean) => !open && setSelectedOrder(null)}
-      />
+        {!isLoading && meta && (
+          <OpPagination
+            currentPage={meta.current_page ?? page}
+            lastPage={meta.last_page ?? 1}
+            total={meta.total}
+            shown={filteredOrders.length}
+            label="طلب"
+            onPageChange={setPage}
+          />
+        )}
+      </OpCard>
     </div>
   )
 }

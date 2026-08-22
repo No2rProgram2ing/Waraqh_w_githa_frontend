@@ -1,118 +1,37 @@
-import React from 'react'
 import type { RawMaterial } from '../types/inventory.types'
 import { OpStatusBadge } from './OpStatusBadge'
-import { Pencil } from 'lucide-react'
+import { OpIconButton } from './OpIconButton'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 
-function getStockStatus(material: RawMaterial): string {
-  if (material.stock_level <= 0) return 'out_of_stock'
-  if (material.stock_level <= (material.reorder_level ?? 0)) return 'low_stock'
-  return 'available'
-}
-
-interface InventoryTableProps {
+interface Props {
   materials: RawMaterial[]
-  onEdit?: (material: RawMaterial) => void
+  onView?: (m: RawMaterial) => void
+  onEdit?: (m: RawMaterial) => void
+  onDelete?: (m: RawMaterial) => void
 }
 
-export function InventoryTable({ materials, onEdit }: InventoryTableProps) {
-  if (!materials.length) {
-    return (
-      <section className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
-        <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
-          <p className="text-sm font-medium text-[var(--color-text-muted)]">لا توجد مواد خام مسجّلة.</p>
-        </div>
-      </section>
-    )
-  }
+export function InventoryTable({ materials, onView, onEdit, onDelete }: Props) {
+  if (!materials.length) return <div className="px-5 py-12 text-center text-sm text-[var(--color-text-muted)]">لا توجد مواد خام مطابقة.</div>
 
   return (
-    <section className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
-        <div>
-          <h2 className="text-base font-bold text-[var(--color-text-primary)]">قائمة المواد الخام</h2>
-          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">جميع المواد المسجّلة في المخزون</p>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[580px] text-right">
-          <thead className="bg-[var(--color-surface)]">
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                اسم المادة
-              </th>
-              <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                الرمز (SKU)
-              </th>
-              <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                الكمية المتاحة
-              </th>
-              <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                نقطة إعادة الطلب
-              </th>
-              <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                الحالة
-              </th>
-              {onEdit && (
-                <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-                  الإجراءات
-                </th>
-              )}
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[700px] text-right text-sm">
+        <thead className="bg-[var(--color-surface-subtle)] text-xs text-[var(--color-text-muted)]">
+          <tr className="border-b border-[var(--color-border)]">{['اسم المادة', 'الوحدة', 'الكمية المتاحة', 'نقطة إعادة الطلب', 'الحالة', 'الإجراءات'].map((h) => <th key={h} className="px-5 py-3.5 font-semibold">{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {materials.map((m) => (
+            <tr key={m.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-subtle)]">
+              <td className="px-5 py-4 font-semibold text-[var(--color-text-primary)]">{m.name}</td>
+              <td className="px-5 py-4 text-[var(--color-text-secondary)]">{m.unit ?? '—'}</td>
+              <td className="px-5 py-4 font-semibold tabular-nums">{m.quantity_available}</td>
+              <td className="px-5 py-4">{m.reorder_point ?? '—'}</td>
+              <td className="px-5 py-4"><OpStatusBadge status={String(m.status)} /></td>
+              <td className="px-5 py-4"><div className="flex items-center gap-1"><OpIconButton icon={<Eye size={17} strokeWidth={1.8} />} label="عرض المادة" onClick={() => onView?.(m)} /><OpIconButton icon={<Pencil size={17} strokeWidth={1.8} />} label="تعديل المادة" onClick={() => onEdit?.(m)} /><OpIconButton icon={<Trash2 size={17} strokeWidth={1.8} />} label="حذف المادة" tone="danger" onClick={() => onDelete?.(m)} /></div></td>
             </tr>
-          </thead>
-          <tbody>
-            {materials.map((m) => (
-              <tr
-                key={m.id}
-                className="border-b border-[var(--color-border)] last:border-b-0 transition-colors hover:bg-[var(--color-surface-subtle)]"
-              >
-                <td className="px-5 py-4">
-                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">{m.name}</p>
-                </td>
-
-                <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
-                  {m.sku ?? '—'}
-                </td>
-
-                <td className="px-5 py-4 text-sm font-semibold tabular-nums text-[var(--color-text-primary)]">
-                  {m.stock_level}
-                  {m.unit ? <span className="mr-1 text-xs font-normal text-[var(--color-text-muted)]">{m.unit}</span> : null}
-                </td>
-
-                <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
-                  {m.reorder_level ?? '—'}
-                </td>
-
-                <td className="px-5 py-4">
-                  <OpStatusBadge status={getStockStatus(m)} />
-                </td>
-
-                {onEdit && (
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => onEdit(m)}
-                      aria-label={`تعديل ${m.name}`}
-                      title="تعديل المادة"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-accent)] transition hover:bg-[var(--color-accent-subtle)]"
-                    >
-                      <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Footer count */}
-      <div className="border-t border-[var(--color-border)] px-5 py-3">
-        <p className="text-sm text-[var(--color-text-muted)]">
-          {materials.length} مادة مسجّلة
-        </p>
-      </div>
-    </section>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

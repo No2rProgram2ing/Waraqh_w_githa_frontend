@@ -1,72 +1,29 @@
 import { axiosAdminClient } from '@/api/axiosAdminClient'
-import type { CustomizationOption, CustomizationEstimate } from '../types/customizations.types'
+import type { CustomizationRequest, CustomizationStatus } from '../types/customizations.types'
 
 export const customizationsApi = {
-  // 1. جلب قائمة التخصيصات
-  async list(params: Record<string, any> = {}): Promise<{ data: CustomizationOption[] }> {
-    const resp = await axiosAdminClient.get('/admin/customizations', { params })
-    return resp.data
+  async list() {
+    const r = await axiosAdminClient.get('/admin/customizations')
+    return { ...r.data, data: Array.isArray(r.data?.data) ? r.data.data as CustomizationRequest[] : [] }
   },
 
-  // 2. جلب تفاصيل تخصيص محدد
-  async getById(id: number): Promise<CustomizationOption> {
-    const resp = await axiosAdminClient.get(`/admin/customizations/${id}`)
-    return resp.data
+  async create(payload: Record<string, unknown>) {
+    const r = await axiosAdminClient.post('/admin/customizations', payload)
+    return (r.data?.data ?? r.data) as CustomizationRequest
   },
 
-  // 3. حساب التكلفة التقديرية
-  async estimate(payload: Record<string, any>): Promise<CustomizationEstimate> {
-    try {
-      const resp = await axiosAdminClient.post('/admin/customizations/estimate', payload)
-      return resp.data.data ?? resp.data
-    } catch (err: any) {
-      const basePrice = Number(payload.base_price ?? 0)
-      const customizationFee = Number(payload.customization_fee ?? 0)
-      const shipping = Number(payload.shipping ?? 0)
-      return {
-        base_price: basePrice,
-        customization_fee: customizationFee,
-        shipping,
-        total: basePrice + customizationFee + shipping,
-      }
-    }
+  async getById(id: number): Promise<CustomizationRequest> {
+    const r = await axiosAdminClient.get(`/admin/customizations/${id}`)
+    return (r.data?.data ?? r.data) as CustomizationRequest
   },
 
-  // 4. إنشاء تخصيص جديد
-  async create(payload: FormData | Record<string, any>): Promise<CustomizationOption> {
-    const isFormData = payload instanceof FormData
-    const resp = await axiosAdminClient.post('/admin/customizations', payload, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    })
-    return resp.data
+  async updateStatus(id: number, status: CustomizationStatus) {
+    const r = await axiosAdminClient.put(`/admin/customizations/${id}/status`, { status })
+    return r.data
   },
 
-  // 5. حفظ المسودة
-  async saveDraft(id: number | null, payload: Record<string, any>) {
-    try {
-      if (id) {
-        const resp = await axiosAdminClient.put(`/admin/customizations/${id}`, payload)
-        return resp.data
-      }
-      const resp = await axiosAdminClient.post('/admin/customizations/drafts', payload)
-      return resp.data
-    } catch (err: any) {
-      try {
-        const key = 'local_customization_drafts'
-        const existingJson = localStorage.getItem(key)
-        const existing = existingJson ? JSON.parse(existingJson) : []
-        const draft = {
-          id: Date.now(),
-          ...payload,
-          _local: true,
-          created_at: new Date().toISOString(),
-        }
-        existing.push(draft)
-        localStorage.setItem(key, JSON.stringify(existing))
-        return { data: draft }
-      } catch (storageErr) {
-        throw err
-      }
-    }
+  async delete(id: number) {
+    const r = await axiosAdminClient.delete(`/admin/customizations/${id}`)
+    return r.data
   },
 }

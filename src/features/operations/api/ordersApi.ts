@@ -1,29 +1,285 @@
 import { axiosAdminClient } from '@/api/axiosAdminClient'
-import type { Order, OrdersListResponse } from '../types/orders.types'
+
+import type {
+  Order,
+  OrderItem,
+  OrdersListResponse,
+  OrderStatus,
+  CreateOrderPayload,
+} from '../types/orders.types'
+
+function normalizeItem(item: any): OrderItem {
+  return {
+    id: Number(item.id),
+
+    product: item.product ?? null,
+
+    name:
+      item.name ??
+      item.product?.name ??
+      null,
+
+    quantity: Number(
+      item.quantity ??
+        item.qty ??
+        0,
+    ),
+
+    qty: Number(
+      item.quantity ??
+        item.qty ??
+        0,
+    ),
+
+    price: Number(
+      item.price ??
+        item.unit_price ??
+        0,
+    ),
+
+    customized: Boolean(
+      item.customized ??
+        item.is_customized,
+    ),
+
+    customization_id:
+      item.customization_id ??
+      null,
+
+    customization_note:
+      item.customization_note ??
+      null,
+  }
+}
+
+function normalizeOrder(raw: any): Order {
+  const source =
+    raw?.data && !raw.id
+      ? raw.data
+      : raw
+
+  return {
+    ...source,
+
+    id: Number(source.id),
+
+    order_number: String(
+      source.order_number ??
+        source.number ??
+        source.id ??
+        '',
+    ),
+
+    type:
+      source.type ??
+      source.order_type ??
+      null,
+
+    subtotal: Number(
+      source.subtotal ??
+        source.sub_total ??
+        0,
+    ),
+
+    shipping_fee: Number(
+      source.shipping_fee ??
+        source.shipping ??
+        0,
+    ),
+
+    total: Number(
+      source.total ??
+        source.total_amount ??
+        0,
+    ),
+
+    status:
+      source.status?.value ??
+      source.status,
+
+    customer: source.customer
+      ? {
+          id:
+            source.customer.id ??
+            null,
+
+          name:
+            source.customer.name ??
+            source.customer.full_name ??
+            null,
+
+          phone:
+            source.customer.phone ??
+            null,
+        }
+      : {
+          id: null,
+          name: null,
+          phone: null,
+        },
+
+    product:
+      source.product ??
+      source.items?.[0]?.product ??
+      null,
+
+    items:
+      Array.isArray(source.items)
+        ? source.items.map(normalizeItem)
+        : [],
+
+    payment: source.payment
+      ? {
+          id: Number(
+            source.payment.id,
+          ),
+
+          method:
+            source.payment.method ??
+            null,
+
+          amount: Number(
+            source.payment.amount ??
+              0,
+          ),
+
+          status:
+            source.payment.status?.value ??
+            source.payment.status ??
+            'unpaid',
+
+          paid_at:
+            source.payment.paid_at ??
+            null,
+        }
+      : null,
+
+    created_at:
+      source.created_at,
+  }
+}
 
 export const ordersApi = {
-  async list(params: Record<string, any> = {}): Promise<OrdersListResponse> {
-    const response = await axiosAdminClient.get('/admin/orders', { params })
+  /**
+   * جلب قائمة الطلبات
+   */
+  async list(
+    params: {
+      page?: number
+      per_page?: number
+    } = {},
+  ): Promise<OrdersListResponse> {
+    const response =
+      await axiosAdminClient.get(
+        '/admin/orders',
+        {
+          params: {
+            per_page: 20,
+            ...params,
+          },
+        },
+      )
+
+    return {
+      ...response.data,
+
+      data:
+        Array.isArray(
+          response.data?.data,
+        )
+          ? response.data.data.map(
+              normalizeOrder,
+            )
+          : [],
+    }
+  },
+
+  /**
+   * جلب تفاصيل طلب
+   */
+  async getById(
+    id: number,
+  ): Promise<Order> {
+    const response =
+      await axiosAdminClient.get(
+        `/admin/orders/${id}`,
+      )
+
+    return normalizeOrder(
+      response.data,
+    )
+  },
+
+  /**
+   * إنشاء طلب جديد
+   */
+  async create(
+    payload: CreateOrderPayload,
+  ): Promise<Order> {
+    const response =
+      await axiosAdminClient.post(
+        '/admin/orders',
+        payload,
+      )
+
+    return normalizeOrder(
+      response.data,
+    )
+  },
+
+  /**
+   * تحديث حالة الطلب
+   */
+  async updateStatus(
+    id: number,
+    status: OrderStatus,
+    note?: string,
+  ): Promise<void> {
+    await axiosAdminClient.put(
+      `/admin/orders/${id}/status`,
+      {
+        status,
+        note,
+      },
+    )
+  },
+
+  /**
+   * حذف الطلب
+   */
+  async delete(
+    id: number,
+  ): Promise<void> {
+    await axiosAdminClient.delete(
+      `/admin/orders/${id}`,
+    )
+  },
+
+  /**
+   * سجل مراحل الإنتاج
+   */
+  async getProductionHistory(
+    id: number,
+  ) {
+    const response =
+      await axiosAdminClient.get(
+        `/admin/orders/${id}/production-history`,
+      )
+
     return response.data
   },
 
-  async getById(id: number): Promise<Order> {
-    const response = await axiosAdminClient.get(`/admin/orders/${id}`)
-    return response.data
-  },
+  /**
+   * سجل حالات الطلب
+   */
+  async getStatusHistory(
+    id: number,
+  ) {
+    const response =
+      await axiosAdminClient.get(
+        `/admin/orders/${id}/status-history`,
+      )
 
-  async create(data: any): Promise<Order> {
-    const response = await axiosAdminClient.post('/admin/orders', data)
-    return response.data
-  },
-
-  async update(id: number, data: any): Promise<Order> {
-    const response = await axiosAdminClient.put(`/admin/orders/${id}`, data)
-    return response.data
-  },
-
-  async getProductionHistory(id: number) {
-    const response = await axiosAdminClient.get(`/admin/orders/${id}/production-history`)
     return response.data
   },
 }

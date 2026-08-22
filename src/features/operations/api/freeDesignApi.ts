@@ -1,80 +1,43 @@
 import { axiosAdminClient } from '@/api/axiosAdminClient'
-import type { FreeDesignRequest } from '../types/freeDesign.types'
+import type { FreeDesignRequest, FreeDesignStatus } from '../types/freeDesign.types'
 
 export interface FreeDesignListResponse {
   data: FreeDesignRequest[]
   meta?: {
-    total: number
-    per_page: number
     current_page: number
     last_page: number
+    per_page: number
+    total: number
   }
 }
 
-export interface AssignFreeDesignPayload {
-  assignee: string
-  status: 'assigned' | 'in_progress' | 'done' | 'rejected'
-}
-
-export interface AssignFreeDesignResponse {
-  data: FreeDesignRequest
+export interface FreeDesignUpdatePayload {
+  status?: FreeDesignStatus
+  description?: string
 }
 
 export const freeDesignApi = {
-  async list(
-    params: Record<string, unknown> = {},
-  ): Promise<FreeDesignListResponse> {
-    try {
-      const resp = await axiosAdminClient.get<FreeDesignListResponse>(
-        '/admin/free-design-requests',
-        { params },
-      )
-
-      return resp.data
-    } catch (err) {
-      const key = 'local_free_designs'
-      const raw = localStorage.getItem(key)
-
-      return {
-        data: raw ? (JSON.parse(raw) as FreeDesignRequest[]) : [],
-      }
-    }
+  async list(params: { page?: number; per_page?: number; search?: string; status?: string } = {}) {
+    const response = await axiosAdminClient.get<FreeDesignListResponse>('/admin/custom-design-requests', { params })
+    return response.data
   },
 
-  async assign(
-    id: number,
-    payload: AssignFreeDesignPayload,
-  ): Promise<AssignFreeDesignResponse> {
-    try {
-      const resp = await axiosAdminClient.post<AssignFreeDesignResponse>(
-        `/admin/free-design-requests/${id}/assign`,
-        payload,
-      )
+  async create(payload: { customer_id: number; description: string; status?: FreeDesignStatus }) {
+    const response = await axiosAdminClient.post<{ data: FreeDesignRequest }>('/admin/custom-design-requests', payload)
+    return response.data
+  },
 
-      return resp.data
-    } catch (err) {
-      const key = 'local_free_designs'
-      const raw = localStorage.getItem(key)
-      const arr: FreeDesignRequest[] = raw
-        ? (JSON.parse(raw) as FreeDesignRequest[])
-        : []
+  async show(id: number) {
+    const response = await axiosAdminClient.get<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`)
+    return response.data
+  },
 
-      const idx = arr.findIndex((item) => item.id === id)
+  async update(id: number, payload: FreeDesignUpdatePayload) {
+    const response = await axiosAdminClient.put<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`, payload)
+    return response.data
+  },
 
-      if (idx !== -1) {
-        arr[idx] = {
-          ...arr[idx],
-          ...payload,
-        }
-
-        localStorage.setItem(key, JSON.stringify(arr))
-
-        return {
-          data: arr[idx],
-        }
-      }
-
-      throw err
-    }
+  async remove(id: number) {
+    return axiosAdminClient.delete(`/admin/custom-design-requests/${id}`)
   },
 }

@@ -21,7 +21,7 @@ export function OpCard({ children, className, variant = 'default' }: OpCardProps
   return (
     <div
       className={clsx(
-        'overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm',
+        'overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm transition-shadow',
         variant === 'default' && 'p-5',
         className,
       )}

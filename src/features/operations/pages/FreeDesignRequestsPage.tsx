@@ -1,88 +1,50 @@
 import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { RefreshCw, Search, Filter } from 'lucide-react'
-import { useFreeDesigns, useAssignFreeDesign } from '../hooks/useFreeDesigns'
-import { FreeDesignList } from '../components/FreeDesignList'
+import { RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { OpButton } from '../components/OpButton'
+import { OpCard, OpCardSection } from '../components/OpCard'
+import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
-import { OpCard } from '../components/OpCard'
+import { OpSearch } from '../components/OpSearch'
+import { OpPagination } from '../components/OpPagination'
+import { FreeDesignList } from '../components/FreeDesignList'
+import { useDeleteFreeDesign, useFreeDesigns } from '../hooks/useFreeDesigns'
 
-export default function FreeDesignsPage() {
-  const [params, setParams] = useState({ per_page: 30, search: '', status: '' })
-  const { data, isLoading, isFetching, isError, refetch } = useFreeDesigns(params)
-  const items = data?.data ?? (Array.isArray(data) ? data : [])
-  const assignMutation = useAssignFreeDesign()
+export default function FreeDesignRequestsPage() {
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const query = useFreeDesigns({ page, per_page: 15, search: search || undefined, status: status || undefined })
+  const remove = useDeleteFreeDesign()
+  const items = query.data?.data ?? []
+  const meta = query.data?.meta
 
-  const assign = async (id: number) => {
-    const assignee = prompt('أدخل اسم الموظف لتعيينه:')
-    if (!assignee) return
-    try {
-      await assignMutation.mutateAsync({ id, payload: { assignee, status: 'assigned' } })
-      alert('تم تعيين الطلب بنجاح')
-    } catch (err) {
-      console.error(err)
-      alert('فشل تعيين الطلب')
-    }
+  const deleteItem = (id: number) => {
+    if (!window.confirm('هل أنت متأكد من حذف طلب التصميم هذا؟')) return
+    remove.mutate(id)
   }
 
   return (
     <div dir="rtl" className="space-y-6">
-      <Helmet>
-        <title>طلبات التصميم الحر — لوحة الإدارة</title>
-      </Helmet>
+      <Helmet><title>طلبات التصميم الحر — لوحة الإدارة</title></Helmet>
+      <OpPageHeader title="طلبات التصميم الحر" description="مراجعة وإدارة طلبات التصاميم الحرة المقدمة من العملاء" action={<><OpButton size="sm" variant="primary" onClick={() => navigate('/admin/free-design-requests/new')}>+ تصميم جديد</OpButton><OpButton size="sm" onClick={() => void query.refetch()} icon={<RefreshCw className={query.isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />}>تحديث</OpButton></>} />
 
-      {/* 1. الهيدر باستخدام OpPageHeader */}
-      <OpPageHeader
-        title="طلبات التصميم الحر"
-        description="إدارة ومتابعة طلبات التصاميم اليدوية والقطع المخصصة المقدمة من العملاء"
-        action={
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-50 transition shadow-sm cursor-pointer"
-          >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin text-[#45592D]' : 'text-gray-500'}`} />
-            تحديث البيانات
-          </button>
-        }
-      />
+      <OpCard variant="table">
+        <OpCardSection className="items-stretch">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+            <OpSearch value={search} onChange={(value) => { setPage(1); setSearch(value) }} placeholder="ابحث عن العميل أو الوصف..." className="w-full sm:max-w-[430px]" />
+            <select value={status} onChange={(e) => { setPage(1); setStatus(e.target.value) }} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none focus:border-[var(--color-accent)]" aria-label="فلترة حالة الطلب">
+              <option value="">جميع الحالات</option><option value="new">جديد</option><option value="in_review">قيد المراجعة</option><option value="quoted">تم التسعير</option><option value="converted">تم التحويل</option><option value="rejected">مرفوض</option>
+            </select>
+            <span className="mr-auto whitespace-nowrap rounded-full bg-[var(--color-surface-subtle)] px-3 py-1 text-xs text-[var(--color-text-muted)]">{meta?.total ?? items.length} طلب</span>
+          </div>
+        </OpCardSection>
 
-      {/* 2. أدوات البحث والفلترة */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            placeholder="ابحث عن طلب..."
-            value={params.search}
-            onChange={(e) => setParams({ ...params, search: e.target.value })}
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-10 pl-4 text-xs text-gray-800 placeholder-gray-400 focus:border-[#45592D] focus:ring-1 focus:ring-[#45592D] focus:outline-none transition"
-          />
-        </div>
+        {query.isLoading ? <OpEmptyState>جاري تحميل الطلبات...</OpEmptyState> : query.isError ? <OpEmptyState tone="error">تعذر تحميل طلبات التصميم.</OpEmptyState> : items.length ? <FreeDesignList items={items} onView={(id) => navigate(`/admin/free-design-requests/${id}`)} onEdit={(id) => navigate(`/admin/free-design-requests/${id}`)} onDelete={deleteItem} /> : <OpEmptyState>لا توجد طلبات تصميم حر مطابقة.</OpEmptyState>}
 
-        <div className="flex w-full items-center justify-end gap-2 md:w-auto">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <select
-            value={params.status}
-            onChange={(e) => setParams({ ...params, status: e.target.value })}
-            className="rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-700 focus:border-[#45592D] focus:outline-none transition cursor-pointer"
-          >
-            <option value="">جميع الحالات</option>
-            <option value="pending">قيد الانتظار</option>
-            <option value="assigned">تم التعيين</option>
-            <option value="completed">مكتمل</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 3. عرض المكون FreeDesignList داخل OpCard */}
-      <OpCard>
-        {isLoading ? (
-          <div className="p-8 text-center text-xs text-gray-500">جاري تحميل طلبات التصميم...</div>
-        ) : isError ? (
-          <div className="p-8 text-center text-xs text-red-600">حدث خطأ أثناء تحميل البيانات.</div>
-        ) : (
-          <FreeDesignList items={items} onAssign={assign} />
-        )}
+        {!query.isLoading && meta && <OpPagination currentPage={meta.current_page ?? page} lastPage={meta.last_page ?? 1} total={meta.total} shown={items.length} label="طلب" onPageChange={setPage} />}
       </OpCard>
     </div>
   )

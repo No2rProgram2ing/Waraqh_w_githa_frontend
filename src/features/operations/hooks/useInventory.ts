@@ -5,24 +5,39 @@ import { inventoryKeys } from './keys'
 export function useMaterials(params: Record<string, any> = {}) {
   return useQuery({
     queryKey: inventoryKeys.materials(params),
-    queryFn: () => inventoryApi.listMaterials(params),
+    queryFn: () => inventoryApi.listMaterials(),
+    staleTime: 30_000,
   })
 }
 
-export function useMovements(params: Record<string, any> = {}) {
+export function useMaterial(id?: number | null) {
   return useQuery({
-    queryKey: inventoryKeys.movements(params),
-    queryFn: () => inventoryApi.getMovements(params),
+    queryKey: ['admin', 'inventory', 'material', id],
+    queryFn: () => inventoryApi.getById(Number(id)),
+    enabled: !!id,
   })
 }
 
-export function useAdjustStock() {
-  const queryClient = useQueryClient()
-
+export function useCreateMaterial() {
+  const q = useQueryClient()
   return useMutation({
-    mutationFn: (payload: Record<string, any>) => inventoryApi.adjustStock(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] })
-    },
+    mutationFn: (payload: any) => inventoryApi.create(payload),
+    onSuccess: () => q.invalidateQueries({ queryKey: ['admin', 'inventory', 'materials'] }),
+  })
+}
+
+export function useUpdateMaterial() {
+  const q = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: any }) => inventoryApi.update(id, payload),
+    onSuccess: () => q.invalidateQueries({ queryKey: ['admin', 'inventory', 'materials'] }),
+  })
+}
+
+export function useDeleteMaterial() {
+  const q = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => inventoryApi.delete(id),
+    onSuccess: () => q.invalidateQueries({ queryKey: ['admin', 'inventory', 'materials'] }),
   })
 }

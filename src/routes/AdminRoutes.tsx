@@ -4,14 +4,17 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminLayout from '@/components/shared/AdminLayout'
 import AdminProtectedRoute from './AdminProtectedRoute'
 
-const CustomizationForm = lazy(() =>
-  import('@/features/operations/components/CustomizationForm')
-)
-
+// ======================================================
+// Authentication
+// ======================================================
 
 const AdminLoginPage = lazy(() =>
   import('@/features/auth/pages/AdminLoginPage')
 )
+
+// ======================================================
+// Catalog
+// ======================================================
 
 const ProductsPage = lazy(() =>
   import('@/features/catalog/pages/ProductsPage')
@@ -29,6 +32,14 @@ const CategoriesPage = lazy(() =>
   import('@/features/catalog/pages/CategoriesPage')
 )
 
+const AttributesPage = lazy(() =>
+  import('@/features/catalog/pages/AttributesPage')
+)
+
+// ======================================================
+// Roles / Activity
+// ======================================================
+
 const RolesPage = lazy(() =>
   import('@/features/roles/pages/RolesPage')
 )
@@ -37,13 +48,17 @@ const ActivityLogsPage = lazy(() =>
   import('@/features/activity-log/pages/ActivityLogsPage')
 )
 
+// ======================================================
+// Design
+// ======================================================
+
 const DesignPage = lazy(() =>
   import('@/features/design/pages/DesignPage')
 )
 
-const AttributesPage = lazy(() =>
-  import('@/features/catalog/pages/AttributesPage')
-)
+// ======================================================
+// Customers
+// ======================================================
 
 const CustomersPage = lazy(() =>
   import('@/features/customers/pages/CustomersPage')
@@ -52,6 +67,10 @@ const CustomersPage = lazy(() =>
 const CustomerDetailsPage = lazy(() =>
   import('@/features/customers/pages/CustomerDetailsPage')
 )
+
+// ======================================================
+// Reviews / Users / Settings
+// ======================================================
 
 const ReviewsPage = lazy(() =>
   import('@/features/reviews/pages/ReviewsPage')
@@ -69,34 +88,65 @@ const SettingsPage = lazy(() =>
   import('@/features/settings/pages/SettingsPage')
 )
 
+// ======================================================
 // Operations
+// ======================================================
+
 const DashboardPage = lazy(() =>
   import('@/features/operations/pages/DashboardPage')
 )
+
+// ======================================================
+// Orders
+// ======================================================
 
 const OrdersPage = lazy(() =>
   import('@/features/operations/pages/OrdersPage')
 )
 
-const CreateOrderPage = lazy(() =>
-  import('@/features/operations/pages/CreateOrderPage')
+const OrderCreatePage = lazy(() =>
+  import('@/features/operations/pages/OrderCreatePage')
 )
 
 const OrderDetailsPage = lazy(() =>
   import('@/features/operations/pages/OrderDetailsPage')
 )
 
-const CustomOrdersPage = lazy(() =>
-  import('@/features/operations/pages/CustomOrdersPage')
-)
+// ======================================================
+// Customizations
+// ======================================================
 
 const CustomizationsPage = lazy(() =>
   import('@/features/operations/pages/CustomizationsPage')
 )
 
+const CustomizationCreatePage = lazy(() =>
+  import('@/features/operations/pages/CustomizationCreatePage')
+)
+
+const CustomizationDetailsPage = lazy(() =>
+  import('@/features/operations/pages/CustomizationDetailsPage')
+)
+
+// ======================================================
+// Free Design
+// ======================================================
+
 const FreeDesignRequestsPage = lazy(() =>
   import('@/features/operations/pages/FreeDesignRequestsPage')
 )
+
+const FreeDesignCreatePage = lazy(() =>
+  import('@/features/operations/pages/FreeDesignCreatePage')
+)
+
+const FreeDesignDetailsPage = lazy(() =>
+  import('@/features/operations/pages/FreeDesignDetailsPage')
+)
+
+// ======================================================
+// Other Operations
+// ======================================================
 
 const ProductionPage = lazy(() =>
   import('@/features/operations/pages/ProductionPage')
@@ -118,86 +168,253 @@ const ReportsPage = lazy(() =>
   import('@/features/operations/pages/ReportsPage')
 )
 
+// ======================================================
+// Loading
+// ======================================================
+
 function PageFallback() {
   return (
-    <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--color-text-muted)]">
+    <div
+      dir="rtl"
+      className="flex min-h-[300px] items-center justify-center text-sm text-[var(--color-text-muted)]"
+    >
       جاري تحميل الصفحة...
     </div>
   )
 }
 
+// ======================================================
+// Admin Routes
+// ======================================================
+
 export function AdminRoutes() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
-        <Route path="login" element={<AdminLoginPage />} />
+
+        <Route
+          path="login"
+          element={<AdminLoginPage />}
+        />
 
         <Route element={<AdminProtectedRoute />}>
           <Route element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
 
-            {/* Operations */}
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="orders/create" element={<CreateOrderPage />} />
-            <Route path="orders/:orderId" element={<OrderDetailsPage />} />
-            <Route path="custom-orders" element={<CustomOrdersPage />} />
-            <Route path="customizations" element={<CustomizationsPage />} />
-            <Route path="customizations/create" element={<CustomizationForm />} />
+            <Route
+              index
+              element={
+                <Navigate
+                  to="dashboard"
+                  replace
+                />
+              }
+            />
+
+            {/* Dashboard */}
+            <Route
+              path="dashboard"
+              element={<DashboardPage />}
+            />
+
+            {/* ==================================================
+                Orders
+            ================================================== */}
+
+            <Route
+              path="orders"
+              element={<OrdersPage />}
+            />
+
+            {/* إنشاء طلب جديد */}
+            <Route
+              path="orders/new"
+              element={<OrderCreatePage />}
+            />
+
+            {/* تفاصيل الطلب */}
+            <Route
+              path="orders/:orderId"
+              element={<OrderDetailsPage />}
+            />
+
+            {/* ==================================================
+                Customizations
+            ================================================== */}
+
+            <Route
+              path="customizations"
+              element={<CustomizationsPage />}
+            />
+
+            <Route
+              path="customizations/new"
+              element={<CustomizationCreatePage />}
+            />
+
+            <Route
+              path="customizations/:id"
+              element={<CustomizationDetailsPage />}
+            />
+
+            {/* ==================================================
+                Free Design
+            ================================================== */}
 
             <Route
               path="free-design-requests"
               element={<FreeDesignRequestsPage />}
             />
+
+            <Route
+              path="free-design-requests/new"
+              element={<FreeDesignCreatePage />}
+            />
+
+            <Route
+              path="free-design-requests/:id"
+              element={<FreeDesignDetailsPage />}
+            />
+
+            {/* ==================================================
+                Other Operations
+            ================================================== */}
+
             <Route
               path="production-stages"
               element={<ProductionPage />}
             />
-            <Route path="payments" element={<PaymentsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="raw-materials" element={<InventoryPage />} />
-            <Route path="reports" element={<ReportsPage />} />
 
-            {/* Existing routes */}
-            <Route path="products" element={<ProductsPage />} />
+            <Route
+              path="payments"
+              element={<PaymentsPage />}
+            />
+
+            <Route
+              path="notifications"
+              element={<NotificationsPage />}
+            />
+
+            <Route
+              path="raw-materials"
+              element={<InventoryPage />}
+            />
+
+            <Route
+              path="reports"
+              element={<ReportsPage />}
+            />
+
+            {/* ==================================================
+                Catalog
+            ================================================== */}
+
+            <Route
+              path="products"
+              element={<ProductsPage />}
+            />
+
             <Route
               path="products/:productId"
               element={<ProductDetailsPage />}
             />
+
             <Route
               path="products/:productId/edit"
               element={<ProductEditPage />}
             />
+
             <Route
               path="product-categories"
               element={<CategoriesPage />}
             />
-            <Route path="roles" element={<RolesPage />} />
-            <Route
-              path="activity-logs"
-              element={<ActivityLogsPage />}
-            />
-            <Route path="design" element={<DesignPage />} />
+
             <Route
               path="product-attributes"
               element={<AttributesPage />}
             />
-            <Route path="customers" element={<CustomersPage />} />
+
+            {/* ==================================================
+                Roles / Activity
+            ================================================== */}
+
+            <Route
+              path="roles"
+              element={<RolesPage />}
+            />
+
+            <Route
+              path="activity-logs"
+              element={<ActivityLogsPage />}
+            />
+
+            {/* ==================================================
+                Design
+            ================================================== */}
+
+            <Route
+              path="design"
+              element={<DesignPage />}
+            />
+
+            {/* ==================================================
+                Customers
+            ================================================== */}
+
+            <Route
+              path="customers"
+              element={<CustomersPage />}
+            />
+
             <Route
               path="customers/:id"
               element={<CustomerDetailsPage />}
             />
-            <Route path="reviews" element={<ReviewsPage />} />
-            <Route path="admin-users" element={<AdminUsersPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="settings" element={<SettingsPage />} />
+
+            {/* ==================================================
+                Reviews
+            ================================================== */}
+
+            <Route
+              path="reviews"
+              element={<ReviewsPage />}
+            />
+
+            {/* ==================================================
+                Admin Users
+            ================================================== */}
+
+            <Route
+              path="admin-users"
+              element={<AdminUsersPage />}
+            />
+
+            {/* ==================================================
+                Settings
+            ================================================== */}
+
+            <Route
+              path="profile"
+              element={<ProfilePage />}
+            />
+
+            <Route
+              path="settings"
+              element={<SettingsPage />}
+            />
+
           </Route>
         </Route>
 
         <Route
           path="*"
-          element={<Navigate to="/admin/login" replace />}
+          element={
+            <Navigate
+              to="/admin/login"
+              replace
+            />
+          }
         />
+
       </Routes>
     </Suspense>
   )

@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { ReportsChart } from '../components/ReportsChart'
 import { useReports } from '../hooks/useReports'
 import { ReportsExport } from '../components/ReportsExport'
 import { ReportsKpiCards } from '../components/ReportsKpiCards'
 import { OpPageHeader } from '../components/OpPageHeader'
+import { OpCard } from '../components/OpCard'
 //import { Search } from 'lucide-react'
 
 export default function ReportsPage() {
   const [params, setParams] = useState({ from: '', to: '' })
-  const { data: stats, refetch, isLoading } = useReports(params)
+  const { data: stats, isLoading } = useReports(params)
   
   const kpi = {
     total_orders: stats?.paid_orders_count ?? 0,
@@ -17,9 +18,6 @@ export default function ReportsPage() {
     avg_order_value: stats?.avg_order_value ?? 0,
   }
 
-  useEffect(() => {
-    refetch()
-  }, [params, refetch])
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -52,14 +50,14 @@ export default function ReportsPage() {
 
         {/* Filters Sidebar */}
         <aside>
-          <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm">
-            <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <OpCard>
+            <div className="-mx-5 -mt-5 mb-5 border-b border-[var(--color-border)] px-5 py-4">
               <h2 className="text-base font-bold text-[var(--color-text-primary)]">
                 تصفية النتائج
               </h2>
             </div>
             
-            <div className="p-5 space-y-4">
+            <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="filter-from"
@@ -92,7 +90,7 @@ export default function ReportsPage() {
                 />
               </div>
             </div>
-          </div>
+          </OpCard>
         </aside>
       </div>
     </div>

@@ -12,9 +12,11 @@ import {
   TrendingUp,
   ShoppingCart,
   Factory,
-  CircleDot,
+  CreditCard,
 } from 'lucide-react'
 import { useSystemCurrency } from '@/lib/currency'
+import { OpCard, OpCardSection } from '../components/OpCard'
+import { OpPageHeader } from '../components/OpPageHeader'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
@@ -28,15 +30,10 @@ export default function DashboardPage() {
         <title>نظرة عامة — لوحة الإدارة</title>
       </Helmet>
 
-      {/* ── Page Header ────────────────────────────────── */}
-      <div>
-        <h1 className="text-[26px] font-extrabold leading-tight text-[var(--color-text-primary)]">
-          نظرة عامة
-        </h1>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          ملخص سريع لأداء المتجر والعمليات الحالية
-        </p>
-      </div>
+      <OpPageHeader
+        title="نظرة عامة"
+        description="ملخص سريع لأداء المتجر والعمليات الحالية"
+      />
 
       {/* ── KPI Cards ──────────────────────────────────── */}
       <section
@@ -79,10 +76,9 @@ export default function DashboardPage() {
         />
 
         <DashboardKpiCard
-          title="انتظار الجودة"
-          icon={CircleDot}
-          value={0}
-          subtitle="معلومة غير متوفرة حالياً"
+          title="الطلبات المدفوعة"
+          icon={CreditCard}
+          value={statsLoading ? '...' : stats?.paid_orders_count ?? '---'}
           variant="normal"
         />
       </section>
@@ -93,17 +89,15 @@ export default function DashboardPage() {
         className="grid grid-cols-1 gap-6 lg:grid-cols-5"
       >
         {/* Latest Orders — right side (RTL), wider */}
-        <div className="overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] shadow-sm lg:col-span-3">
-          <div className="border-b border-[var(--color-border)] px-5 py-4">
-            <h2 className="text-sm font-bold text-[var(--color-text-primary)]">
-              آخر الطلبات
-            </h2>
-            <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-              أحدث 5 طلبات مسجّلة
-            </p>
-          </div>
+        <OpCard variant="table" className="lg:col-span-3">
+          <OpCardSection>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--color-text-primary)]">آخر الطلبات</h2>
+              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">أحدث 5 طلبات مسجّلة</p>
+            </div>
+          </OpCardSection>
           <LatestOrders orders={orders} />
-        </div>
+        </OpCard>
 
         {/* Sales Chart — left side (RTL), narrower */}
         <div className="lg:col-span-2">

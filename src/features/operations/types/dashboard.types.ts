@@ -8,11 +8,10 @@ export interface DashboardStats {
   total_orders: number
   pending: number
   production: number
-  completed: number
-  total_revenue?: number
-  paid_orders_count?: number
-  avg_order_value?: number
-  sales_timeseries?: SalesPoint[]
+  total_revenue: number
+  paid_orders_count: number
+  avg_order_value: number
+  sales_timeseries: SalesPoint[]
 }
 
 export interface DashboardOrderCustomer {

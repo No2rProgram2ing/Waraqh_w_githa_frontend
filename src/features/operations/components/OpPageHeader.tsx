@@ -14,7 +14,7 @@ interface OpPageHeaderProps {
 
 export function OpPageHeader({ title, description, action }: OpPageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 className="text-[28px] font-extrabold leading-tight text-[var(--color-text-primary)]">
           {title}
@@ -25,7 +25,7 @@ export function OpPageHeader({ title, description, action }: OpPageHeaderProps) 
           </p>
         )}
       </div>
-      {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
+      {action && <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div>}
     </div>
   )
 }

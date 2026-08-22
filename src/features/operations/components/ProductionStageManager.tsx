@@ -1,46 +1,38 @@
-
 import type { ProductionStage } from '../types/orders.types'
-import { useUpdateProductionStage, useProductionHistory } from '../hooks/useProduction'
+import { useProductionHistory, useUpdateProductionStage } from '../hooks/useProduction'
+import { OpButton } from './OpButton'
+import { OpStatusBadge } from './OpStatusBadge'
 
 export function ProductionStageManager({ orderId }: { orderId: number }) {
-  const { data, refetch } = useProductionHistory(orderId)
-  const stages: ProductionStage[] = data?.data ?? []
+  const { data, isLoading, isError } = useProductionHistory(orderId)
   const update = useUpdateProductionStage()
+  const stages: ProductionStage[] = data?.data ?? []
 
-  const handleUpdate = async (stageKey: string, status: string) => {
-    try {
-      await update.mutateAsync({ orderId, stageKey, payload: { status, date: new Date().toISOString() } })
-      refetch()
-    } catch (err) {
-      console.error(err)
-      alert('فشل تحديث المرحلة (محلياً سيتم حفظ التغيير)')
-      // fallback handled by API layer which updates localStorage
-      refetch()
-    }
-  }
-
-  if (!stages || !stages.length) return <div className="text-sm text-gray-500">لا توجد مراحل إنتاج لهذا الطلب.</div>
+  if (isLoading) return <div className="text-sm text-[var(--color-text-muted)]">جارٍ تحميل مراحل الإنتاج...</div>
+  if (isError) return <div className="text-sm text-red-600">تعذر تحميل مراحل الإنتاج.</div>
+  if (!stages.length) return <div className="text-sm text-[var(--color-text-muted)]">لا توجد مراحل إنتاج معرفة.</div>
 
   return (
-    <div className="space-y-2">
-      {stages.map((s) => (
-        <div key={s.key} className="flex items-center justify-between border rounded p-3">
-          <div className="text-right">
-            <div className="font-semibold">{s.name}</div>
-            <div className="text-xs text-gray-500">{s.date ? new Date(s.date).toLocaleString() : ''}</div>
+    <div className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)]">
+      {stages.map((s) => {
+        const status = s.status === 'done' ? 'completed' : s.status === 'in_progress' ? 'in_progress' : 'pending'
+        return (
+          <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <div className="font-semibold text-[var(--color-text-primary)]">{s.name}</div>
+              <div className="mt-1 text-xs text-[var(--color-text-muted)]">{s.date ? new Date(s.date).toLocaleString('ar-SA') : '—'}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <OpStatusBadge status={status} label={s.status === 'done' ? 'مكتملة' : s.status === 'in_progress' ? 'جارية' : 'معلقة'} />
+              {s.status !== 'done' && (
+                <OpButton size="sm" variant="primary" disabled={update.isPending} onClick={() => update.mutate({ orderId, stageId: s.id })}>
+                  {s.status === 'in_progress' ? 'تعيين هذه المرحلة' : 'بدء'}
+                </OpButton>
+              )}
+            </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <div className={`px-2 py-1 rounded-full text-xs ${s.status === 'done' ? 'bg-emerald-100 text-emerald-700' : s.status === 'in_progress' ? 'bg-amber-100 text-amber-700' : s.status === 'blocked' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>{s.status}</div>
-            {s.status !== 'in_progress' && s.status !== 'done' && (
-              <button onClick={() => handleUpdate(s.key, 'in_progress')} className="rounded-md border px-2 py-1 text-xs">بدء</button>
-            )}
-            {s.status !== 'done' && (
-              <button onClick={() => handleUpdate(s.key, 'done')} className="rounded-md bg-emerald-600 px-2 py-1 text-xs text-white">إنهاء</button>
-            )}
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

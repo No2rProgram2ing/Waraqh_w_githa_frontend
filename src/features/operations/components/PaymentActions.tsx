@@ -1,46 +1,20 @@
-import React, { useState } from 'react'
-import { paymentsApi } from '../api/paymentsApi'
+import { useUpdatePaymentStatus } from '../hooks/usePayments'
+import type { PaymentStatus } from '../types/payments.types'
+import { OpButton } from './OpButton'
 
-export function PaymentActions({ paymentId }: { paymentId: number }){
-  const [loading, setLoading] = useState(false)
+export function PaymentActions({ paymentId, status }: { paymentId: number; status: string }) {
+  const update = useUpdatePaymentStatus()
 
-  const handleRefund = async () => {
-    const ok = confirm('هل تريد بالتأكيد استرجاع المدفوعات لهذا الدفع؟')
-    if (!ok) return
-    const amountStr = prompt('أدخل المبلغ للاسترجاع (أترك فارغًا للمبلغ الكامل)')
-    const amount = amountStr ? Number(amountStr) : undefined
-    const reason = prompt('سبب الاسترجاع (اختياري)') || undefined
-    setLoading(true)
-    try {
-      await paymentsApi.refund(paymentId, { amount, reason })
-      alert('تمت معالجة الاسترجاع (محلي/سيرفر)')
-    } catch (err) {
-      console.error(err)
-      alert('فشل معالجة الاسترجاع')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleMarkPaid = async () => {
-    const ok = confirm('ضع علامة كمدفوع للدفع المحدد؟')
-    if (!ok) return
-    setLoading(true)
-    try {
-      await paymentsApi.markPaid(paymentId)
-      alert('تم وضع علامة كمدفوع')
-    } catch (err) {
-      console.error(err)
-      alert('فشل وضع العلامة')
-    } finally {
-      setLoading(false)
-    }
+  const change = (next: PaymentStatus) => {
+    const admin_note = window.prompt('ملاحظة الإدارة (اختياري):') ?? undefined
+    update.mutate({ id: paymentId, status: next, admin_note })
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button disabled={loading} onClick={handleRefund} className="rounded-md bg-red-600 px-3 py-1 text-white text-sm">Refund</button>
-      <button disabled={loading} onClick={handleMarkPaid} className="rounded-md bg-emerald-600 px-3 py-1 text-white text-sm">Mark as paid</button>
+    <div className="flex flex-wrap items-center gap-2 border-t border-[var(--color-border)] pt-4">
+      {status !== 'paid' && <OpButton size="sm" variant="primary" disabled={update.isPending} onClick={() => change('paid')}>تعيين كمدفوع</OpButton>}
+      {status !== 'unpaid' && <OpButton size="sm" disabled={update.isPending} onClick={() => change('unpaid')}>تعيين غير مدفوع</OpButton>}
+      {status !== 'failed' && <OpButton size="sm" variant="danger" disabled={update.isPending} onClick={() => change('failed')}>تعيين فشل</OpButton>}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { Download, FileText } from 'lucide-react'
+import { OpButton } from './OpButton'
 
 export function ReportsExport({ rows }: { rows: any[] }) {
   const exportCsv = () => {
@@ -65,20 +66,8 @@ export function ReportsExport({ rows }: { rows: any[] }) {
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <button
-        onClick={exportCsv}
-        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)]"
-      >
-        <Download size={15} strokeWidth={2} aria-hidden="true" />
-        تصدير CSV
-      </button>
-      <button
-        onClick={exportPdf}
-        className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] shadow-sm transition hover:bg-[var(--color-surface-subtle)]"
-      >
-        <FileText size={15} strokeWidth={2} aria-hidden="true" />
-        تصدير PDF
-      </button>
+      <OpButton size="sm" variant="primary" onClick={exportCsv} icon={<Download size={15} strokeWidth={2} aria-hidden="true" />}>تصدير CSV</OpButton>
+      <OpButton size="sm" onClick={exportPdf} icon={<FileText size={15} strokeWidth={2} aria-hidden="true" />}>تصدير PDF</OpButton>
     </div>
   )
 }

@@ -1,36 +1,49 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { customizationsApi } from '../api/customizationsApi'
+import type { CustomizationStatus } from '../types/customizations.types'
 
-// 1. الدالة الأساسية التي تطلبها صفحة CustomizationsPage
-export function useCustomizations(params: Record<string, any> = {}) {
+export function useCustomizations() {
   return useQuery({
-    queryKey: ['customizations', params],
-    queryFn: () => customizationsApi.list(params),
-    staleTime: 60 * 1000,
+    queryKey: ['admin', 'customizations'],
+    queryFn: () => customizationsApi.list(),
+    staleTime: 30_000,
   })
 }
 
-// 2. دالة حساب التكلفة التقديرية
-export function useEstimateCustomization() {
-  return useMutation({
-    mutationFn: (payload: Record<string, any>) => customizationsApi.estimate(payload),
+export function useCustomization(id?: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'customizations', 'detail', id],
+    queryFn: () => customizationsApi.getById(Number(id)),
+    enabled: !!id,
   })
 }
 
-// 3. دالة إنشاء تخصيص جديد
-export function useCreateCustomization() {
-  const queryClient = useQueryClient()
+export function useUpdateCustomizationStatus() {
+  const q = useQueryClient()
   return useMutation({
-    mutationFn: (payload: FormData) => customizationsApi.create(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customizations'] })
+    mutationFn: ({ id, status }: { id: number; status: CustomizationStatus }) =>
+      customizationsApi.updateStatus(id, status),
+    onSuccess: (_d, v) => {
+      q.invalidateQueries({ queryKey: ['admin', 'customizations'] })
+      q.invalidateQueries({ queryKey: ['admin', 'customizations', 'detail', v.id] })
     },
   })
 }
 
-// 4. دالة حفظ المسودة
-export function useSaveDraft(id: number | null) {
+export function useDeleteCustomization() {
+  const q = useQueryClient()
   return useMutation({
-    mutationFn: (payload: Record<string, any>) => customizationsApi.saveDraft(id, payload),
+    mutationFn: (id: number) => customizationsApi.delete(id),
+    onSuccess: () => {
+      q.invalidateQueries({ queryKey: ['admin', 'customizations'] })
+    },
+  })
+}
+
+export function useCreateCustomization() {
+  const q = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Record<string, unknown>) => customizationsApi.create(payload),
+    onSuccess: () => q.invalidateQueries({ queryKey: ['admin', 'customizations'] }),
   })
 }
