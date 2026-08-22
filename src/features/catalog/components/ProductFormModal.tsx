@@ -26,7 +26,7 @@ export default function ProductFormModal({
   const [sku, setSku] = useState('')
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [price, setPrice] = useState<string>('')
-  const [stockQuantity, setStockQuantity] = useState<number>(0)
+  const [stockQuantity, setStockQuantity] = useState<string>('0')
   const [status, setStatus] = useState<'active' | 'inactive'>('active')
   const [isCustomizable, setIsCustomizable] = useState(false)
   const [description, setDescription] = useState('')
@@ -38,7 +38,7 @@ export default function ProductFormModal({
       setSku(`PRD-${Math.floor(1000 + Math.random() * 9000)}`)
       setCategoryId(categories.length > 0 ? categories[0].id : '')
       setPrice('')
-      setStockQuantity(10)
+      setStockQuantity('10')
       setStatus('active')
       setIsCustomizable(false)
       setDescription('')
@@ -210,7 +210,7 @@ export default function ProductFormModal({
                 type="number"
                 min="0"
                 value={stockQuantity}
-                onChange={(e) => setStockQuantity(Number(e.target.value))}
+                onChange={(e) => setStockQuantity(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               />
             </div>

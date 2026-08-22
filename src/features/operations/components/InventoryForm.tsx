@@ -4,9 +4,13 @@ import { useCreateMaterial, useUpdateMaterial } from '../hooks/useInventory'
 import { OpButton } from './OpButton'
 import { OpModal } from './OpModal'
 
-function deriveStatus(q: number, r: number): RawMaterialStatus {
-  if (q <= 0) return 'out_of_stock'
-  if (q <= r) return 'low_stock'
+function deriveStatus(q: string, r: string): RawMaterialStatus {
+  const quantity = Number(q)
+  const reorderPoint = Number(r)
+
+  if (quantity <= 0) return 'out_of_stock'
+  if (quantity <= reorderPoint) return 'low_stock'
+
   return 'in_stock'
 }
 
@@ -18,22 +22,41 @@ interface InventoryFormProps {
 }
 
 export function InventoryForm({ open, material, onClose, onSaved }: InventoryFormProps) {
-  const [form, setForm] = useState({ name: '', unit: '', quantity_available: 0, reorder_point: 0, status: 'in_stock' as RawMaterialStatus })
+  const [form, setForm] = useState({ name: '', unit: '', quantity_available: '0', reorder_point: '0', status: 'in_stock' as RawMaterialStatus })
   const create = useCreateMaterial()
   const update = useUpdateMaterial()
 
   useEffect(() => {
     if (material) {
-      setForm({ name: material.name, unit: material.unit, quantity_available: Number(material.quantity_available), reorder_point: Number(material.reorder_point), status: material.status })
+      setForm({ name: material.name, unit: material.unit, quantity_available: String(material.quantity_available), reorder_point: String(material.reorder_point), status: material.status })
     } else {
-      setForm({ name: '', unit: '', quantity_available: 0, reorder_point: 0, status: 'in_stock' })
+      setForm({ name: '', unit: '', quantity_available: '0', reorder_point: '0', status: 'in_stock' })
     }
   }, [material, open])
 
   const save = async () => {
-    const payload = { ...form, status: deriveStatus(form.quantity_available, form.reorder_point) }
-    if (material) await update.mutateAsync({ id: material.id, payload })
-    else await create.mutateAsync(payload)
+    const quantityAvailable = Number(form.quantity_available)
+    const reorderPoint = Number(form.reorder_point)
+
+    const payload = {
+      ...form,
+      quantity_available: quantityAvailable,
+      reorder_point: reorderPoint,
+      status: deriveStatus(
+        form.quantity_available,
+        form.reorder_point,
+      ),
+    }
+
+    if (material) {
+      await update.mutateAsync({
+        id: material.id,
+        payload,
+      })
+    } else {
+      await create.mutateAsync(payload)
+    }
+
     onSaved?.()
     onClose()
   }
@@ -59,11 +82,11 @@ export function InventoryForm({ open, material, onClose, onSaved }: InventoryFor
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-semibold text-[var(--color-text-secondary)]">الكمية المتاحة</span>
-            <input type="number" min="0" value={form.quantity_available} onChange={e => setForm({ ...form, quantity_available: Number(e.target.value) })} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]" />
+            <input type="number" min="0" value={form.quantity_available} onChange={e => setForm({ ...form, quantity_available: e.target.value })} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]" />
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-semibold text-[var(--color-text-secondary)]">نقطة إعادة الطلب</span>
-            <input type="number" min="0" value={form.reorder_point} onChange={e => setForm({ ...form, reorder_point: Number(e.target.value) })} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]" />
+            <input type="number" min="0" value={form.reorder_point} onChange={e => setForm({ ...form, reorder_point: e.target.value })} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]" />
           </label>
         </div>
         <div className="flex justify-end gap-2 border-t border-[var(--color-border)] pt-4">

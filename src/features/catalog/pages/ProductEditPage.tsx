@@ -13,6 +13,9 @@
     import MediaUploader from '../components/media/MediaUploader'
     import MediaGallery from '../components/media/MediaGallery'
 
+    type ProductEditForm = Omit<UpdateProductData, 'stock_quantity'> & {
+    stock_quantity: string
+    }
     function ProductEditPage() {
     const { productId } = useParams<{ productId: string }>()
     const navigate = useNavigate()
@@ -31,12 +34,12 @@
     isLoading: isCategoriesLoading,
     } = useCategories()
     const updateProduct = useUpdateProduct()
-    const [form, setForm] = useState<UpdateProductData>({
+const [form, setForm] = useState<ProductEditForm>({
         name: '',
         sku: '',
         description: null,
         price: '',
-        stock_quantity: 0,
+        stock_quantity: '0',
         status: 'active',
         is_customizable: false,
         category_id: 0,
@@ -52,7 +55,7 @@
         sku: product.sku ?? '',
         description: product.description ?? '',
         price: product.price ?? '',
-        stock_quantity: product.stock_quantity,
+        stock_quantity: String(product.stock_quantity),
         status: product.status,
         is_customizable: product.is_customizable,
         category_id: product.category?.id ?? 0,
@@ -77,7 +80,10 @@
         try {
         await updateProduct.mutateAsync({
             id,
-            data: form,
+            data: {
+                ...form,
+                stock_quantity: Number(form.stock_quantity),
+            },
         })
 
         showSuccessToast('تم تحديث المنتج بنجاح')
@@ -264,7 +270,7 @@
                     onChange={(event) =>
                     handleChange(
                         'stock_quantity',
-                        Number(event.target.value),
+                        event.target.value,
                     )
                     }
                     className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[#45592D]"
