@@ -1,9 +1,11 @@
 import type { Product } from '../types/product'
 
-import { Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSystemCurrency } from '@/lib/currency'
+
 import ProductStatusBadge from './ProductStatusBadge'
+
 interface ProductTableProps {
   products: Product[]
   isLoading?: boolean
@@ -14,7 +16,7 @@ interface ProductTableProps {
 function ProductTable({
   products,
   isLoading = false,
-  //onView,
+  onView,
   onDelete,
 }: ProductTableProps) {
   const { formatAmount } = useSystemCurrency()
@@ -73,7 +75,7 @@ function ProductTable({
             products.map((product) => (
               <tr
                 key={product.id}
-                className="border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-surface-subtle)] transition-colors"
+                className="border-b border-[var(--color-border)] transition-colors last:border-b-0 hover:bg-[var(--color-surface-subtle)]"
               >
                 <td className="px-5 py-4">
                   <div>
@@ -96,7 +98,8 @@ function ProductTable({
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
-                  {product.stock_quantity}                </td>
+                  {product.stock_quantity}
+                </td>
 
                 <td className="px-5 py-4">
                   <ProductStatusBadge
@@ -106,30 +109,47 @@ function ProductTable({
 
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onView?.(product.id)}
+                      aria-label={`عرض ${product.name}`}
+                      title="عرض المنتج"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-subtle)] hover:text-[var(--color-accent)]"
+                    >
+                      <Eye
+                        size={17}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                    </button>
+
                     <Link
-                        to={`/admin/products/${product.id}/edit`}
-                        aria-label={`تعديل ${product.name}`}
-                        title="تعديل المنتج"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#45592D] transition hover:bg-[var(--color-accent-subtle)] hover:text-[#5D7243]"
-                      >
-                        <Pencil
-                          size={17}
-                          strokeWidth={1.8}
-                          aria-hidden="true"
-                        />
-                      </Link>
+                      to={`/admin/products/${product.id}/edit`}
+                      aria-label={`تعديل ${product.name}`}
+                      title="تعديل المنتج"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#45592D] transition hover:bg-[var(--color-accent-subtle)] hover:text-[#5D7243]"
+                    >
+                      <Pencil
+                        size={17}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                    </Link>
 
                     <button
                       type="button"
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-danger)] transition hover:bg-[var(--color-danger-subtle)] hover:text-[#8C382A]"
                       onClick={() => onDelete?.(product.id)}
-                      aria-label="حذف المنتج"
+                      aria-label={`حذف ${product.name}`}
                       title="حذف المنتج"
                     >
-                      <Trash2 size={17} aria-hidden="true" />
+                      <Trash2
+                        size={17}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
-                  
                 </td>
               </tr>
             ))

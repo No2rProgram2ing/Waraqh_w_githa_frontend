@@ -6,6 +6,7 @@ import { OpCard, OpCardSection } from '../components/OpCard'
 import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { OpStatusBadge } from '../components/OpStatusBadge'
+import { useSystemCurrency } from '@/lib/currency'
 
 export default function CustomizationDetailsPage() {
   const { id } = useParams()
@@ -13,6 +14,7 @@ export default function CustomizationDetailsPage() {
   const itemId = Number(id)
   const { data: item, isLoading, isError, refetch } = useCustomization(itemId)
   const update = useUpdateCustomizationStatus()
+  const { formatAmount } = useSystemCurrency()
 
   if (isLoading) return <div className="flex min-h-[280px] items-center justify-center" dir="rtl"><OpEmptyState>جارٍ التحميل...</OpEmptyState></div>
   if (isError || !item) return <div className="flex min-h-[280px] items-center justify-center" dir="rtl"><OpEmptyState tone="error">طلب التخصيص غير موجود أو تعذر تحميله.</OpEmptyState></div>
@@ -39,7 +41,36 @@ export default function CustomizationDetailsPage() {
             </div>
             <OpStatusBadge status={String(item.status)} />
           </div>
+          {item.attributes && item.attributes.length > 0 && (
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <div className="mb-4">
+              <h2 className="text-sm font-bold text-[var(--color-text-primary)]">
+                خصائص المنتج المختارة
+              </h2>
 
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                القيم التي تم اختيارها لهذا الطلب ويمكن الرجوع إليها أثناء التنفيذ.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {item.attributes.map((attribute) => (
+                <div
+                  key={attribute.id}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+                >
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    {attribute.display_name ?? attribute.name ?? 'خاصية'}
+                  </div>
+
+                  <div className="mt-1 font-semibold text-[var(--color-text-primary)]">
+                    {attribute.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ['الكمية', item.quantity],
@@ -64,7 +95,7 @@ export default function CustomizationDetailsPage() {
             ].map(([label, value]) => (
               <div key={String(label)} className="rounded-xl border border-[var(--color-border)] p-4">
                 <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
-                <div className="mt-1 text-lg font-bold text-[var(--color-text-primary)]">{Number(value ?? 0).toLocaleString('ar-SA')} ر.س</div>
+                <div className="mt-1 text-lg font-bold text-[var(--color-text-primary)]">{formatAmount(value ?? 0)}</div>
               </div>
             ))}
           </div>
@@ -90,7 +121,6 @@ export default function CustomizationDetailsPage() {
         </OpCardSection>
       </OpCard>
 
-      <p className="text-xs leading-5 text-[var(--color-text-muted)]">ملاحظة: البيانات المعروضة تقتصر على الحقول التي يعيدها ProductCustomizationResource حالياً.</p>
     </div>
   )
 }
