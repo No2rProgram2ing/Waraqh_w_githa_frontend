@@ -1,4 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { productionApi } from '../api/productionApi'
 import { ordersKeys } from './keys'
 
@@ -31,7 +35,10 @@ export function useUpdateProductionStage() {
 
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: [...ordersKeys.detail(variables.orderId), 'production'],
+        queryKey: [
+          ...ordersKeys.detail(variables.orderId),
+          'production',
+        ],
       })
 
       queryClient.invalidateQueries({
@@ -60,7 +67,11 @@ export function useCreateProductionStage() {
     }: {
       name: string
       sort_order: number
-    }) => productionApi.createStage({ name, sort_order }),
+    }) =>
+      productionApi.createStage({
+        name,
+        sort_order,
+      }),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -100,7 +111,23 @@ export function useDeleteProductionStage() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: number) => productionApi.deleteStage(id),
+    mutationFn: (id: number) =>
+      productionApi.deleteStage(id),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'production-stages'],
+      })
+    },
+  })
+}
+
+export function useReorderProductionStages() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (stageIds: number[]) =>
+      productionApi.reorderStages(stageIds),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

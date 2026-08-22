@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, Save } from 'lucide-react'
+import { GripVertical, Plus, Pencil, Trash2, Save } from 'lucide-react'
 import { OpButton } from '../components/OpButton'
 import { OpCard, OpCardSection } from '../components/OpCard'
 import { OpEmptyState } from '../components/OpEmptyState'
@@ -10,8 +10,10 @@ import {
   useCreateProductionStage,
   useDeleteProductionStage,
   useProductionStages,
+  useReorderProductionStages,
   useUpdateProductionStageDefinition,
 } from '../hooks/useProduction'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 interface StageForm {
   name: string
@@ -29,7 +31,8 @@ export default function ProductionPage() {
   const create = useCreateProductionStage()
   const update = useUpdateProductionStageDefinition()
   const remove = useDeleteProductionStage()
-
+  const reorder = useReorderProductionStages()
+  const [draggedId, setDraggedId] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState<StageForm>(initialForm)
@@ -164,6 +167,52 @@ export default function ProductionPage() {
     update.isPending ||
     remove.isPending
 
+  const handleDrop = async (targetId: number) => {
+    if (draggedId === null || draggedId === targetId || !stages) {
+      setDraggedId(null)
+      return
+    }
+
+    const currentIndex = stages.findIndex((stage) => stage.id === draggedId)
+    const targetIndex = stages.findIndex((stage) => stage.id === targetId)
+
+    if (currentIndex === -1 || targetIndex === -1) {
+      setDraggedId(null)
+      return
+    }
+
+    const reordered = [...stages]
+    const [movedStage] = reordered.splice(currentIndex, 1)
+
+    if (!movedStage) {
+      setDraggedId(null)
+      return
+    }
+
+    reordered.splice(targetIndex, 0, movedStage)
+
+    try {
+      await reorder.mutateAsync(reordered.map((stage) => stage.id))
+      showSuccessToast('تم تحديث ترتيب مراحل الإنتاج بنجاح')
+    } catch (error: unknown) {
+      const response = (
+        error as {
+          response?: {
+            data?: {
+              message?: string
+            }
+          }
+        }
+      )?.response
+
+      showErrorToast(
+        response?.data?.message ??
+          'تعذر تحديث ترتيب مراحل الإنتاج، يرجى المحاولة مرة أخرى.',
+      )
+    } finally {
+      setDraggedId(null)
+    }
+  }
   return (
     <div className="space-y-6" dir="rtl">
       <OpPageHeader
@@ -223,8 +272,25 @@ export default function ProductionPage() {
             {stages.map((stage, index) => (
               <div
                 key={stage.id}
-                className="flex flex-wrap items-center gap-4 px-5 py-4 transition hover:bg-[var(--color-surface-subtle)]"
+                draggable={!busy && !reorder.isPending}
+                onDragStart={() => setDraggedId(stage.id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => void handleDrop(stage.id)}
+                onDragEnd={() => setDraggedId(null)}
+                className={[
+                  'flex flex-wrap items-center gap-4 px-5 py-4 transition',
+                  'hover:bg-[var(--color-surface-subtle)]',
+                  draggedId === stage.id ? 'opacity-50' : '',
+                  !busy && !reorder.isPending ? 'cursor-grab active:cursor-grabbing' : '',
+                ].join(' ')}
               >
+                <div
+                  className="flex h-10 w-8 shrink-0 items-center justify-center text-[var(--color-text-muted)]"
+                  aria-hidden="true"
+                >
+                  <GripVertical size={18} />
+                </div>
+
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-surface-subtle)] font-bold text-[var(--color-text-primary)]">
                   {index + 1}
                 </div>
@@ -245,7 +311,7 @@ export default function ProductionPage() {
                     variant="ghost"
                     onClick={() => openEdit(stage)}
                     icon={<Pencil size={15} />}
-                    disabled={busy}
+                    disabled={busy || reorder.isPending}
                   >
                     تعديل
                   </OpButton>
@@ -257,7 +323,7 @@ export default function ProductionPage() {
                       void handleDelete(stage.id, stage.name)
                     }
                     icon={<Trash2 size={15} />}
-                    disabled={busy}
+                    disabled={busy || reorder.isPending}
                   >
                     حذف
                   </OpButton>

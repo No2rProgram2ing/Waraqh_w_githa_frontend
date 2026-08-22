@@ -30,8 +30,13 @@ export const productionApi = {
           sort_order: Number(item.sort_order ?? 0),
         }
       })
-      .sort((a, b) => a.sort_order - b.sort_order)
-  },
+      .sort(
+        (
+          a: ProductionStageDefinition,
+          b: ProductionStageDefinition,
+        ) => a.sort_order - b.sort_order,
+      ) 
+},
 
   async createStage(data: {
     name: string
@@ -64,6 +69,11 @@ export const productionApi = {
     await axiosAdminClient.delete(`/admin/production-stages/${id}`)
   },
 
+  async reorderStages(stageIds: number[]): Promise<void> {
+    await axiosAdminClient.post('/admin/production-stages/reorder', {
+      stage_ids: stageIds,
+    })
+  },
   async getHistory(orderId: number): Promise<{ data: ProductionStage[] }> {
     const [historyResponse, stagesResponse] = await Promise.all([
       axiosAdminClient.get(`/admin/orders/${orderId}/production-history`),
