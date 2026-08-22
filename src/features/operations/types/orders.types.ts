@@ -40,6 +40,12 @@ export interface CreateOrderItemPayload {
   customization_note?: string | null
 }
 
+export interface ProductionStageDefinition {
+  id: number
+  name: string
+  sort_order: number
+}
+
 export interface CreateOrderPayload {
   customer_id: number
   order_type: OrderType
