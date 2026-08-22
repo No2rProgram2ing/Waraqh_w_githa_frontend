@@ -39,6 +39,11 @@ export interface ProductsResponse {
   meta: ProductsPaginationMeta
 }
 
+export interface ProductAttributeValuePayload {
+  attribute_id: number
+  value: string
+}
+
 export interface CreateProductPayload {
   name: string
   sku: string
@@ -49,6 +54,7 @@ export interface CreateProductPayload {
   status: 'active' | 'inactive'
   is_customizable?: boolean
   category_id: number
+  attribute_values?: ProductAttributeValuePayload[]
 }
 
 export interface UpdateProductPayload {
@@ -60,6 +66,7 @@ export interface UpdateProductPayload {
   status: 'active' | 'inactive'
   is_customizable: boolean
   category_id: number
+  attribute_values?: ProductAttributeValuePayload[]
 }
 
 export const productsApi = {
@@ -99,16 +106,17 @@ export const productsApi = {
   async update(
     id: number,
     data: UpdateProductPayload,
-  ): Promise<void> {
-    await axiosAdminClient.put(
-      `/admin/products/${id}`,
-      data,
-    )
-  },
+  ): Promise<Product> {
+    const response =
+      await axiosAdminClient.put<{ data: Product }>(
+        `/admin/products/${id}`,
+        data,
+      )
 
+    return response.data.data
+  },
 
   async delete(id: number): Promise<void> {
     await axiosAdminClient.delete(`/admin/products/${id}`)
   },
 }
-
