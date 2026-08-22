@@ -6,6 +6,7 @@ import { OpCard, OpCardSection } from '../components/OpCard'
 import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { OpStatusBadge } from '../components/OpStatusBadge'
+import { useSystemCurrency } from '@/lib/currency'
 
 export default function CustomizationDetailsPage() {
   const { id } = useParams()
@@ -13,6 +14,7 @@ export default function CustomizationDetailsPage() {
   const itemId = Number(id)
   const { data: item, isLoading, isError, refetch } = useCustomization(itemId)
   const update = useUpdateCustomizationStatus()
+  const { formatAmount } = useSystemCurrency()
 
   if (isLoading) return <div className="flex min-h-[280px] items-center justify-center" dir="rtl"><OpEmptyState>جارٍ التحميل...</OpEmptyState></div>
   if (isError || !item) return <div className="flex min-h-[280px] items-center justify-center" dir="rtl"><OpEmptyState tone="error">طلب التخصيص غير موجود أو تعذر تحميله.</OpEmptyState></div>
@@ -64,7 +66,7 @@ export default function CustomizationDetailsPage() {
             ].map(([label, value]) => (
               <div key={String(label)} className="rounded-xl border border-[var(--color-border)] p-4">
                 <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
-                <div className="mt-1 text-lg font-bold text-[var(--color-text-primary)]">{Number(value ?? 0).toLocaleString('ar-SA')} ر.س</div>
+                <div className="mt-1 text-lg font-bold text-[var(--color-text-primary)]">{formatAmount(value ?? 0)}</div>
               </div>
             ))}
           </div>

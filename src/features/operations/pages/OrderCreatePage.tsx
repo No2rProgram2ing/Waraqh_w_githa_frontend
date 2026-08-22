@@ -9,6 +9,8 @@ import { OpButton } from '../components/OpButton'
 import { OpCard } from '../components/OpCard'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { useCreateOrder } from '../hooks/useOrders'
+import { useSystemCurrency } from '@/lib/currency'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
 
 interface CustomerOption {
   id: number
@@ -28,6 +30,7 @@ interface ProductOption {
 
 export default function OrderCreatePage() {
   const navigate = useNavigate()
+  const { formatAmount } = useSystemCurrency()
 
   const createOrder =
     useCreateOrder()
@@ -432,48 +435,19 @@ export default function OrderCreatePage() {
               <div className="grid gap-5 sm:grid-cols-2">
 
                 {/* العميل */}
-                <label className="space-y-1.5">
-                  <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                    العميل
-                  </span>
-
-                  <select
-                    value={customerId}
-                    onChange={(event) =>
-                      setCustomerId(
-                        event.target.value,
-                      )
-                    }
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
-                  >
-                    <option value="">
-                      اختر العميل
-                    </option>
-
-                    {customers.map(
-                      (
-                        customer,
-                      ) => (
-                        <option
-                          key={
-                            customer.id
-                          }
-                          value={
-                            customer.id
-                          }
-                        >
-                          {
-                            customer.full_name
-                          }
-
-                          {customer.phone
-                            ? ` — ${customer.phone}`
-                            : ''}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </label>
+                <div className="space-y-1.5">
+                  <SearchableSelect
+                    label="العميل"
+                    value={customerId ? Number(customerId) : null}
+                    onChange={(val) => setCustomerId(val ? String(val) : '')}
+                    options={customers.map((customer) => ({
+                      id: customer.id,
+                      label: customer.full_name,
+                      sublabel: customer.phone ? customer.phone : undefined
+                    }))}
+                    placeholder="اختر العميل أو ابحث..."
+                  />
+                </div>
 
                 {/* نوع الطلب */}
                 <label className="space-y-1.5">
@@ -509,73 +483,23 @@ export default function OrderCreatePage() {
                 </label>
 
                 {/* المنتج */}
-                <label className="space-y-1.5 sm:col-span-2">
-                  <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                    المنتج
-                  </span>
-
-                  <select
-                    value={productId}
-                    onChange={(event) =>
-                      setProductId(
-                        event.target.value,
-                      )
-                    }
-                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
-                  >
-                    <option value="">
-                      اختر المنتج
-                    </option>
-
-                    {products.map(
-                      (
-                        product,
-                      ) => {
-                        const available =
-                          product.stock_quantity -
-                          (
-                            product.reserved_quantity ??
-                            0
-                          )
-
-                        return (
-                          <option
-                            key={
-                              product.id
-                            }
-                            value={
-                              product.id
-                            }
-                            disabled={
-                              available <=
-                              0
-                            }
-                          >
-                            {
-                              product.name
-                            }
-
-                            {product.sku
-                              ? ` — ${product.sku}`
-                              : ''}
-
-                            {' — '}
-
-                            {
-                              product.price
-                            }
-
-                            {' ر.س — المتاح: '}
-
-                            {
-                              available
-                            }
-                          </option>
-                        )
-                      },
-                    )}
-                  </select>
-                </label>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <SearchableSelect
+                    label="المنتج"
+                    value={productId ? Number(productId) : null}
+                    onChange={(val) => setProductId(val ? String(val) : '')}
+                    options={products.map((product) => {
+                      const available = product.stock_quantity - (product.reserved_quantity ?? 0)
+                      return {
+                        id: product.id,
+                        label: product.name,
+                        sublabel: `${product.sku ? product.sku + ' — ' : ''}${formatAmount(product.price)} — المتاح: ${available}`,
+                        disabled: available <= 0
+                      }
+                    })}
+                    placeholder="اختر المنتج أو ابحث..."
+                  />
+                </div>
 
                 {/* الكمية */}
                 <label className="space-y-1.5">
@@ -732,11 +656,10 @@ export default function OrderCreatePage() {
                   </span>
 
                   <span className="font-semibold">
-                    {
+                    {formatAmount(
                       selectedProduct?.price ??
                       0
-                    }{' '}
-                    ر.س
+                    )}
                   </span>
                 </div>
 
@@ -746,12 +669,7 @@ export default function OrderCreatePage() {
                   </span>
 
                   <span className="font-semibold">
-                    {
-                      subtotal.toFixed(
-                        2,
-                      )
-                    }{' '}
-                    ر.س
+                    {formatAmount(subtotal)}
                   </span>
                 </div>
 
@@ -761,12 +679,7 @@ export default function OrderCreatePage() {
                   </span>
 
                   <span className="font-semibold">
-                    {
-                      numericShipping.toFixed(
-                        2,
-                      )
-                    }{' '}
-                    ر.س
+                    {formatAmount(numericShipping)}
                   </span>
                 </div>
 
@@ -779,12 +692,7 @@ export default function OrderCreatePage() {
                     </span>
 
                     <span className="text-lg font-extrabold text-[var(--color-accent)]">
-                      {
-                        total.toFixed(
-                          2,
-                        )
-                      }{' '}
-                      ر.س
+                      {formatAmount(total)}
                     </span>
 
                   </div>

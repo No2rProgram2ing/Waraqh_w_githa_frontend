@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingBagIcon } from "@/components/ui/icons";
 import { AccountLayout } from "@/layouts/AccountLayout";
+import { useSystemCurrency } from '@/lib/currency'
 
 const initialWishlistItems = [
   {
@@ -47,6 +48,7 @@ const initialWishlistItems = [
 ];
 
 export function WishlistsPage() {
+  const { formatAmount } = useSystemCurrency()
   const [wishlistItems, setWishlistItems] = useState(initialWishlistItems);
 
   const handleRemove = (id: string) => {
@@ -108,7 +110,7 @@ export function WishlistsPage() {
 
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[17px] font-extrabold text-[#1d2218]">
-                    {item.price.toLocaleString("ar-SA")} ر.س
+                    {formatAmount(item.price)}
                   </span>
                   <button
                     type="button"

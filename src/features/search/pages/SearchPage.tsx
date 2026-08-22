@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ShoppingBagIcon } from "@/components/ui/icons";
 import { AccountLayout } from "@/layouts/AccountLayout";
+import { useSystemCurrency } from '@/lib/currency'
 
 const results = [
   {
@@ -68,6 +69,7 @@ const results = [
 const suggestedTerms = ["خيزران", "ديكور", "سلة", "مصباح", "طاولة", "تراث"];
 
 export function SearchPage() {
+  const { formatAmount } = useSystemCurrency()
   return (
     <AccountLayout hideSidebar>
       <motion.section
@@ -144,7 +146,7 @@ export function SearchPage() {
 
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[17px] font-extrabold text-[#1d2218]">
-                    {item.price.toLocaleString("ar-SA")} ر.س
+                    {formatAmount(item.price)}
                   </span>
                   <button
                     type="button"
