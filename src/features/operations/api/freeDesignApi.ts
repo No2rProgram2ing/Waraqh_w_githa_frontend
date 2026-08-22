@@ -1,0 +1,43 @@
+import { axiosAdminClient } from '@/api/axiosAdminClient'
+import type { FreeDesignRequest, FreeDesignStatus } from '../types/freeDesign.types'
+
+export interface FreeDesignListResponse {
+  data: FreeDesignRequest[]
+  meta?: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
+}
+
+export interface FreeDesignUpdatePayload {
+  status?: FreeDesignStatus
+  description?: string
+}
+
+export const freeDesignApi = {
+  async list(params: { page?: number; per_page?: number; search?: string; status?: string } = {}) {
+    const response = await axiosAdminClient.get<FreeDesignListResponse>('/admin/custom-design-requests', { params })
+    return response.data
+  },
+
+  async create(payload: { customer_id: number; description: string; status?: FreeDesignStatus }) {
+    const response = await axiosAdminClient.post<{ data: FreeDesignRequest }>('/admin/custom-design-requests', payload)
+    return response.data
+  },
+
+  async show(id: number) {
+    const response = await axiosAdminClient.get<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`)
+    return response.data
+  },
+
+  async update(id: number, payload: FreeDesignUpdatePayload) {
+    const response = await axiosAdminClient.put<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`, payload)
+    return response.data
+  },
+
+  async remove(id: number) {
+    return axiosAdminClient.delete(`/admin/custom-design-requests/${id}`)
+  },
+}

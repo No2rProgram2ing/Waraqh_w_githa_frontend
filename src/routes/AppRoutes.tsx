@@ -1,34 +1,101 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import { SignupPage } from "@/features/auth-customer/pages/SignupPage";
-import { LoginPage } from "@/features/auth-customer/pages/LoginPage";
-import { ForgotPasswordPage } from "@/features/auth-customer/pages/ForgotPasswordPage";
-import { CheckEmailPage } from "@/features/auth-customer/pages/CheckEmailPage";
-import { ResetPasswordPage } from "@/features/auth-customer/pages/ResetPasswordPage"
-import { OtpVerificationPage } from "@/features/auth-customer/pages/OtpVerificationPage"; // استيراد الصفحة الجديدة
-import { ROUTES } from "@/routes/paths";
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 
+import { ROUTES } from '@/routes/paths'
 
-/**
- * Route table for the app. Wrapped in AnimatePresence so each page's
- * own enter/exit motion (defined in the page component) plays on
- * navigation instead of an abrupt swap.
- */
-export function AppRoutes() {
-  const location = useLocation();
+const SignupPage = lazy(() =>
+  import('@/features/auth-customer/pages/SignupPage').then(
+    ({ SignupPage }) => ({ default: SignupPage }),
+  ),
+)
+
+const LoginPage = lazy(() =>
+  import('@/features/auth-customer/pages/LoginPage').then(
+    ({ LoginPage }) => ({ default: LoginPage }),
+  ),
+)
+
+const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth-customer/pages/ForgotPasswordPage').then(
+    ({ ForgotPasswordPage }) => ({ default: ForgotPasswordPage }),
+  ),
+)
+
+const CheckEmailPage = lazy(() =>
+  import('@/features/auth-customer/pages/CheckEmailPage').then(
+    ({ CheckEmailPage }) => ({ default: CheckEmailPage }),
+  ),
+)
+
+const ResetPasswordPage = lazy(() =>
+  import('@/features/auth-customer/pages/ResetPasswordPage').then(
+    ({ ResetPasswordPage }) => ({ default: ResetPasswordPage }),
+  ),
+)
+
+const OtpVerificationPage = lazy(() =>
+  import('@/features/auth-customer/pages/OtpVerificationPage').then(
+    ({ OtpVerificationPage }) => ({ default: OtpVerificationPage }),
+  ),
+)
+
+function AppRoutes() {
+  const location = useLocation()
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Navigate to={ROUTES.signup} replace />} />
-        <Route path={ROUTES.signup} element={<SignupPage />} />
-        <Route path={ROUTES.login} element={<LoginPage />} />
-        <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
-        <Route path={ROUTES.checkEmail} element={<CheckEmailPage />} />
-        <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />        
-        <Route path={ROUTES.otpVerification} element={<OtpVerificationPage />} />        
-        <Route path="*" element={<Navigate to={ROUTES.signup} replace />} />
-      </Routes>
-    </AnimatePresence>
-  );
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-sm text-[var(--color-text-muted)]">
+          جاري تحميل الصفحة...
+        </div>
+      }
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route
+            path="/"
+            element={<Navigate to={ROUTES.signup} replace />}
+          />
+
+          <Route
+            path={ROUTES.signup}
+            element={<SignupPage />}
+          />
+
+          <Route
+            path={ROUTES.login}
+            element={<LoginPage />}
+          />
+
+          <Route
+            path={ROUTES.forgotPassword}
+            element={<ForgotPasswordPage />}
+          />
+
+          <Route
+            path={ROUTES.checkEmail}
+            element={<CheckEmailPage />}
+          />
+
+          <Route
+            path={ROUTES.resetPassword}
+            element={<ResetPasswordPage />}
+          />
+
+          <Route
+            path={ROUTES.otpVerification}
+            element={<OtpVerificationPage />}
+          />
+
+          <Route
+            path="*"
+            element={<Navigate to={ROUTES.signup} replace />}
+          />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
+  )
 }
+
+export { AppRoutes }

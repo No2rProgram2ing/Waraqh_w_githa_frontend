@@ -154,36 +154,10 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
 
                 {activeTab === 'finance' && (
                     <div className="space-y-5 max-w-2xl">
-                        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-                            <label className="flex cursor-pointer items-center justify-between gap-4">
-                                <div>
-                                    <span className="block text-sm font-medium text-[var(--color-text-secondary)]">تفعيل الضريبة</span>
-                                    <span className="text-xs text-[var(--color-text-muted)]">عند إيقافها، ستُخفي الضريبة من واجهة المتجر تلقائياً</span>
-                                </div>
-                                <input
-                                    type="checkbox"
-                                    checked={taxEnabled}
-                                    onChange={(e) => setTaxEnabled(e.target.checked)}
-                                    className="h-5 w-5 accent-[#45592D]"
-                                />
-                            </label>
-                        </div>
+                        
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">نسبة الضريبة (٪)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.01"
-                                    value={taxRate}
-                                    onChange={(e) => setTaxRate(Number(e.target.value))}
-                                    disabled={!taxEnabled}
-                                    className="w-full rounded-xl border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition-colors focus:border-[#45592D]"
-                                    dir="ltr"
-                                />
-                            </div>
+                            
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">العملة الافتراضية</label>
                                 <input
@@ -202,12 +176,6 @@ export default function SettingsTabs({ settings }: SettingsTabsProps) {
                                 </datalist>
                             </div>
                         </div>
-
-                        {!taxEnabled && (
-                            <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[#F8F5F0] px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                                الضريبة متوقفة حاليًا، لذا سيتم إخفاؤها تلقائيًا في واجهة المتجر.
-                            </div>
-                        )}
                     </div>
                 )}
 

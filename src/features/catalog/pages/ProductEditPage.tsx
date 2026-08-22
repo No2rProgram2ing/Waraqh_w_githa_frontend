@@ -5,6 +5,7 @@
     import { useQueryClient } from '@tanstack/react-query'
 
     import { useProduct } from '../hooks/useProduct'
+    import { useCategories } from '../hooks/useCategories'
     import {
     useUpdateProduct,
     type UpdateProductData,
@@ -25,7 +26,10 @@
         isError,
         refetch,
     } = useProduct(id)
-
+    const {
+    data: categories,
+    isLoading: isCategoriesLoading,
+    } = useCategories()
     const updateProduct = useUpdateProduct()
     const [form, setForm] = useState<UpdateProductData>({
         name: '',
@@ -225,7 +229,7 @@
                     htmlFor="product-price"
                     className="text-sm font-medium text-[var(--color-text-secondary)]"
                 >
-                    السعر
+                السعر (ريال يمني - الطبعة القديمة) 
                 </label>
 
                 <input
@@ -297,26 +301,40 @@
                 </div>
 
                 <div>
-                <label
-                    htmlFor="product-category"
-                    className="text-sm font-medium text-[var(--color-text-secondary)]"
-                >
-                    رقم الفئة
-                </label>
+                    <label
+                        htmlFor="product-category"
+                        className="text-sm font-medium text-[var(--color-text-secondary)]"
+                    >
+                        الفئة
+                    </label>
 
-                <input
-                    id="product-category"
-                    type="number"
-                    min="1"
-                    value={form.category_id}
-                    onChange={(event) =>
-                    handleChange(
-                        'category_id',
-                        Number(event.target.value),
-                    )
-                    }
-                    className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[#45592D]"
-                />
+                    <select
+                        id="product-category"
+                        value={form.category_id}
+                        onChange={(event) =>
+                            handleChange(
+                                'category_id',
+                                Number(event.target.value),
+                            )
+                        }
+                        disabled={isCategoriesLoading}
+                        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[#45592D] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <option value={0}>
+                            {isCategoriesLoading
+                                ? 'جاري تحميل الفئات...'
+                                : 'اختر الفئة'}
+                        </option>
+
+                        {categories?.map((category) => (
+                            <option
+                                key={category.id}
+                                value={category.id}
+                            >
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 

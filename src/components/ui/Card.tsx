@@ -14,7 +14,7 @@ export function Card({ children, interactive = false, className, ...props }: Car
       whileHover={interactive ? { y: -3, boxShadow: "0 12px 24px -12px rgba(38, 47, 26, 0.18)" } : undefined}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className={clsx(
-        "rounded-2xl border border-brand-border bg-brand-cream p-6 shadow-sm shadow-brand-olive-900/5",
+        "rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-card)] p-6 shadow-sm",
         className,
       )}
       {...props}

@@ -24,7 +24,7 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
         if (attributeToEdit) {
             setName(attributeToEdit.name)
             setDisplayName(attributeToEdit.display_name)
-            setType(attributeToEdit.type)
+            setType(attributeToEdit.input_type)
             setIsRequired(attributeToEdit.is_required)
             setOptions(attributeToEdit.options ?? [])
         } else {
@@ -58,12 +58,12 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
 
         const safeName = (name || attributeToEdit?.name || '').trim()
         const safeDisplayName = (displayName || attributeToEdit?.display_name || safeName).trim()
-        const safeType = type || attributeToEdit?.type || 'text'
+        const safeType = type || attributeToEdit?.input_type || 'text'
 
         const payload = {
             name: safeName,
             display_name: safeDisplayName,
-            type: safeType,
+            input_type: safeType,
             is_required: isRequired,
             options: safeType === 'select' ? options : null,
         }
@@ -123,6 +123,8 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
                                 <option value="text">نص حر (Text)</option>
                                 <option value="select">قائمة منسدلة (Select)</option>
                                 <option value="boolean">نعم/لا (Boolean)</option>
+                                <option value="number">رقم (Number)</option>
+                                <option value="color">لون (Color)</option>
                             </select>
                         </div>
 
