@@ -10,12 +10,14 @@ import { OpSearch } from '../components/OpSearch'
 import { OpPagination } from '../components/OpPagination'
 import { OpIconButton } from '../components/OpIconButton'
 import { OpStatusBadge } from '../components/OpStatusBadge'
+import { useSystemCurrency } from '@/lib/currency'
 
 const PAGE_SIZE = 10
 
 export default function CustomizationsPage() {
   const nav = useNavigate()
   const { data, isLoading, isFetching, isError, refetch } = useCustomizations()
+  const { formatAmount } = useSystemCurrency()
   const remove = useDeleteCustomization()
   const items = data?.data ?? []
   const [search, setSearch] = useState('')
@@ -68,7 +70,7 @@ export default function CustomizationsPage() {
                     <td className="px-5 py-4">{it.quantity}</td>
                     <td className="px-5 py-4">{it.color ?? '—'}</td>
                     <td className="px-5 py-4">{it.design_pattern ?? '—'}</td>
-                    <td className="px-5 py-4 font-semibold">{Number(it.price?.total ?? 0).toLocaleString('ar-SA')} ر.س</td>
+                    <td className="px-5 py-4 font-semibold">{formatAmount(it.price?.total ?? 0)}</td>
                     <td className="px-5 py-4"><OpStatusBadge status={String(it.status)} /></td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1">

@@ -1,17 +1,13 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-
 import { useSystemCurrency } from '@/lib/currency'
 import {
   showErrorToast,
   showSuccessToast,
   showValidationErrorToast,
 } from '@/lib/toast'
-
 import { useCategories } from '../hooks/useCategories'
 import { useCreateProduct } from '../hooks/useProducts'
-import { useAttributes } from '../hooks/useAttributes'
-import type { ProductAttribute } from '../types/product-attribute'
 
 interface ProductFormModalProps {
   isOpen: boolean
@@ -23,170 +19,43 @@ export default function ProductFormModal({
   onClose,
 }: ProductFormModalProps) {
   const { data: categories = [] } = useCategories()
-  const { data: attributes = [], isLoading: isAttributesLoading } =
-    useAttributes()
-
   const { mutate: createProduct, isPending } = useCreateProduct()
-
   useSystemCurrency()
 
   const [name, setName] = useState('')
   const [sku, setSku] = useState('')
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [price, setPrice] = useState<string>('')
-  const [stockQuantity, setStockQuantity] = useState<string>('0')
+  const [stockQuantity, setStockQuantity] = useState<number>(0)
   const [status, setStatus] = useState<'active' | 'inactive'>('active')
   const [isCustomizable, setIsCustomizable] = useState(false)
   const [description, setDescription] = useState('')
-  const [attributeValues, setAttributeValues] = useState<
-    Record<number, string>
-  >({})
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    if (!isOpen) {
-      return
+    if (isOpen) {
+      setName('')
+      setSku(`PRD-${Math.floor(1000 + Math.random() * 9000)}`)
+      setCategoryId(categories.length > 0 ? categories[0].id : '')
+      setPrice('')
+      setStockQuantity(10)
+      setStatus('active')
+      setIsCustomizable(false)
+      setDescription('')
+      setErrorMsg('')
     }
-
-    setName('')
-    setSku(`PRD-${Math.floor(1000 + Math.random() * 9000)}`)
-    setCategoryId(categories.length > 0 ? categories[0].id : '')
-    setPrice('')
-    setStockQuantity('10')
-    setStatus('active')
-    setIsCustomizable(false)
-    setDescription('')
-    setAttributeValues({})
-    setErrorMsg('')
   }, [isOpen, categories])
 
-  const handleAttributeChange = (
-    attributeId: number,
-    value: string,
-  ) => {
-    setAttributeValues((current) => ({
-      ...current,
-      [attributeId]: value,
-    }))
-  }
+  if (!isOpen) return null
 
-  const getAttributeInput = (attribute: ProductAttribute) => {
-    const value = attributeValues[attribute.id] ?? ''
-
-    const commonClassName =
-      'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-accent)]'
-
-    switch (attribute.input_type) {
-      case 'select':
-        return (
-          <select
-            value={value}
-            onChange={(event) =>
-              handleAttributeChange(
-                attribute.id,
-                event.target.value,
-              )
-            }
-            className={commonClassName}
-          >
-            <option value="">اختر قيمة</option>
-
-            {(attribute.options ?? []).map((option) => (
-              <option
-                key={option}
-                value={option}
-              >
-                {option}
-              </option>
-            ))}
-          </select>
-        )
-
-      case 'number':
-        return (
-          <input
-            type="number"
-            value={value}
-            onChange={(event) =>
-              handleAttributeChange(
-                attribute.id,
-                event.target.value,
-              )
-            }
-            className={commonClassName}
-            placeholder={`أدخل ${attribute.display_name}`}
-          />
-        )
-
-      case 'boolean':
-        return (
-          <select
-            value={value}
-            onChange={(event) =>
-              handleAttributeChange(
-                attribute.id,
-                event.target.value,
-              )
-            }
-            className={commonClassName}
-          >
-            <option value="">اختر</option>
-            <option value="true">نعم</option>
-            <option value="false">لا</option>
-          </select>
-        )
-
-      case 'color':
-      case 'text':
-      default:
-        return (
-          <input
-            type="text"
-            value={value}
-            onChange={(event) =>
-              handleAttributeChange(
-                attribute.id,
-                event.target.value,
-              )
-            }
-            className={commonClassName}
-            placeholder={`أدخل ${attribute.display_name}`}
-          />
-        )
-    }
-  }
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
     setErrorMsg('')
 
     if (!categoryId) {
       setErrorMsg('يرجى اختيار فئة للمنتج')
       return
     }
-
-    const missingRequiredAttribute = attributes.find(
-      (attribute) =>
-        attribute.is_required &&
-        !(attributeValues[attribute.id] ?? '').trim(),
-    )
-
-    if (missingRequiredAttribute) {
-      setErrorMsg(
-        `يرجى إدخال قيمة الخاصية المطلوبة: ${missingRequiredAttribute.display_name}`,
-      )
-      return
-    }
-
-    const attribute_values = attributes
-      .filter((attribute) => {
-        const value = attributeValues[attribute.id] ?? ''
-        return value.trim() !== ''
-      })
-      .map((attribute) => ({
-        attribute_id: attribute.id,
-        value: attributeValues[attribute.id].trim(),
-      }))
 
     createProduct(
       {
@@ -198,19 +67,16 @@ export default function ProductFormModal({
         status,
         is_customizable: isCustomizable,
         description: description || null,
-        attribute_values,
       },
       {
         onSuccess: () => {
           showSuccessToast('تمت إضافة المنتج بنجاح')
           onClose()
         },
-
         onError: (err: any) => {
-          const validationErrors =
-            err?.response?.data?.errors as
-              | Record<string, string[]>
-              | undefined
+          const validationErrors = err?.response?.data?.errors as
+            | Record<string, string[]>
+            | undefined
 
           if (validationErrors) {
             showValidationErrorToast(validationErrors)
@@ -226,10 +92,6 @@ export default function ProductFormModal({
         },
       },
     )
-  }
-
-  if (!isOpen) {
-    return null
   }
 
   return (
@@ -273,7 +135,7 @@ export default function ProductFormModal({
                 required
                 type="text"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="أدخل اسم المنتج"
               />
@@ -288,7 +150,7 @@ export default function ProductFormModal({
                 required
                 type="text"
                 value={sku}
-                onChange={(event) => setSku(event.target.value)}
+                onChange={(e) => setSku(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="مثال: PRD-1001"
               />
@@ -304,25 +166,16 @@ export default function ProductFormModal({
               <select
                 required
                 value={categoryId}
-                onChange={(event) =>
-                  setCategoryId(
-                    event.target.value
-                      ? Number(event.target.value)
-                      : '',
-                  )
-                }
+                onChange={(e) => setCategoryId(Number(e.target.value))}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               >
                 <option value="" disabled>
                   اختر الفئة
                 </option>
 
-                {categories.map((category) => (
-                  <option
-                    key={category.id}
-                    value={category.id}
-                  >
-                    {category.name}
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -339,9 +192,7 @@ export default function ProductFormModal({
                 step="0.01"
                 min="0"
                 value={price}
-                onChange={(event) =>
-                  setPrice(event.target.value)
-                }
+                onChange={(e) => setPrice(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
                 placeholder="0.00"
               />
@@ -359,9 +210,7 @@ export default function ProductFormModal({
                 type="number"
                 min="0"
                 value={stockQuantity}
-                onChange={(event) =>
-                  setStockQuantity(event.target.value)
-                }
+                onChange={(e) => setStockQuantity(Number(e.target.value))}
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               />
             </div>
@@ -373,12 +222,8 @@ export default function ProductFormModal({
 
               <select
                 value={status}
-                onChange={(event) =>
-                  setStatus(
-                    event.target.value as
-                      | 'active'
-                      | 'inactive',
-                  )
+                onChange={(e) =>
+                  setStatus(e.target.value as 'active' | 'inactive')
                 }
                 className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               >
@@ -396,60 +241,10 @@ export default function ProductFormModal({
             <textarea
               rows={3}
               value={description}
-              onChange={(event) =>
-                setDescription(event.target.value)
-              }
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full resize-none rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
               placeholder="وصف مختصر للمنتج..."
             />
-          </div>
-
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <div className="mb-4">
-              <h3 className="text-sm font-bold text-[var(--color-text-primary)]">
-                خصائص المنتج
-              </h3>
-
-              <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
-                اختر قيم الخصائص التي تنطبق على هذا المنتج. الخصائص
-                التي تتركها فارغة لن يتم ربطها بالمنتج.
-              </p>
-            </div>
-
-            {isAttributesLoading ? (
-              <p className="text-sm text-[var(--color-text-muted)]">
-                جاري تحميل خصائص المنتجات...
-              </p>
-            ) : attributes.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-muted)]">
-                لا توجد خصائص معرفة حاليًا. يمكنك إضافة الخصائص من
-                صفحة خصائص المنتجات.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {attributes.map((attribute) => (
-                  <div key={attribute.id}>
-                    <label className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]">
-                      {attribute.display_name}
-                      {attribute.is_required ? (
-                        <span className="mr-1 text-[var(--color-danger)]">
-                          *
-                        </span>
-                      ) : null}
-                    </label>
-
-                    {getAttributeInput(attribute)}
-
-                    {attribute.input_type === 'select' &&
-                    !attribute.options?.length ? (
-                      <p className="mt-1 text-xs text-[var(--color-danger)]">
-                        لا توجد خيارات معرفة لهذه الخاصية.
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -457,9 +252,7 @@ export default function ProductFormModal({
               id="modal-is-customizable"
               type="checkbox"
               checked={isCustomizable}
-              onChange={(event) =>
-                setIsCustomizable(event.target.checked)
-              }
+              onChange={(e) => setIsCustomizable(e.target.checked)}
               className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
             />
 
@@ -475,15 +268,14 @@ export default function ProductFormModal({
             <button
               type="button"
               onClick={onClose}
-              disabled={isPending}
-              className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
               إلغاء
             </button>
 
             <button
               type="submit"
-              disabled={isPending || isAttributesLoading}
+              disabled={isPending}
               className="rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? 'جاري الإضافة...' : 'حفظ المنتج'}

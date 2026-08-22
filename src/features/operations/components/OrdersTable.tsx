@@ -2,6 +2,7 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { Order } from '../types/orders.types'
 import { OpStatusBadge } from './OpStatusBadge'
 import { OpIconButton } from './OpIconButton'
+import { useSystemCurrency } from '@/lib/currency'
 
 interface OrdersTableProps {
   orders: Order[]
@@ -13,6 +14,8 @@ interface OrdersTableProps {
 }
 
 export function OrdersTable({ orders, onOpen, onEdit, onDelete, deletingId = null, isLoading = false }: OrdersTableProps) {
+  const { formatAmount } = useSystemCurrency()
+
   if (isLoading) return <div className="flex items-center justify-center px-5 py-16 text-sm text-[var(--color-text-muted)]">جارٍ تحميل الطلبات...</div>
   if (!orders.length) return <div className="flex items-center justify-center px-5 py-16 text-sm text-[var(--color-text-muted)]">لا توجد طلبات حالياً.</div>
 
@@ -38,7 +41,7 @@ export function OrdersTable({ orders, onOpen, onEdit, onDelete, deletingId = nul
                 {o.items?.[0]?.product?.name ?? '—'}
                 {(o.items?.length ?? 0) > 1 && <span className="mr-1 text-xs text-gray-400">+{(o.items?.length ?? 0) - 1}</span>}
               </td>
-              <td className="px-5 py-4 text-sm font-semibold tabular-nums">{Number(o.total).toLocaleString('ar-SA')} ر.س</td>
+              <td className="px-5 py-4 text-sm font-semibold tabular-nums">{formatAmount(o.total)}</td>
               <td className="px-5 py-4"><OpStatusBadge status={String(o.status)} /></td>
               <td className="px-5 py-4">
                 <div className="flex items-center gap-1">

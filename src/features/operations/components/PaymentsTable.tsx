@@ -2,6 +2,7 @@ import type { Payment } from '../types/payments.types'
 import { OpStatusBadge } from './OpStatusBadge'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { OpIconButton } from './OpIconButton'
+import { useSystemCurrency } from '@/lib/currency'
 
 const PAYMENT_STATUS_LABEL: Record<string, string> = { paid: 'مدفوع', unpaid: 'غير مدفوع', failed: 'فشل' }
 const PAYMENT_METHOD_LABEL: Record<string, string> = { jawali: 'جوالي', jeeb: 'جيب', al_kuraimi: 'الكريمي' }
@@ -17,6 +18,7 @@ interface PaymentsTableProps {
 }
 
 export function PaymentsTable({ payments, onOpenDetails, onDelete, isLoading = false, searchTerm = '', status = '', method = '' }: PaymentsTableProps) {
+  const { formatAmount } = useSystemCurrency()
   const query = searchTerm.trim().toLowerCase()
   const filtered = payments.filter((p) => {
     const matchesSearch = !query || [p.order_number, p.customer_name, p.method, PAYMENT_METHOD_LABEL[p.method], String(p.amount)]
@@ -43,7 +45,7 @@ export function PaymentsTable({ payments, onOpenDetails, onDelete, isLoading = f
               <td className="px-5 py-4 text-sm font-semibold text-[var(--color-text-primary)]">#{p.order_number}</td>
               <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">{p.customer_name}</td>
               <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">{PAYMENT_METHOD_LABEL[p.method] ?? p.method}</td>
-              <td className="px-5 py-4 text-sm font-semibold tabular-nums text-[var(--color-text-primary)]">{Number(p.amount).toLocaleString('ar-SA')} ر.س</td>
+              <td className="px-5 py-4 text-sm font-semibold tabular-nums text-[var(--color-text-primary)]">{formatAmount(p.amount)}</td>
               <td className="px-5 py-4"><OpStatusBadge status={p.status} label={PAYMENT_STATUS_LABEL[p.status]} /></td>
               <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">{p.paid_at ? new Date(p.paid_at).toLocaleDateString('ar-SA') : '—'}</td>
               <td className="px-5 py-4"><div className="flex items-center gap-1"><OpIconButton icon={<Eye size={17} strokeWidth={1.8} />} label="عرض تفاصيل الدفع" onClick={() => onOpenDetails(p.id)} /><OpIconButton icon={<Pencil size={17} strokeWidth={1.8} />} label="تعديل الدفع" onClick={() => onOpenDetails(p.id)} /><OpIconButton icon={<Trash2 size={17} strokeWidth={1.8} />} label="حذف الدفع" tone="danger" onClick={() => onDelete?.(p.id)} /></div></td>

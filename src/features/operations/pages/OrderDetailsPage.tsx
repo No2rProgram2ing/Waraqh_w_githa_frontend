@@ -10,12 +10,14 @@ import { OpPageHeader } from '../components/OpPageHeader'
 import { OpStatusBadge } from '../components/OpStatusBadge'
 import { ProductionStageManager } from '../components/ProductionStageManager'
 import type { OrderStatus } from '../types/orders.types'
+import { useSystemCurrency } from '@/lib/currency'
 
 export default function OrderDetailsPage() {
   const { orderId: orderIdParam } = useParams<{ orderId: string }>()
   const navigate = useNavigate()
   const orderId = Number(orderIdParam)
   const [statusNote, setStatusNote] = useState('')
+  const { formatAmount } = useSystemCurrency()
   const { data: order, isLoading, isError, refetch, isFetching } = useOrder(Number.isFinite(orderId) ? orderId : null)
   const { data: historyData } = useOrderStatusHistory(Number.isFinite(orderId) ? orderId : null)
   const updateStatus = useUpdateOrderStatus()
@@ -77,7 +79,7 @@ export default function OrderDetailsPage() {
                       <div className="mt-1 text-xs text-[var(--color-text-muted)]">الكمية: {it.quantity}</div>
                       {it.customized && <div className="mt-1 text-xs font-semibold text-[var(--color-accent)]">طلب مخصص</div>}
                     </div>
-                    <div className="font-semibold tabular-nums text-[var(--color-text-primary)]">{Number(it.price).toLocaleString('ar-SA')} ر.س</div>
+                    <div className="font-semibold tabular-nums text-[var(--color-text-primary)]">{formatAmount(it.price)}</div>
                   </div>
                 ))}
               </div>
@@ -122,7 +124,7 @@ export default function OrderDetailsPage() {
               <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">العميل</span><b>{order.customer?.name ?? '-'}</b></div>
               <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">رقم الطلب</span><span>{order.order_number}</span></div>
               <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">نوع الطلب</span><span>{order.type ?? '-'}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">الإجمالي</span><b>{Number(order.total).toLocaleString('ar-SA')} ر.س</b></div>
+              <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">الإجمالي</span><b>{formatAmount(order.total)}</b></div>
               <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">طريقة الدفع</span><span>{order.payment?.method ?? '-'}</span></div>
               <div className="flex items-center justify-between gap-3"><span className="text-[var(--color-text-muted)]">حالة الدفع</span><OpStatusBadge status={String(order.payment?.status ?? 'unpaid')} /></div>
               <div className="flex justify-between gap-3"><span className="text-[var(--color-text-muted)]">تاريخ الإنشاء</span><span>{order.created_at ? new Date(order.created_at).toLocaleString('ar-SA') : '-'}</span></div>

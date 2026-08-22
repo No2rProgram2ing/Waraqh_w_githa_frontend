@@ -8,26 +8,8 @@ export interface CustomizationRequest {
   color?: string | null
   design_pattern?: string | null
   quantity: number
-  dimensions: {
-    length?: number
-    width?: number
-    height?: number
-  }
-  attributes?: CustomizationAttributeValue[]
-  price: {
-    base: number
-    customization: number
-    total: number
-  }
+  dimensions: { length?: number; width?: number; height?: number }
+  price: { base: number; customization: number; total: number }
   status: CustomizationStatus | string
   created_at?: string
-}
-
-export interface CustomizationAttributeValue {
-  id: number
-  attribute_id: number
-  name: string | null
-  display_name: string | null
-  input_type: string | null
-  value: string
 }

@@ -2,12 +2,15 @@ import { X } from 'lucide-react'
 import type { Payment } from '../types/payments.types'
 import { OpButton } from './OpButton'
 import { OpStatusBadge } from './OpStatusBadge'
+import { useSystemCurrency } from '@/lib/currency'
 import { PaymentActions } from './PaymentActions'
 
 interface Props { payment: Payment | null; onClose: () => void }
 const METHOD_LABEL: Record<string, string> = { jawali: 'جوالي', jeeb: 'جيب', al_kuraimi: 'الكريمي' }
 
 export function PaymentDetailsDrawer({ payment, onClose }: Props) {
+  const { formatAmount } = useSystemCurrency()
+
   if (!payment) return null
 
   return (
@@ -26,7 +29,7 @@ export function PaymentDetailsDrawer({ payment, onClose }: Props) {
           <div className="flex justify-between gap-3"><strong>رقم الطلب</strong><span>#{payment.order_number}</span></div>
           <div className="flex justify-between gap-3"><strong>العميل</strong><span>{payment.customer_name}</span></div>
           <div className="flex justify-between gap-3"><strong>طريقة الدفع</strong><span>{METHOD_LABEL[payment.method] ?? payment.method}</span></div>
-          <div className="flex justify-between gap-3"><strong>المبلغ</strong><b>{Number(payment.amount).toLocaleString('ar-SA')} ر.س</b></div>
+          <div className="flex justify-between gap-3"><strong>المبلغ</strong><b>{formatAmount(payment.amount)}</b></div>
           <div className="flex items-center justify-between gap-3"><strong>الحالة</strong><OpStatusBadge status={String(payment.status)} /></div>
           <div className="flex justify-between gap-3"><strong>التاريخ</strong><span>{payment.created_at ? new Date(payment.created_at).toLocaleString('ar-SA') : '-'}</span></div>
           <PaymentActions paymentId={payment.id} status={String(payment.status)} />

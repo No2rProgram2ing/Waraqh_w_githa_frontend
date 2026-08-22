@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { Product } from "@/features/products/types";
 import { ShoppingBagIcon } from "@/components/ui/icons";
+import { useSystemCurrency } from '@/lib/currency'
 
 interface ProductCardProps {
   product: Product;
@@ -9,6 +10,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index, featured = false }: ProductCardProps) {
+  const { formatAmount } = useSystemCurrency()
   return (
     <motion.article
       initial={{ opacity: 0, y: 18 }}
@@ -57,7 +59,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
 
         <div className="flex items-center justify-between gap-3 pt-1">
           <span className="text-[18px] font-extrabold text-[#1e241d]">
-            {product.price.toLocaleString("ar-SA")} ر.س
+            {formatAmount(product.price)}
           </span>
           <button
             type="button"
