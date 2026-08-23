@@ -44,17 +44,26 @@ export function OrderListCard({ order }: OrderListCardProps) {
           {order.price}
         </div>
 
-        <Link
-          to={`/orders/${orderPath}`}
-          className={[
-            "inline-flex items-center justify-center rounded-xl px-4 py-2 text-[12px] font-bold transition-all",
-            order.isActive
-              ? "bg-[#4a5c39] text-white shadow-[0_8px_18px_-12px_rgba(74,92,57,0.9)] hover:bg-[#3d4d2d]"
-              : "border border-[#d7d2c8] bg-white text-[#454a42] hover:bg-[#f1f0ed]",
-          ].join(" ")}
-        >
-          <span>التفاصيل</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/orders/${orderPath}`}
+            className={[
+              "inline-flex items-center justify-center rounded-xl px-4 py-2 text-[12px] font-bold transition-all",
+              order.isActive
+                ? "bg-[#4a5c39] text-white shadow-[0_8px_18px_-12px_rgba(74,92,57,0.9)] hover:bg-[#3d4d2d]"
+                : "border border-[#d7d2c8] bg-white text-[#454a42] hover:bg-[#f1f0ed]",
+            ].join(" ")}
+          >
+            <span>التفاصيل</span>
+          </Link>
+
+          <Link
+            to={`/orders/${orderPath}/track`}
+            className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[12px] font-bold border border-[#d7d2c8] bg-white text-[#454a42] hover:bg-[#f1f0ed]"
+          >
+            <span>تتبع الطلب</span>
+          </Link>
+        </div>
       </div>
     </motion.article>
   );

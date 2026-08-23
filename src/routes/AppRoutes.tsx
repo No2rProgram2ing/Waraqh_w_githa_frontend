@@ -22,6 +22,7 @@ import { CheckoutSuccessPage } from "@/features/checkout/pages/CheckoutSuccessPa
 import { OrdersPage } from "@/features/orders/pages/OrdersPage";
 import { OrderDetailsPage } from "@/features/orders/pages/OrderDetailsPage";
 import { OrderDesignDetailsPage } from "@/features/orders/pages/OrderDesignDetailsPage";
+import { OrderTrackingPage } from "@/features/orders/pages/OrderTrackingPage";
 
 import { CustomRequestsPage } from "@/features/custom-requests/pages/CustomRequestsPage";
 import { RequestSubmittedPage } from "@/features/custom-requests/pages/RequestSubmittedPage";
@@ -71,6 +72,7 @@ export function AppRoutes() {
           <Route path={ROUTES.wishlist} element={<WishlistsPage />} />
           <Route path={ROUTES.notifications} element={<NotificationsPage />} />
           <Route path="/orders/:orderId/design" element={<OrderDesignDetailsPage />} />
+          <Route path="/orders/:orderId/track" element={<OrderTrackingPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
         </Route>
 
