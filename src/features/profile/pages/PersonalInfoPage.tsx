@@ -1,45 +1,72 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { PersonalInfoForm } from "../components/PersonalInfoForm";
 import { ChangePasswordForm } from "../components/ChangePasswordForm";
 import { useProfile } from "../hooks/useProfile";
-import { Toast } from "@/components/ui/Toast";
 import { Loader } from "@/components/ui/Loader";
 import { TrashIcon } from "@/components/ui/icons";
-
+import { showErrorToast, showSuccessToast } from "@/lib/toast";
+import { extractMessage } from "@/utils/apiErrors";
 
 export function PersonalInfoPage() {
-  const { profile, isLoading, updateProfile, isUpdatingProfile, updatePassword, isUpdatingPassword } = useProfile();
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const {
+    profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    updateProfile,
+    isUpdatingProfile,
+    updatePassword,
+    isUpdatingPassword,
+  } = useProfile();
+
+  useEffect(() => {
+    if (isError && error) {
+      const message = extractMessage(error, "حدث خطأ أثناء جلب بيانات الملف الشخصي.");
+      showErrorToast(message);
+    }
+  }, [isError, error]);
 
   const handleUpdateProfile = async (data: { fullName: string; email: string; phone: string }) => {
-    try {
-      await updateProfile(data);
-      setToastMessage("تم حفظ التغييرات بنجاح");
-    } catch {
-      setToastMessage("حدث خطأ أثناء حفظ التغييرات");
-    }
+    await updateProfile(data);
+    showSuccessToast("تم حفظ التغييرات بنجاح");
   };
 
-  const handleUpdatePassword = async (data: { currentPassword: string; newPassword: string }) => {
-    try {
-      const res = await updatePassword(data);
-      setToastMessage(res.message);
-    } catch {
-      setToastMessage("حدث خطأ أثناء تحديث كلمة المرور");
-    }
+  const handleUpdatePassword = async (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    const result = await updatePassword(data);
+    showSuccessToast(result.message);
   };
+
+  if (isError && !profile) {
+    return (
+      <AccountLayout>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="flex flex-col gap-8"
+        >
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+            <p className="text-sm font-medium">حدث خطأ أثناء جلب بيانات الملف الشخصي.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded-xl bg-[#45592D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5D7243]"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </motion.div>
+      </AccountLayout>
+    );
+  }
 
   return (
     <AccountLayout>
-      <Toast
-        isVisible={Boolean(toastMessage)}
-        message={toastMessage || ""}
-        onClose={() => setToastMessage(null)}
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,34 +81,30 @@ export function PersonalInfoPage() {
           </div>
         ) : (
           <>
-            {/* Header with Avatar */}
             <ProfileHeader
               fullName={profile?.fullName}
               avatarUrl={profile?.avatarUrl}
               isOnline={profile?.isOnline}
             />
 
-            {/* Form 1: Personal Info */}
             <PersonalInfoForm
               profile={profile}
               onSubmit={handleUpdateProfile}
               isLoading={isUpdatingProfile}
             />
 
-            {/* Form 2: Security Change Password */}
             <ChangePasswordForm
               onSubmit={handleUpdatePassword}
               isLoading={isUpdatingPassword}
             />
 
-            {/* Account Actions & Subtext */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-brand-border/60">
               <button
                 type="button"
-                onClick={() => setToastMessage("تأكيد: هل أنت أثر برغبتك في حذف الحساب؟")}
+                onClick={() => showSuccessToast("تأكيد: هل أنت متأكد من رغبتك في حذف الحساب؟")}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
               >
-                <TrashIcon />
+                <TrashIcon className="w-4 h-4 shrink-0" />
                 <span>حذف الحساب نهائياً</span>
               </button>
 

@@ -28,7 +28,9 @@ export function useCustomRequests() {
     requests: requestsQuery.data || [],
     isLoading: requestsQuery.isLoading,
     isError: requestsQuery.isError,
+    error: requestsQuery.error,
     createRequest: createRequestMutation.mutateAsync,
     isCreating: createRequestMutation.isPending,
   };
 }
+

@@ -24,8 +24,8 @@ export const profileApi = {
         }
 
         if (data.current_password) formData.append('current_password', data.current_password)
-        if (data.new_password) formData.append('new_password', data.new_password)
-        if (data.new_password_confirmation) formData.append('new_password_confirmation', data.new_password_confirmation)
+        if (data.password) formData.append('password', data.password)
+        if (data.password_confirmation) formData.append('password_confirmation', data.password_confirmation)
 
         const response = await axiosAdminClient.post<ProfileResponse>('/admin/profile', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },

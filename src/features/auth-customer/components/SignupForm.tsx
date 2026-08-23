@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
@@ -24,10 +24,12 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const signup = useSignup();
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
+    setError,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<SignupSchema>({
@@ -35,6 +37,7 @@ export function SignupForm() {
     defaultValues: {
       fullName: "",
       email: "",
+      phoneCountryCode: "+967",
       phone: "",
       password: "",
       confirmPassword: "",
@@ -46,22 +49,40 @@ export function SignupForm() {
   const password = watch("password");
 
   const onSubmit = handleSubmit(async (values) => {
-    await signup.mutateAsync({
-      fullName: values.fullName,
-      email: values.email,
-      phone: values.phone,
-      password: values.password,
-    });
+    try {
+      await signup.mutateAsync({
+        fullName: values.fullName,
+        email: values.email,
+        phoneCountryCode: values.phoneCountryCode,
+        phone: values.phone,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      });
+
+      navigate("/login");
+    } catch (err: any) {
+      const validationErrors = err?.fieldErrors ?? err?.response?.data?.errors;
+
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, message]) => {
+          const fieldName = field as keyof SignupSchema;
+          setError(fieldName, {
+            type: "server",
+            message: Array.isArray(message) ? message[0] : String(message),
+          });
+        });
+
+        console.error("🔴 Laravel validation errors (422):", validationErrors);
+        return;
+      }
+
+      console.error("🔴 Signup error:", err?.response?.data ?? err?.message ?? err);
+    }
   });
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col">
-      <motion.div
-        custom={0}
-        initial="hidden"
-        animate="visible"
-        variants={fieldStagger}
-      >
+      <motion.div custom={0} initial="hidden" animate="visible" variants={fieldStagger}>
         <h1 className="text-2xl font-bold text-brand-ink text-center">إنشاء حساب</h1>
         <p className="mt-2 text-[15px] text-brand-muted text-center">ابدأ تجربتك في عالم المنتجات اليدوية الفاخرة.</p>
       </motion.div>
@@ -88,18 +109,32 @@ export function SignupForm() {
           />
         </motion.div>
 
-        <motion.div custom={3} initial="hidden" animate="visible" variants={fieldStagger}>
-          <Input
-            label="رقم الهاتف"
-            type="tel"
-            placeholder="+967 7xx xxx xxx"
-            dir="ltr"
-            autoComplete="tel"
-            icon={<PhoneIcon />}
-            iconPosition="left"
-            error={errors.phone?.message}
-            {...register("phone")}
-          />
+        <motion.div custom={3} initial="hidden" animate="visible" variants={fieldStagger} className="flex gap-2">
+          <div className="w-28">
+            <Input
+              label="رمز الدولة"
+              type="text"
+              placeholder="+967"
+              disabled
+              dir="ltr"
+              error={errors.phoneCountryCode?.message}
+              {...register("phoneCountryCode")}
+            />
+          </div>
+
+          <div className="flex-1">
+            <Input
+              label="رقم الهاتف"
+              type="tel"
+              placeholder="7xx xxx xxx"
+              dir="ltr"
+              autoComplete="tel"
+              icon={<PhoneIcon />}
+              iconPosition="left"
+              error={errors.phone?.message}
+              {...register("phone")}
+            />
+          </div>
         </motion.div>
 
         <motion.div custom={4} initial="hidden" animate="visible" variants={fieldStagger} className="flex flex-col gap-2">
@@ -122,7 +157,9 @@ export function SignupForm() {
             }
             {...register("password")}
           />
-          <PasswordStrengthMeter password={password ?? ""} />
+
+          <PasswordStrengthMeter password={password} />
+
           {!errors.password && <p className="text-sm text-brand-muted">أدخل 8 أحرف على الأقل</p>}
         </motion.div>
 
@@ -152,11 +189,11 @@ export function SignupForm() {
           <Checkbox
             label={
               <>
-                أوافق على{" "}
+                أوافق على{' '}
                 <span className="font-medium text-brand-olive-700 underline-offset-2 hover:underline cursor-pointer">
                   الشروط والأحكام
-                </span>{" "}
-                و{" "}
+                </span>{' '}
+                و{' '}
                 <span className="font-medium text-brand-olive-700 underline-offset-2 hover:underline cursor-pointer">
                   سياسة الخصوصية
                 </span>
@@ -168,23 +205,13 @@ export function SignupForm() {
         </motion.div>
 
         {signup.isError && (
-          <motion.p
-            role="alert"
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm text-red-500"
-          >
+          <motion.p role="alert" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-red-500">
             {signup.error.message || "تعذر إنشاء الحساب، حاول مرة أخرى."}
           </motion.p>
         )}
 
         {signup.isSuccess && (
-          <motion.p
-            role="status"
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm text-brand-olive-700"
-          >
+          <motion.p role="status" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-brand-olive-700">
             تم إنشاء الحساب بنجاح! جارٍ تحويلك...
           </motion.p>
         )}
@@ -196,14 +223,8 @@ export function SignupForm() {
         </motion.div>
       </form>
 
-      <motion.p
-        custom={8}
-        initial="hidden"
-        animate="visible"
-        variants={fieldStagger}
-        className="mt-6 text-center text-sm text-brand-muted"
-      >
-        لديك حساب بالفعل؟{" "}
+      <motion.p custom={8} initial="hidden" animate="visible" variants={fieldStagger} className="mt-6 text-center text-sm text-brand-muted">
+        لديك حساب بالفعل؟{' '}
         <Link to="/login" className="font-semibold text-brand-olive-700 hover:underline">
           تسجيل الدخول
         </Link>
@@ -211,3 +232,4 @@ export function SignupForm() {
     </div>
   );
 }
+

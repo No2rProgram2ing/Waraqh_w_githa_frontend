@@ -1,4 +1,4 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 import { adminAuthStorage } from '@/features/auth/services/adminAuthStorage'
 import { useAdminAuthStore } from '@/features/auth/stores/adminAuthStore'
 import { sanitizeErrorMessage, showErrorToast } from '@/lib/toast'
@@ -23,7 +23,9 @@ axiosAdminClient.interceptors.request.use((config) => {
   const token = adminAuthStorage.getToken()
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    // Ensure headers object exists and set Authorization as Bearer token
+    config.headers = config.headers || {}
+    ;(config.headers as any).Authorization = 'Bearer ' + token
   }
 
   return config

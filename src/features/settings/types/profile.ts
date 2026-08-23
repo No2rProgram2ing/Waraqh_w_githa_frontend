@@ -15,6 +15,6 @@ export interface UpdateProfilePayload {
     avatar?: File | null
     avatar_url?: string | null
     current_password?: string
-    new_password?: string
-    new_password_confirmation?: string
+    password?: string
+    password_confirmation?: string
 }
