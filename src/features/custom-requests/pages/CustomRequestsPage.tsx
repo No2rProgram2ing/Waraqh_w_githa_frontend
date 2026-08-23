@@ -1,139 +1,61 @@
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { AccountLayout } from "@/layouts/AccountLayout";
-import { Button } from "@/components/ui/Button";
-import { PlusIcon, SparkleIcon } from "@/components/ui/icons";
-import { ShowcaseCard } from "@/features/custom-requests/components/ShowcaseCard";
-import type { ShowcaseCardData } from "@/features/custom-requests/types";
-import { RequestCard } from "@/features/custom-requests/components/RequestCard";
-import { NewRequestModal } from "@/features/custom-requests/components/NewRequestModal";
+import { Archive, ArrowLeft, ArrowRight, Gift, ImagePlus, Palette, PencilLine, Sparkles, UserRound } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { useCustomRequests } from "@/features/custom-requests/hooks/useCustomRequests";
 import type { CreateCustomRequestInput } from "@/api/customRequestsApi";
+import { ROUTES } from "@/routes/paths";
 
-const cards: ShowcaseCardData[] = [
-  {
-    id: "panel-1",
-    title: "لوحة جدارية فاخرة",
-    subtitle: "تغليف عربي أنيق مع لمسات من الخشب الطبيعي وراحة عصرية في تفاصيل كل زاوية.",
-    date: "٢٨ أبريل ٢٠٢٤",
-    status: "مكتمل",
-    accent: "8/10",
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "ديكور خشبي",
-  },
-  {
-    id: "panel-2",
-    title: "طاولة وركيزة مغروسة",
-    subtitle: "تصميم مخصص يجمع بين العمارة اليمنية والهوية الحديثة مع خيط دقيق في التشطيبات.",
-    date: "١٦ أبريل ٢٠٢٤",
-    status: "قيد التنفيذ",
-    accent: "٧/١٠",
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "طاولة خشبية",
-  },
+type Step = 1 | 2 | 3 | 4;
+type DimensionKey = "length" | "width" | "height";
+type Dimensions = Record<DimensionKey, string>;
+
+const requestTypes = [
+  { label: "سلة تخزين", icon: Archive },
+  { label: "ديكور", icon: Palette },
+  { label: "إكسسوار عرس", icon: Sparkles },
+  { label: "هدية تذكارية", icon: Gift },
+  { label: "أخرى", icon: PencilLine },
 ];
 
+const materialOptions = [
+  { label: "نسيج تقليدي", image: "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?auto=format&fit=crop&w=500&q=85" },
+  { label: "نمط عصري", image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=500&q=85" },
+  { label: "خشب دافئ", image: "https://images.unsplash.com/photo-1601058268499-e52658b8bb88?auto=format&fit=crop&w=500&q=85" },
+  { label: "مزيج طبيعي", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=500&q=85" },
+];
+
+const inspirationCards = [
+  { title: "لمسة فريدة لمساحتك", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=85" },
+  { title: "صنع بكل حب وجذع", image: "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?auto=format&fit=crop&w=800&q=85" },
+];
+
+function Stepper({ currentStep }: { currentStep: Step }) {
+  const labels = ["نوع الطلب", "التفاصيل الفنية", "الميزانية والموعد", "بيانات التواصل"];
+  return <div className="mb-10 flex items-start">{labels.map((label, index) => { const step = index + 1; const active = step === currentStep; const complete = step < currentStep; return <div key={label} className="flex flex-1 items-start"><div className="flex min-w-0 flex-1 flex-col items-center gap-2"><span className={`flex size-8 items-center justify-center rounded-full border-2 text-xs font-extrabold ${active ? "border-[#9b6a3d] bg-white text-[#795238]" : complete ? "border-[#52663c] bg-[#52663c] text-white" : "border-[#dedbd5] bg-[#dedbd5] text-[#3f3d38]"}`}>{complete ? "✓" : step}</span><span className={`text-center text-[10px] font-bold ${active ? "text-[#795238]" : "text-[#3f3d38]"}`}>{label}</span></div>{step < 4 && <span className="mt-4 h-px flex-1 bg-[#c9c4bb]" />}</div>; })}</div>;
+}
+
+function TypeStep({ selectedType, setSelectedType, description, setDescription, onNext }: { selectedType: string; setSelectedType: (value: string) => void; description: string; setDescription: (value: string) => void; onNext: (event: FormEvent<HTMLFormElement>) => void }) {
+  return <form onSubmit={onNext}><div className="text-center"><h1 className="text-3xl font-extrabold text-[#211f1b] sm:text-4xl">طلب تصميم خاص</h1><p className="mt-3 text-sm leading-7 text-[#504b44]">دعنا نصنع لك قطعة فنية فريدة تعكس ذوقك وتضيف لمسة جميلة إلى منزلك.</p></div><h2 className="mb-5 mt-8 text-lg font-extrabold text-[#3e522c]">ما نوع القطعة التي ترغب بتصميمها؟</h2><div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{requestTypes.map(({ label, icon: Icon }) => <button key={label} type="button" onClick={() => setSelectedType(label)} className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-[5px] border text-xs font-bold transition ${selectedType === label ? "border-[#3e522c] bg-[#e5eddc] text-[#26351e] shadow-sm" : "border-[#c8c0b4] bg-[#fbf9f5] text-[#3a3028] hover:border-[#8e704f] hover:bg-[#f6f0e7]"}`}><Icon className="size-5" />{label}</button>)}</div><div className="mt-7 border-t border-[#ded8cf] pt-6"><label htmlFor="request-description" className="mb-3 block text-lg font-extrabold text-[#3e522c]">صف تفاصيل الفكرة</label><textarea id="request-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="اكتب هنا تفاصيل التصميم، الألوان المقترحة، أو أي ملاحظات خاصة تود إضافتها للقطعة..." rows={5} className="w-full resize-none rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] p-4 text-sm leading-7 text-[#211f1b] outline-none placeholder:text-[#615b53] focus:border-[#3e522c] focus:bg-white" /></div><div className="mt-8 flex items-center justify-between gap-4"><Link to={ROUTES.home} className="text-sm font-bold text-[#403c36] hover:text-[#3e522c]">إلغاء</Link><button type="submit" disabled={!selectedType || !description.trim()} className="inline-flex min-w-40 items-center justify-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#3e522c] disabled:cursor-not-allowed disabled:bg-[#aeb6a2]">التالي <ArrowLeft className="size-4" /></button></div></form>;
+}
+
+function DetailsStep({ dimensions, setDimensions, selectedMaterial, setSelectedMaterial, files, setFiles, onBack, onNext }: { dimensions: Dimensions; setDimensions: (value: Dimensions) => void; selectedMaterial: string; setSelectedMaterial: (value: string) => void; files: File[]; setFiles: (value: File[]) => void; onBack: () => void; onNext: () => void }) {
+  return <div><div className="text-center"><h1 className="text-3xl font-extrabold text-[#211f1b] sm:text-4xl">التفاصيل الفنية والقياسات</h1><p className="mt-3 text-sm leading-7 text-[#504b44]">ساعدنا في فهم فكرتك بشكل أدق من خلال تحديد المقاسات والخامات المفضلة.</p></div><div className="mt-8 border-r-2 border-[#c79645] pr-4"><h2 className="text-lg font-extrabold text-[#3e522c]">الأبعاد المطلوبة (اختياري)</h2><div className="mt-4 grid gap-3 sm:grid-cols-3">{(["length", "width", "height"] as DimensionKey[]).map((field) => <label key={field} className="text-sm font-bold text-[#302c27]">{field === "length" ? "الطول" : field === "width" ? "العرض" : "الارتفاع"}<div className="mt-2 flex items-center rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-3"><input value={dimensions[field]} onChange={(event) => setDimensions({ ...dimensions, [field]: event.target.value })} type="number" min="0" placeholder="00" className="w-full bg-transparent py-3 text-sm text-[#211f1b] outline-none placeholder:text-[#615b53]" /><span className="text-xs text-[#403c36]">سم</span></div></label>)}</div></div><div className="mt-8 border-r-2 border-[#c79645] pr-4"><h2 className="text-lg font-extrabold text-[#3e522c]">نوع النسيج واللون المفضل</h2><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{materialOptions.map((option) => <button key={option.label} type="button" onClick={() => setSelectedMaterial(option.label)} className={`overflow-hidden rounded-[5px] border text-xs font-bold transition ${selectedMaterial === option.label ? "border-[#3e522c] bg-[#e5eddc] text-[#26351e]" : "border-[#c8c0b4] bg-[#fbf9f5] text-[#3a3028] hover:border-[#8e704f]"}`}><img src={option.image} alt={option.label} className="h-16 w-full object-cover" /><span className="block px-2 py-2">{option.label}</span></button>)}</div></div><div className="mt-8 border-r-2 border-[#c79645] pr-4"><h2 className="text-lg font-extrabold text-[#3e522c]">منطقة رفع الصور المرجعية</h2><label htmlFor="reference-images" className="mt-4 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-[#b9a88e] bg-[#fbf9f5] p-4 text-center transition hover:bg-[#f6f0e7]"><ImagePlus className="size-7 text-[#3e522c]" /><p className="mt-3 text-sm font-bold text-[#302c27]">اسحب الصور هنا أو انقر للاختيار</p><p className="mt-1 text-[10px] text-[#504b44]">PNG, JPG بحد أقصى 5 ميجابايت</p><input id="reference-images" type="file" accept="image/png,image/jpeg" multiple className="sr-only" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>{files.length > 0 && <div className="mt-4 grid grid-cols-3 gap-3">{files.map((file) => <Preview key={`${file.name}-${file.lastModified}`} file={file} />)}</div>}</div><div className="mt-8 flex items-center justify-between gap-4"><button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-sm border border-[#9b7655] px-5 py-3 text-sm font-bold text-[#603e27] hover:bg-[#f8f1e8]"><ArrowRight className="size-4" /> العودة السابقة</button><button type="button" onClick={onNext} className="inline-flex items-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#3e522c]">الخطوة التالية <ArrowLeft className="size-4" /></button></div></div>;
+}
+
+function Preview({ file }: { file: File }) { const [source, setSource] = useState(""); useEffect(() => { const url = URL.createObjectURL(file); setSource(url); return () => URL.revokeObjectURL(url); }, [file]); return source ? <img src={source} alt={file.name} className="aspect-square w-full rounded border border-[#b9a88e] object-cover" /> : null; }
+
+function BudgetStep({ deliveryDate, setDeliveryDate, onBack, onNext }: { deliveryDate: string; setDeliveryDate: (value: string) => void; onBack: () => void; onNext: () => void }) {
+  return <div><div className="text-center"><h1 className="text-3xl font-extrabold text-[#211f1b] sm:text-4xl">الجدول الزمني</h1><p className="mt-3 text-sm leading-7 text-[#504b44]">حدد التاريخ المفضل للتسليم لنتمكن من توفير أفضل جودة.</p></div><div className="mt-8 border-r-2 border-[#c79645] pr-4"><label htmlFor="delivery-date" className="block text-lg font-extrabold text-[#3e522c]">تاريخ التسليم المطلوب</label><input id="delivery-date" type="date" value={deliveryDate} onChange={(event) => setDeliveryDate(event.target.value)} className="mt-4 w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm text-[#211f1b] outline-none focus:border-[#3e522c]" /></div><div className="mt-8 flex items-center justify-between gap-4"><button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-sm border border-[#9b7655] px-5 py-3 text-sm font-bold text-[#603e27]"><ArrowRight className="size-4" /> العودة السابقة</button><button type="button" onClick={onNext} disabled={!deliveryDate} className="inline-flex items-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white disabled:bg-[#aeb6a2]">الخطوة التالية <ArrowLeft className="size-4" /></button></div></div>;
+}
+
+function ContactStep({ name, setName, email, setEmail, phone, setPhone, onBack, onSubmit, isCreating }: { name: string; setName: (value: string) => void; email: string; setEmail: (value: string) => void; phone: string; setPhone: (value: string) => void; onBack: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; isCreating: boolean }) {
+  return <form onSubmit={onSubmit}><div className="text-center"><h1 className="text-3xl font-extrabold text-[#211f1b] sm:text-4xl">بيانات التواصل والمراجعة</h1><p className="mt-3 text-sm leading-7 text-[#504b44]">أدخل بياناتك حتى نتمكن من مراجعة طلبك والتواصل معك.</p></div><div className="mt-8 space-y-5 border-t border-[#ded8cf] pt-6">{[["contact-name", "الاسم الكامل", name, setName, "أحمد العبدالله"], ["contact-email", "البريد الإلكتروني", email, setEmail, "ahmed@example.com"], ["contact-phone", "رقم الهاتف", phone, setPhone, "+967 7XX XXX XXX"]].map(([id, label, value, setter, placeholder]) => <label key={id as string} htmlFor={id as string} className="block text-sm font-extrabold text-[#302c27]">{label as string}<input id={id as string} value={value as string} onChange={(event) => (setter as (value: string) => void)(event.target.value)} placeholder={placeholder as string} className="mt-2 w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm text-[#211f1b] outline-none placeholder:text-[#615b53] focus:border-[#3e522c]" required /></label>)}<label className="flex items-center gap-2 text-xs font-semibold text-[#403c36]"><input type="checkbox" required className="size-4 accent-[#52663c]" /> أوافق على سياسة الخصوصية واستخدام بياناتي للتواصل.</label></div><div className="mt-8 flex items-center justify-between gap-4"><button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-sm border border-[#9b7655] px-5 py-3 text-sm font-bold text-[#603e27]"><ArrowRight className="size-4" /> العودة السابقة</button><button type="submit" disabled={isCreating} className="rounded-sm bg-[#18b957] px-6 py-3 text-sm font-extrabold text-white disabled:opacity-60">{isCreating ? "جارٍ الإرسال..." : "تأكيد وإرسال عبر واتساب"}</button></div></form>;
+}
+
 export function CustomRequestsPage() {
-  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const { requests, isLoading, createRequest, isCreating } = useCustomRequests();
-
-  const handleCreateRequest = async (input: CreateCustomRequestInput) => {
-    await createRequest(input);
-  };
-
-  return (
-    <AccountLayout>
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="flex flex-col gap-6"
-        dir="rtl"
-      >
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <h1 className="text-[27px] font-extrabold text-[#1d2218]">طلبات التصميم الخاص</h1>
-
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => setIsRequestModalOpen(true)}
-            className="h-12 rounded-xl bg-[#4f5f3d] px-5 text-[15px] font-bold text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] hover:bg-[#465734]"
-          >
-            <span>طلب جديد</span>
-            <PlusIcon className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-2">
-          {cards.map((card, index) => (
-            <ShowcaseCard key={card.id} card={card} index={index} />
-          ))}
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35, delay: 0.12 }}
-            className="flex min-h-57.5 flex-col items-center justify-center gap-5 rounded-3xl border border-[#d7d1c8] bg-[#4f5f3d] p-6 text-center text-white shadow-[0_16px_28px_-18px_rgba(44,57,35,0.4)]"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-white/10">
-              <SparkleIcon className="h-7 w-7 text-[#f7e3b7]" />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[18px] font-bold">هل لديك فكرة فريدة؟</p>
-              <p className="max-w-xs text-[13px] leading-7 text-[#edf4e4]">
-                نساعدك في تحويل أفكارك إلى قطعة فنية متكاملة تناسب أسلوب منزلك وتراثك المميز.
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => setIsRequestModalOpen(true)}
-              className="h-11 rounded-xl bg-[#e6c78f] px-6 font-bold text-[#2d331f] shadow-[0_12px_18px_-12px_rgba(0,0,0,0.2)] hover:bg-[#d8b878]"
-            >
-              <span>استئناف الطلب</span>
-            </Button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.18 }}
-            className="flex min-h-57.5 flex-col justify-between overflow-hidden rounded-3xl border border-[#e4dfd8] bg-[#f5f1ea] p-5 shadow-[0_8px_24px_-16px_rgba(38,47,26,0.2)]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4cabd] bg-white text-[#4f5f3d]">
-                <SparkleIcon className="h-4 w-4" />
-              </div>
-              <span className="text-[11px] font-medium text-[#7c7b74]">سبت ١٢ يوليو</span>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-[15px] font-bold text-[#1f231d]">مواصفات مشروعك</p>
-              <p className="text-[13px] leading-7 text-[#5d5f59]">
-                نقدم لك متابعة دقيقة لكل مرحلة من الخطة، من اختيار الخامة إلى التنفيذ النهائي لضمان النتيجة المتوقعة.
-              </p>
-            </div>
-
-            <div className="rounded-[18px] border border-dashed border-[#cabfa8] bg-[#f0e8dc] p-3">
-              <div className="h-24 rounded-[14px] bg-[linear-gradient(135deg,#d4c4a5_0%,#f2eadf_50%,#d7c8ae_100%)]" />
-            </div>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      <NewRequestModal
-        isOpen={isRequestModalOpen}
-        onClose={() => setIsRequestModalOpen(false)}
-        onSubmit={handleCreateRequest}
-        isLoading={isCreating}
-      />
-    </AccountLayout>
-  );
+  const [step, setStep] = useState<Step>(1); const [selectedType, setSelectedType] = useState(""); const [description, setDescription] = useState(""); const [dimensions, setDimensions] = useState<Dimensions>({ length: "", width: "", height: "" }); const [material, setMaterial] = useState(""); const [files, setFiles] = useState<File[]>([]); const [deliveryDate, setDeliveryDate] = useState(""); const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [phone, setPhone] = useState(""); const { createRequest, isCreating } = useCustomRequests(); const navigate = useNavigate();
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const input: CreateCustomRequestInput = { title: selectedType, budget: "", dimensions: `${dimensions.length || "-"} × ${dimensions.width || "-"} × ${dimensions.height || "-"} سم`, description: `${description}\nالخامة: ${material || "غير محددة"}\nالتسليم: ${deliveryDate}\nالتواصل: ${name}، ${email}، ${phone}\nالصور: ${files.map((file) => file.name).join(", ") || "لا توجد"}` }; const createdRequest = await createRequest(input); navigate(ROUTES.customRequestDetails(createdRequest.id)); };
+  return <CatalogLayout><motion.main initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} dir="rtl" className="bg-[#f2f0ec] px-5 py-12 text-[#211f1b] sm:py-16"><div className="mx-auto max-w-6xl"><Stepper currentStep={step} /><section className="mx-auto max-w-4xl rounded-[10px] border border-[#ded9d0] bg-white px-6 py-10 shadow-[0_14px_30px_-24px_rgba(48,42,35,0.5)] sm:px-10 sm:py-12">{step === 1 && <TypeStep selectedType={selectedType} setSelectedType={setSelectedType} description={description} setDescription={setDescription} onNext={(event) => { event.preventDefault(); setStep(2); }} />}{step === 2 && <DetailsStep dimensions={dimensions} setDimensions={setDimensions} selectedMaterial={material} setSelectedMaterial={setMaterial} files={files} setFiles={setFiles} onBack={() => setStep(1)} onNext={() => setStep(3)} />}{step === 3 && <BudgetStep deliveryDate={deliveryDate} setDeliveryDate={setDeliveryDate} onBack={() => setStep(2)} onNext={() => setStep(4)} />}{step === 4 && <ContactStep name={name} setName={setName} email={email} setEmail={setEmail} phone={phone} setPhone={setPhone} onBack={() => setStep(3)} onSubmit={submit} isCreating={isCreating} />}</section></div></motion.main></CatalogLayout>;
 }

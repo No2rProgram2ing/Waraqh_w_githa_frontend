@@ -1,4 +1,66 @@
 import type { SVGProps } from "react";
+import {
+  ArrowLeft as LucideArrowLeft,
+  Bell as LucideBell,
+  CheckCircle as LucideCheckCircle,
+  CircleHelp as LucideHelpCircle,
+  Heart as LucideHeart,
+  Image as LucideImage,
+  LogOut as LucideLogOut,
+  Mail as LucideMail,
+  MessageCircle as LucideMessageCircle,
+  MapPin as LucideMapPin,
+  Menu as LucideMenu,
+  Package as LucidePackage,
+  Palette as LucidePalette,
+  Plus as LucidePlus,
+  Search as LucideSearch,
+  ShoppingBag as LucideShoppingBag,
+  Sparkles as LucideSparkles,
+  Trash2 as LucideTrash,
+  User as LucideUser,
+  X as LucideX,
+} from "lucide-react";
+
+export const ArrowLeftIcon = LucideArrowLeft;
+export const BellIcon = LucideBell;
+export const BrandLogoIcon = LucideSparkles;
+export const CheckCircleIcon = LucideCheckCircle;
+export const CustomCraftIcon = LucidePalette;
+export const HeartIcon = LucideHeart;
+export const HelpCircleIcon = LucideHelpCircle;
+export const ImagePlaceholderIcon = LucideImage;
+export const LogoutIcon = LucideLogOut;
+export const MailIcon = LucideMail;
+export const WhatsAppIcon = LucideMessageCircle;
+export const MapPinIcon = LucideMapPin;
+export const MenuIcon = LucideMenu;
+export const PackageIcon = LucidePackage;
+export const PlusIcon = LucidePlus;
+export const SearchIcon = LucideSearch;
+export const ShoppingBagIcon = LucideShoppingBag;
+export const TrashIcon = LucideTrash;
+export const UserIcon = LucideUser;
+export const XMarkIcon = LucideX;
+
+export function InstagramIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function TwitterIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 4l16 16" />
+      <path d="M20 4L4 20" />
+    </svg>
+  );
+}
 
 export function ShieldCheckIcon(props: SVGProps<SVGSVGElement>) {
   return (
