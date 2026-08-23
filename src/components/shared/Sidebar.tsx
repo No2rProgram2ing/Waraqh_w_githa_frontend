@@ -10,9 +10,11 @@ import {
   LogoutIcon,
 } from "@/components/ui/icons";
 import { ROUTES } from "@/routes/paths";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
 export function Sidebar() {
   const location = useLocation();
+  const user = useCustomerAuthStore((state) => state.user);
 
   const primaryMenuItems = [
     { label: "البيانات الشخصية", path: ROUTES.profile, icon: UserIcon },
@@ -32,12 +34,10 @@ export function Sidebar() {
       <div className="sticky top-24">
         {/* Header Section - shown on tablet/laptop screens and up */}
         <div className="hidden md:block mb-6 px-1">
-          <h2 className="text-base lg:text-xl font-bold text-white font-display tracking-tight">
-            حساب العميل
+          <p className="text-xs text-brand-cream/60 font-body">مرحباً،</p>
+          <h2 className="text-base lg:text-xl font-bold text-white font-display tracking-tight truncate">
+            {user?.fullName ?? ""}
           </h2>
-          <p className="text-xs text-brand-cream/70 mt-1 font-body">
-            إدارة ملفك الشخصي وطلباتك
-          </p>
         </div>
 
         {/* Primary Navigation Menu */}

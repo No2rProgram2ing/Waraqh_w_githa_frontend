@@ -1,82 +1,64 @@
+<<<<<<< HEAD
 import { motion } from "framer-motion";
 import { ShoppingBagIcon } from "@/components/ui/icons";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { useSystemCurrency } from '@/lib/currency'
+=======
+import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import { ShoppingBagIcon } from '@/components/ui/icons'
+import { AccountLayout } from '@/layouts/AccountLayout'
+import { useSearchProducts, useSearchCategories } from '@/features/search/hooks/useSearchProducts'
+import type { SearchFiltersDTO } from '@/api/search'
+import type { Product } from '@/features/catalog/types/product'
+>>>>>>> dad121843105060107acde3b906c6c7d331c9270
 
-const results = [
-  {
-    id: "sr-1",
-    name: "سلة يدوية مزخرفة",
-    price: 390,
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "سلة يدوية مزخرفة",
-    category: "ديكور منزلي",
-    tag: "مميز",
-  },
-  {
-    id: "sr-2",
-    name: "طاولة خشبية فاخرة",
-    price: 540,
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "طاولة خشبية فاخرة",
-    category: "أثاث",
-    tag: "جديد",
-  },
-  {
-    id: "sr-3",
-    name: "مقعد خيزران عربي",
-    price: 480,
-    image:
-      "https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "مقعد خيزران عربي",
-    category: "مفروشات",
-    tag: "حصري",
-  },
-  {
-    id: "sr-4",
-    name: "مصباح خشبي أنيق",
-    price: 425,
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "مصباح خشبي أنيق",
-    category: "إضاءة",
-    tag: "شائع",
-  },
-  {
-    id: "sr-5",
-    name: "مجموعة أقمشة فاخرة",
-    price: 620,
-    image:
-      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "مجموعة أقمشة فاخرة",
-    category: "ديكور",
-    tag: "أفضل قيمة",
-  },
-  {
-    id: "sr-6",
-    name: "سلة نخل ريفية",
-    price: 570,
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
-    imageAlt: "سلة نخل ريفية",
-    category: "استوديو",
-    tag: "مميز",
-  },
-];
+const SKELETON_COUNT = 6
 
-const suggestedTerms = ["خيزران", "ديكور", "سلة", "مصباح", "طاولة", "تراث"];
+function formatPrice(price: string | number) {
+  const num = typeof price === 'string' ? Number(price) : price
+  if (Number.isNaN(num)) return price
+  return num.toLocaleString('ar-SA')
+}
 
 export function SearchPage() {
+<<<<<<< HEAD
   const { formatAmount } = useSystemCurrency()
+=======
+  const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState(query)
+  const [filters, setFilters] = useState<SearchFiltersDTO>({ page: 1, per_page: 12 })
+
+  // Debounce input (300ms)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300)
+    return () => clearTimeout(t)
+  }, [query])
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, q: debouncedQuery, page: 1 }))
+  }, [debouncedQuery])
+
+  // Use the existing hooks
+  const productsQuery = useSearchProducts(filters)
+  const categoriesQuery = useSearchCategories()
+
+  const products: Product[] = useMemo(() => productsQuery.data?.data ?? [], [productsQuery.data])
+  const total = productsQuery.data?.meta?.total ?? products.length
+
+  const suggestedTerms = useMemo(() => {
+    if (categoriesQuery.data?.data) return categoriesQuery.data.data.slice(0, 6).map((c: any) => c.name)
+    return ['خيزران', 'ديكور', 'سلة', 'مصباح', 'طاولة', 'تراث']
+  }, [categoriesQuery.data])
+
+>>>>>>> dad121843105060107acde3b906c6c7d331c9270
   return (
     <AccountLayout hideSidebar>
       <motion.section
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
         className="flex flex-col gap-6"
         dir="rtl"
       >
@@ -86,13 +68,16 @@ export function SearchPage() {
               <span className="text-[#5e634f]">⌕</span>
               <input
                 aria-label="ابحث في المنتجات"
-                defaultValue="سلة"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="ابحث عن منتج أو فئة..."
                 className="w-full border-0 bg-transparent text-right text-[15px] text-[#20251f] placeholder:text-[#7f827b] focus:outline-none"
               />
             </div>
 
             <button
               type="button"
+              onClick={() => setDebouncedQuery(query)}
               className="rounded-xl bg-[#4f5f3d] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] hover:bg-[#45593a]"
             >
               بحث
@@ -104,6 +89,7 @@ export function SearchPage() {
               <button
                 key={term}
                 type="button"
+                onClick={() => setQuery(term)}
                 className="rounded-full border border-[#d9d1c6] bg-white px-3 py-1.5 text-[12px] text-[#4a5149] transition-colors hover:bg-[#f0e9e1]"
               >
                 {term}
@@ -115,32 +101,71 @@ export function SearchPage() {
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-[28px] font-extrabold text-[#1d2218]">نتائج البحث</h1>
           <span className="rounded-full border border-[#dacfbf] bg-[#f3efe9] px-3 py-1.5 text-[12px] font-medium text-[#4f5f3d]">
-            {results.length} نتائج
+            {productsQuery.isLoading ? '...' : `${total} نتائج`}
           </span>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {results.map((item, index) => (
-            <motion.article
-              key={item.id}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.06, ease: "easeOut" }}
-              className="group overflow-hidden rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] shadow-[0_10px_20px_-18px_rgba(38,47,26,0.25)]"
-            >
-              <img
-                src={item.image}
-                alt={item.imageAlt}
-                className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
+          {productsQuery.isLoading &&
+            Array.from({ length: SKELETON_COUNT }).map((_, index) => (
+              <motion.article
+                key={`s-${index}`}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.03, ease: 'easeOut' }}
+                className="animate-pulse overflow-hidden rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] p-6"
+              >
+                <div className="mb-4 h-48 w-full rounded bg-[#e6e0d6]" />
+                <div className="h-4 w-3/4 rounded bg-[#e6e0d6] mb-2" />
+                <div className="h-3 w-1/2 rounded bg-[#e6e0d6]" />
+              </motion.article>
+            ))}
 
-              <div className="space-y-3 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-full bg-[#eef2e8] px-2 py-1 text-[9px] font-medium text-[#4d6340]">
-                    {item.tag}
-                  </span>
-                  <span className="text-[11px] text-[#7a7b75]">{item.category}</span>
+          {!productsQuery.isLoading && products.length === 0 && (
+            <div className="col-span-full rounded-[20px] border border-[#e9e0d5] bg-[#fff7f4] p-6 text-center text-[#6b6b66]">
+              لا توجد نتائج تطابق بحثك
+            </div>
+          )}
+
+          {!productsQuery.isLoading &&
+            products.map((item, index) => (
+              <motion.article
+                key={item.id}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.06, ease: 'easeOut' }}
+                className="group overflow-hidden rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] shadow-[0_10px_20px_-18px_rgba(38,47,26,0.25)]"
+              >
+                <img
+                  src={item.media?.[0]?.url ?? 'https://via.placeholder.com/600x400?text=No+Image'}
+                  alt={item.name}
+                  className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+
+                <div className="space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-[#eef2e8] px-2 py-1 text-[9px] font-medium text-[#4d6340]">
+                      {item.status === 'active' ? 'متوفر' : 'غير متوفر'}
+                    </span>
+                    <span className="text-[11px] text-[#7a7b75]">{item.category?.name ?? ''}</span>
+                  </div>
+
+                  <p className="text-[16px] font-bold text-[#1c211b]">{item.name}</p>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[17px] font-extrabold text-[#1d2218]">
+                      {formatPrice(item.price)} ر.س
+                    </span>
+                    <button
+                      type="button"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4f5f3d] text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] transition-transform duration-200 hover:scale-105"
+                      aria-label={`إضافة ${item.name} إلى السلة`}
+                    >
+                      <ShoppingBagIcon className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
+<<<<<<< HEAD
 
                 <p className="text-[16px] font-bold text-[#1c211b]">{item.name}</p>
 
@@ -159,8 +184,12 @@ export function SearchPage() {
               </div>
             </motion.article>
           ))}
+=======
+              </motion.article>
+            ))}
+>>>>>>> dad121843105060107acde3b906c6c7d331c9270
         </div>
       </motion.section>
     </AccountLayout>
-  );
+  )
 }

@@ -3,17 +3,20 @@ export interface SignupFormValues {
   fullName: string;
   email: string;
   phone: string;
+  phoneCountryCode?: string;
   password: string;
   confirmPassword: string;
   acceptedTerms: boolean;
 }
 
-/** Payload shape sent to the API (no client-only fields like confirmPassword). */
+/** Payload shape sent to the API (no client-only fields like acceptedTerms). */
 export interface SignupPayload {
   fullName: string;
   email: string;
   phone: string;
+  phoneCountryCode?: string;
   password: string;
+  confirmPassword: string;
 }
 
 /** Successful signup response from the API. */

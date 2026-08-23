@@ -89,7 +89,14 @@ export function RequestCard({ request, onSelect }: RequestCardProps) {
           )}
         </div>
 
-        <button className="flex items-center gap-1 text-brand-olive-700 group-hover:translate-x-[-2px] transition-transform font-bold">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(request);
+          }}
+          className="flex items-center gap-1 text-brand-olive-700 group-hover:translate-x-[-2px] transition-transform font-bold"
+        >
           <span>عرض التفاصيل</span>
           <ArrowLeftIcon />
         </button>

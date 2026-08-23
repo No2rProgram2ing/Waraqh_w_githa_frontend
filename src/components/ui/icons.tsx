@@ -1,47 +1,20 @@
 import type { SVGProps } from "react";
-import {
-  ArrowLeft as LucideArrowLeft,
-  Bell as LucideBell,
-  CheckCircle as LucideCheckCircle,
-  CircleHelp as LucideHelpCircle,
-  Heart as LucideHeart,
-  Image as LucideImage,
-  LogOut as LucideLogOut,
-  Mail as LucideMail,
-  MessageCircle as LucideMessageCircle,
-  MapPin as LucideMapPin,
-  Menu as LucideMenu,
-  Package as LucidePackage,
-  Palette as LucidePalette,
-  Plus as LucidePlus,
-  Search as LucideSearch,
-  ShoppingBag as LucideShoppingBag,
-  Sparkles as LucideSparkles,
-  Trash2 as LucideTrash,
-  User as LucideUser,
-  X as LucideX,
-} from "lucide-react";
 
-export const ArrowLeftIcon = LucideArrowLeft;
-export const BellIcon = LucideBell;
-export const BrandLogoIcon = LucideSparkles;
-export const CheckCircleIcon = LucideCheckCircle;
-export const CustomCraftIcon = LucidePalette;
-export const HeartIcon = LucideHeart;
-export const HelpCircleIcon = LucideHelpCircle;
-export const ImagePlaceholderIcon = LucideImage;
-export const LogoutIcon = LucideLogOut;
-export const MailIcon = LucideMail;
-export const WhatsAppIcon = LucideMessageCircle;
-export const MapPinIcon = LucideMapPin;
-export const MenuIcon = LucideMenu;
-export const PackageIcon = LucidePackage;
-export const PlusIcon = LucidePlus;
-export const SearchIcon = LucideSearch;
-export const ShoppingBagIcon = LucideShoppingBag;
-export const TrashIcon = LucideTrash;
-export const UserIcon = LucideUser;
-export const XMarkIcon = LucideX;
+export const WhatsAppIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M20.5 12.4A8.4 8.4 0 0 1 12 20.5H7.8a1.6 1.6 0 0 1-1.3-.8L5 17.5a8.4 8.4 0 1 1 15.5-5.1Z" />
+    <path d="M8.5 14.4c.7.6 1.5 1 2.4 1.2.4.1.8-.2.9-.6l.4-1.3c.1-.4-.2-.8-.6-.9l-1.1-.4a.9.9 0 0 1-.5-.9v-.5c0-.5-.4-.9-.9-.9h-.4a1.8 1.8 0 0 0-1.7 1.6c-.4 2.3 1.2 4.2 3.5 4.8.5.2.9.1 1.2-.1l.9-.8c.3-.3.8-.3 1.1 0l.7.7c.4.4 1 .4 1.4 0l.9-1c.3-.3.3-.8 0-1.1l-.8-.9c-.3-.3-.3-.8 0-1.1l.8-.8c.3-.3.3-.8 0-1.1l-1.1-1.1c-.4-.4-1-.4-1.4 0l-.7.7c-.3.3-.8.3-1.1 0l-.7-.7c-.3-.3-.8-.4-1.2-.2L8.5 14.4Z" />
+  </svg>
+);
 
 export function InstagramIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -55,9 +28,8 @@ export function InstagramIcon(props: SVGProps<SVGSVGElement>) {
 
 export function TwitterIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M4 4l16 16" />
-      <path d="M20 4L4 20" />
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M18.9 2h3.4l-7.4 8.5L23 22h-6.8l-5.3-7.3L5.3 22H1.9l7.9-9.1L1 2h7l4.8 6.7L18.9 2zm-1.2 18h1.9L7.1 3.9H5.1L17.7 20z" />
     </svg>
   );
 }
@@ -74,6 +46,14 @@ export function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    </svg>
+  );
+}
+
+export function ArrowLeftIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7 7-7M3 12h18" />
     </svg>
   );
 }
@@ -107,6 +87,159 @@ export function PhoneIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </svg>
+  );
+}
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <circle cx="11" cy="11" r="6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 16l5 5" />
+    </svg>
+  );
+}
+
+export function ShoppingBagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 10H6L5 9z" />
+    </svg>
+  );
+}
+
+export function HeartIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-8.5-4.35-9.72-9.07C1.38 9.07 3.94 4.5 8.1 4.5c2.2 0 3.52 1.06 3.9 2.22.38-1.16 1.7-2.22 3.9-2.22 4.16 0 6.72 4.57 5.82 7.43C20.5 16.65 12 21 12 21z" />
+    </svg>
+  );
+}
+
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0m6 0H9" />
+    </svg>
+  );
+}
+
+export function MenuIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+export function XMarkIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1" />
+      <circle cx="10" cy="7" r="4" />
+    </svg>
+  );
+}
+
+export function MapPinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s6-4.35 6-10a6 6 0 10-12 0c0 5.65 6 10 6 10z" />
+      <circle cx="12" cy="11" r="2.5" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 12.5l2.3 2.3 4.7-5" />
+    </svg>
+  );
+}
+
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M9 7V4h6v3m-7 4l1 9h6l1-9" />
+    </svg>
+  );
+}
+
+export function PlusIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+export function ImagePlaceholderIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="9" cy="10" r="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 15l-5-5L5 21" />
+    </svg>
+  );
+}
+
+export function PackageIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9-4 9 4-9 4-9-4zm0 0v8l9 4 9-4V8" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v8" />
+    </svg>
+  );
+}
+
+export function BrandLogoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" {...props}>
+      <path d="M32 7c-9 0-16 7-16 16v4h10v-4c0-3 2-6 6-6h2c4 0 7 3 7 7v4H32v10h10v-5c0-7 5-12 12-12 7 0 12 5 12 12v16c0 7-5 12-12 12H32c-8 0-14-6-14-14V25h-9v17c0 13 10 23 23 23s23-10 23-23V23c0-13-10-16-23-16z" fill="currentColor" opacity="0.15"/>
+      <path d="M23 19h18v8H23zm-2 10h22v16H21zm9 9h4v7h-4zm-8 0h4v7h-4zm15 0h4v7h-4z" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function MailIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7.5A2.5 2.5 0 016.5 5h11A2.5 2.5 0 0120 7.5v9A2.5 2.5 0 0117.5 19h-11A2.5 2.5 0 014 16.5v-9zm0 0l8 6 8-6" />
+    </svg>
+  );
+}
+
+export function CustomCraftIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18M3 12h18M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.1 9a3 3 0 115.8 0c0 2-2.6 2.4-2.8 4.5M12 17h.01" />
+    </svg>
+  );
+}
+
+export function LogoutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 17l5-5-5-5M15 12H3m12 9h4a2 2 0 002-2V5a2 2 0 00-2-2h-4" />
     </svg>
   );
 }
