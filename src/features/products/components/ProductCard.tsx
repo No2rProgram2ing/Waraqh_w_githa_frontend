@@ -23,6 +23,16 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
     try {
       setIsCartLoading(true);
       await cartApi.addToCart(product.id);
+
+      // Update local cart store for immediate UX
+      try {
+        const addItem = (await import('@/features/cart/stores/cartStore')).useCartStore.getState().addItem;
+        addItem({ id: String(product.id), name: product.name ?? '', subtitle: product.subtitle ?? product.description ?? '', price: Number(product.price ?? 0), image: product.image ?? product.imageUrl ?? '' });
+      } catch (e) {
+        // If importing store fails, fall back silently — the server cart still has the item.
+        console.warn('Failed to update local cart store', e);
+      }
+
       showSuccessToast("تمت إضافة المنتج إلى السلة");
     } catch (error) {
       console.error(error);
