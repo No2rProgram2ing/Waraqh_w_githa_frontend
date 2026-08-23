@@ -2,6 +2,7 @@ import type { ProductionStage } from '../types/orders.types'
 import { useProductionHistory, useUpdateProductionStage } from '../hooks/useProduction'
 import { OpButton } from './OpButton'
 import { OpStatusBadge } from './OpStatusBadge'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export function ProductionStageManager({ orderId }: { orderId: number }) {
   const { data, isLoading, isError } = useProductionHistory(orderId)
@@ -25,7 +26,26 @@ export function ProductionStageManager({ orderId }: { orderId: number }) {
             <div className="flex items-center gap-2">
               <OpStatusBadge status={status} label={s.status === 'done' ? 'مكتملة' : s.status === 'in_progress' ? 'جارية' : 'معلقة'} />
               {s.status !== 'done' && (
-                <OpButton size="sm" variant="primary" disabled={update.isPending} onClick={() => update.mutate({ orderId, stageId: s.id })}>
+                <OpButton size="sm" variant="primary" disabled={update.isPending}
+                 onClick={() => {
+                    update.mutate(
+                        {
+                          orderId,
+                          stageId: s.id,
+                        },
+                        {
+                          onSuccess: () => {
+                            showSuccessToast('تم تحديث مرحلة الإنتاج بنجاح')
+                          },
+                          onError: (error: any) => {
+                            showErrorToast(
+                              error?.response?.data?.message ||
+                                'فشل في تحديث مرحلة الإنتاج، يرجى المحاولة مرة أخرى.',
+                            )
+                          },
+                        },
+                      )   
+                  }}>
                   {s.status === 'in_progress' ? 'تعيين هذه المرحلة' : 'بدء'}
                 </OpButton>
               )}

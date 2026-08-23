@@ -11,6 +11,7 @@ import { OpPageHeader } from '../components/OpPageHeader'
 import { useCreateOrder } from '../hooks/useOrders'
 import { useSystemCurrency } from '@/lib/currency'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 interface CustomerOption {
   id: number
@@ -317,6 +318,7 @@ export default function OrderCreatePage() {
         onSuccess: (
           order,
         ) => {
+          showSuccessToast('تم إنشاء الطلب بنجاح')
           navigate(
             `/admin/orders/${order.id}`,
           )
@@ -336,7 +338,12 @@ export default function OrderCreatePage() {
                 ? 'تعذر إنشاء الطلب. تحقق من البيانات المدخلة.'
                 : 'تعذر إنشاء الطلب. حاول مرة أخرى.'
             )
-
+          
+          showErrorToast(
+            typeof message === 'string'
+              ? message
+              : 'تعذر إنشاء الطلب، حاول مرة أخرى.',
+          )     
           setError(
             typeof message ===
               'string'

@@ -7,6 +7,7 @@ import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { OpStatusBadge } from '../components/OpStatusBadge'
 import { useSystemCurrency } from '@/lib/currency'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function CustomizationDetailsPage() {
   const { id } = useParams()
@@ -111,7 +112,25 @@ export default function CustomizationDetailsPage() {
           <select
             value={String(item.status)}
             disabled={update.isPending}
-            onChange={(e) => update.mutate({ id: item.id, status: e.target.value as any })}
+            onChange={(e) => {
+              update.mutate(
+                {
+                  id: item.id,
+                  status: e.target.value as any,
+                },
+                {
+                  onSuccess: () => {
+                    showSuccessToast('تم تحديث حالة التخصيص بنجاح')
+                  },
+                  onError: (error: any) => {
+                    showErrorToast(
+                      error?.response?.data?.message ||
+                        'فشل في تحديث حالة التخصيص، يرجى المحاولة مرة أخرى.',
+                    )
+                  },
+                },
+              )
+            }}            
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
           >
             <option value="pending_approval">بانتظار الموافقة</option>

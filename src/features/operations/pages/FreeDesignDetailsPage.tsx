@@ -17,6 +17,7 @@ import { OpCard } from '../components/OpCard'
 import { OpEmptyState } from '../components/OpEmptyState'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { OpStatusBadge } from '../components/OpStatusBadge'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function FreeDesignDetailsPage() {
   const { id } = useParams()
@@ -51,15 +52,45 @@ export default function FreeDesignDetailsPage() {
         formData.append('images[]', file)
       })
 
-      update.mutate({
-        id: requestId,
-        payload: formData,
-      })
+      update.mutate(
+        {
+          id: requestId,
+          payload: formData,
+        },
+        {
+          onSuccess: () => {
+            showSuccessToast('تم تحديث طلب التصميم الحر بنجاح')
+            setImages([])
+
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
+          },
+          onError: (error: any) => {
+            showErrorToast(
+              error?.response?.data?.message ||
+                'فشل في تحديث طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
+            )
+          },
+        },
+      )
     }
 
   const destroy = () => {
     if (!window.confirm('هل أنت متأكد من حذف الطلب؟')) return
-    remove.mutate(requestId, { onSuccess: () => navigate('/admin/free-design-requests') })
+
+    remove.mutate(requestId, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف طلب التصميم الحر بنجاح')
+        navigate('/admin/free-design-requests')
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        error?.response?.data?.message ||
+          'فشل في حذف طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
+      )
+    },
+  })
   }
 
   return (
@@ -126,7 +157,6 @@ export default function FreeDesignDetailsPage() {
             </div>
           </div>
         </OpCard>
-        {item.images && item.images.length > 0 && (
         <OpCard className="lg:col-span-3">
           <div className="space-y-5">
             <div>
@@ -178,10 +208,23 @@ export default function FreeDesignDetailsPage() {
                             return
                           }
 
-                          removeImage.mutate({
-                            requestId,
-                            imageId: image.id,
-                          })
+                          removeImage.mutate(
+                            {
+                              requestId,
+                              imageId: image.id,
+                            },
+                            {
+                              onSuccess: () => {
+                                showSuccessToast('تم حذف الصورة بنجاح')
+                              },
+                              onError: (error: any) => {
+                                showErrorToast(
+                                  error?.response?.data?.message ||
+                                    'فشل في حذف الصورة، يرجى المحاولة مرة أخرى.',
+                                )
+                              },
+                            },
+                          )   
                         }}
                         className="rounded-lg p-2 text-[var(--color-text-muted)] transition hover:bg-[var(--color-danger-subtle)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label="حذف الصورة"
@@ -194,7 +237,7 @@ export default function FreeDesignDetailsPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-muted)]">
+              <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-center text-sm text-[var(--color-text-muted)]">
                 لا توجد صور مرجعية مرفقة حاليًا.
               </div>
             )}
@@ -251,7 +294,7 @@ export default function FreeDesignDetailsPage() {
             </div>
           </div>
         </OpCard>
-      )}
+              
       
         
         

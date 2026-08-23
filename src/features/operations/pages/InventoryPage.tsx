@@ -11,6 +11,7 @@ import { OpSearch } from '../components/OpSearch'
 import { OpPagination } from '../components/OpPagination'
 import { OpModal } from '../components/OpModal'
 import type { RawMaterial } from '../types/inventory.types'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 const PAGE_SIZE = 10
 
@@ -27,19 +28,43 @@ export default function InventoryPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return materials.filter((m) => {
-      const matchesSearch = !q || [m.name, m.unit].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
-      return matchesSearch && (!status || String(m.status) === status)
+
+    return materials.filter((m: RawMaterial) => {
+      const matchesSearch =
+        !q ||
+        [m.name, m.unit]
+          .filter(Boolean)
+          .some((value) =>
+            String(value).toLowerCase().includes(q),
+          )
+
+      return (
+        matchesSearch &&
+        (!status || String(m.status) === status)
+      )
     })
-  }, [materials, search, status])
+  }, [materials, search, status]) 
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const lastPage = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
 
   const openCreate = () => { setEditing(null); setFormOpen(true) }
   const openEdit = (m: RawMaterial) => { setEditing(m); setFormOpen(true) }
   const deleteMaterial = (m: RawMaterial) => {
-    if (!window.confirm(`هل أنت متأكد من حذف المادة «${m.name}»؟`)) return
-    remove.mutate(m.id)
+    if (!window.confirm(`هل أنت متأكد من حذف المادة «${m.name}»؟`)) {
+      return
+    }
+
+    remove.mutate(m.id, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف المادة من المخزون بنجاح')
+      },
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في حذف المادة، يرجى المحاولة مرة أخرى.',
+        )
+      },
+    })
   }
 
   return (

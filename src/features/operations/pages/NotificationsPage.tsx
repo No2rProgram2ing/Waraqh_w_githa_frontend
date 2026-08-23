@@ -6,6 +6,7 @@ import { OpPageHeader } from '../components/OpPageHeader'
 import { OpCard } from '../components/OpCard'
 import { OpButton } from '../components/OpButton'
 import { OpEmptyState } from '../components/OpEmptyState'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function NotificationsPage() {
   const query = useNotifications({ per_page: 50 })
@@ -14,11 +15,23 @@ export default function NotificationsPage() {
 
   const handleMark = async (ids: number[]) => {
     if (!ids.length) return
+
     try {
-      for (const id of ids) await markRead.mutateAsync(id)
-    } catch (err) {
-      console.error(err)
-      alert('فشل تحديث الإشعارات')
+      for (const id of ids) {
+        await markRead.mutateAsync(id)
+      }
+
+      showSuccessToast(
+        ids.length === 1
+          ? 'تم تحديث الإشعار بنجاح'
+          : 'تم تحديث الإشعارات بنجاح',
+      )
+    } catch (error) {
+      console.error(error)
+
+      showErrorToast(
+        'فشل في تحديث الإشعارات، يرجى المحاولة مرة أخرى.',
+      )
     }
   }
 

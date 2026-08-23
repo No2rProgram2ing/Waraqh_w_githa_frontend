@@ -11,6 +11,7 @@ import { OpStatusBadge } from '../components/OpStatusBadge'
 import { ProductionStageManager } from '../components/ProductionStageManager'
 import type { OrderStatus } from '../types/orders.types'
 import { useSystemCurrency } from '@/lib/currency'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function OrderDetailsPage() {
   const { orderId: orderIdParam } = useParams<{ orderId: string }>()
@@ -34,17 +35,55 @@ export default function OrderDetailsPage() {
   }
 
   const changeStatus = (next: OrderStatus) => {
-    const note = window.prompt('ملاحظة تغيير الحالة (اختياري):', statusNote) ?? ''
+    const note =
+      window.prompt(
+        'ملاحظة تغيير الحالة (اختياري):',
+        statusNote,
+      ) ?? ''
+
     setStatusNote(note)
-    updateStatus.mutate({ id: order.id, status: next, note })
+
+    updateStatus.mutate(
+      {
+        id: order.id,
+        status: next,
+        note,
+      },
+      {
+        onSuccess: () => {
+          showSuccessToast('تم تحديث حالة الطلب بنجاح')
+        },
+        onError: (error: any) => {
+          showErrorToast(
+            error?.response?.data?.message ||
+              'فشل في تحديث حالة الطلب، يرجى المحاولة مرة أخرى.',
+          )
+        },
+      },
+    )
   }
 
   const handleDelete = async () => {
-    if (!window.confirm(`هل أنت متأكد من حذف الطلب #${order.order_number}؟ لا يمكن التراجع عن هذا الإجراء.`)) return
-    await deleteOrder.mutateAsync(order.id)
-    navigate('/admin/orders')
-  }
+    if (
+      !window.confirm(
+        `هل أنت متأكد من حذف الطلب #${order.order_number}؟ لا يمكن التراجع عن هذا الإجراء.`,
+      )
+    ) {
+      return
+    }
 
+    try {
+      await deleteOrder.mutateAsync(order.id)
+
+      showSuccessToast('تم حذف الطلب بنجاح')
+      navigate('/admin/orders')
+    } catch (error: any) {
+      showErrorToast(
+        error?.response?.data?.message ||
+          'فشل في حذف الطلب، يرجى المحاولة مرة أخرى.',
+      )
+    }
+  }
   const statusHistory = Array.isArray(historyData?.data) ? historyData.data : (Array.isArray(historyData) ? historyData : [])
 
   return (
@@ -91,7 +130,7 @@ export default function OrderDetailsPage() {
             <h2 className="mb-4 font-bold text-[var(--color-text-primary)]">مراحل الإنتاج</h2>
             <ProductionStageManager orderId={order.id} />
           </OpCard>
-
+          
           <OpCard variant="table">
             <OpCardSection>
               <div>

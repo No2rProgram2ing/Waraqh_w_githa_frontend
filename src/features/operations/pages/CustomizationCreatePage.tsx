@@ -14,7 +14,7 @@ import { useProducts } from '@/features/catalog/hooks/useProducts'
 import { useSystemCurrency } from '@/lib/currency'
 import { useColors } from '@/features/design/hooks/useColors'
 import { usePatterns } from '@/features/design/hooks/usePatterns'
-
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 import type { Product } from '@/features/catalog/types/product'
 
 export default function CustomizationCreatePage() {
@@ -328,8 +328,16 @@ export default function CustomizationCreatePage() {
     }
 
     create.mutate(payload, {
-      onSuccess: () =>
-        navigate('/admin/customizations'),
+      onSuccess: () => {
+        showSuccessToast('تم إنشاء طلب التخصيص بنجاح')
+        navigate('/admin/customizations')
+      },
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في إنشاء طلب التخصيص، يرجى المحاولة مرة أخرى.',
+        )
+      },
     })
   }
 

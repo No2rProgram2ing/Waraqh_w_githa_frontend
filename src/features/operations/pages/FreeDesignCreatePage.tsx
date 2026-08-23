@@ -8,6 +8,7 @@ import { OpCard } from '../components/OpCard'
 import { OpPageHeader } from '../components/OpPageHeader'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { useCustomers } from '@/features/customers/hooks/useCustomers'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function FreeDesignCreatePage() {
   const navigate = useNavigate()
@@ -52,8 +53,16 @@ export default function FreeDesignCreatePage() {
     })
 
     create.mutate(formData, {
-      onSuccess: () =>
-        navigate('/admin/free-design-requests'),
+      onSuccess: () => {
+        showSuccessToast('تم إنشاء طلب التصميم الحر بنجاح')
+        navigate('/admin/free-design-requests')
+      },
+      onError: (error: any) => {
+          showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في إنشاء طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
+        )
+      },
     })
   }
   const valid = Number(customerId) > 0 && description.trim().length > 0

@@ -3,6 +3,7 @@ import type { RawMaterial, RawMaterialStatus } from '../types/inventory.types'
 import { useCreateMaterial, useUpdateMaterial } from '../hooks/useInventory'
 import { OpButton } from './OpButton'
 import { OpModal } from './OpModal'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 function deriveStatus(q: string, r: string): RawMaterialStatus {
   const quantity = Number(q)
@@ -48,17 +49,32 @@ export function InventoryForm({ open, material, onClose, onSaved }: InventoryFor
       ),
     }
 
-    if (material) {
-      await update.mutateAsync({
-        id: material.id,
-        payload,
-      })
-    } else {
-      await create.mutateAsync(payload)
-    }
+    try {
+      if (material) {
+        await update.mutateAsync({
+          id: material.id,
+          payload,
+        })
 
-    onSaved?.()
-    onClose()
+        showSuccessToast('تم تحديث المادة في المخزون بنجاح')
+      } else {
+        await create.mutateAsync(payload)
+
+        showSuccessToast('تمت إضافة المادة إلى المخزون بنجاح')
+      }
+
+      onSaved?.()
+      onClose()
+    } catch (error: any) {
+      showErrorToast(
+        error?.response?.data?.message ||
+          (
+            material
+              ? 'فشل في تحديث المادة، يرجى المحاولة مرة أخرى.'
+              : 'فشل في إضافة المادة، يرجى المحاولة مرة أخرى.'
+          ),
+      )
+    }
   }
 
   const busy = create.isPending || update.isPending

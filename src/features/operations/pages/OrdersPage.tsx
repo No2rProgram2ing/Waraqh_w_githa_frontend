@@ -10,6 +10,7 @@ import { OpSearch } from '../components/OpSearch'
 import { OpPagination } from '../components/OpPagination'
 import { OrdersTable } from '../components/OrdersTable'
 import { OrdersTableSkeleton } from '../components/OrdersTableSkeleton'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function OrdersPage() {
   const navigate = useNavigate()
@@ -32,7 +33,17 @@ export default function OrdersPage() {
 
   const handleDelete = (id: number, orderNumber: string | number) => {
     if (!window.confirm(`هل أنت متأكد من حذف الطلب #${orderNumber}؟ لا يمكن التراجع عن هذا الإجراء.`)) return
-    deleteOrder.mutate(id)
+    deleteOrder.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف الطلب بنجاح')
+      },
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في حذف الطلب، يرجى المحاولة مرة أخرى.',
+        )
+      },
+    })
   }
 
   return (

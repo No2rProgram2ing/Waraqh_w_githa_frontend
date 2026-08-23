@@ -9,6 +9,7 @@ import { OpButton } from '../components/OpButton'
 import { OpCard, OpCardSection } from '../components/OpCard'
 import { OpSearch } from '../components/OpSearch'
 import { OpPagination } from '../components/OpPagination'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 function toCsv(rows: any[], columns: string[]) {
   const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`
@@ -28,8 +29,26 @@ export default function PaymentsPage() {
   const payments = data?.data ?? []
 
   const deletePayment = (id: number) => {
-    if (!window.confirm('هل أنت متأكد من حذف عملية الدفع؟ لا يمكن التراجع عن هذا الإجراء.')) return
-    remove.mutate(id)
+    if (
+      !window.confirm(
+        'هل أنت متأكد من حذف عملية الدفع؟ لا يمكن التراجع عن هذا الإجراء.',
+      )
+    ) {
+      return
+    }
+
+    remove.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف الدفعة بنجاح')
+      },
+
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في حذف الدفعة، يرجى المحاولة مرة أخرى.',
+        )
+      },
+    })
   }
 
   const exportCsv = () => {

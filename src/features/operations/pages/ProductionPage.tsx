@@ -63,7 +63,7 @@ export default function ProductionPage() {
     setError('')
     setIsModalOpen(true)
   }
-
+  
   const closeModal = () => {
     if (create.isPending || update.isPending) return
 
@@ -95,12 +95,16 @@ export default function ProductionPage() {
           name,
           sort_order: sortOrder,
         })
+
+        showSuccessToast('تم إنشاء مرحلة الإنتاج بنجاح')
       } else {
         await update.mutateAsync({
           id: editingId,
           name,
           sort_order: sortOrder,
         })
+
+        showSuccessToast('تم تحديث مرحلة الإنتاج بنجاح')
       }
 
       closeModal()
@@ -125,13 +129,21 @@ export default function ProductionPage() {
           firstMessage ??
             'تعذر حفظ مرحلة الإنتاج. يرجى التحقق من البيانات.',
         )
+
+        showErrorToast(
+          firstMessage ??
+            'تعذر حفظ مرحلة الإنتاج. يرجى التحقق من البيانات.',
+        )
+
         return
       }
 
-      setError(
+      const message =
         response?.data?.message ??
-          'تعذر حفظ مرحلة الإنتاج. يرجى المحاولة مرة أخرى.',
-      )
+        'تعذر حفظ مرحلة الإنتاج، يرجى المحاولة مرة أخرى.'
+
+      setError(message)
+      showErrorToast(message)
     }
   }
 
@@ -144,6 +156,8 @@ export default function ProductionPage() {
 
     try {
       await remove.mutateAsync(id)
+
+      showSuccessToast('تم حذف مرحلة الإنتاج بنجاح')
     } catch (err: unknown) {
       const response = (
         err as {
@@ -155,9 +169,9 @@ export default function ProductionPage() {
         }
       )?.response
 
-      window.alert(
+      showErrorToast(
         response?.data?.message ??
-          'تعذر حذف مرحلة الإنتاج. يرجى المحاولة مرة أخرى.',
+          'تعذر حذف مرحلة الإنتاج، يرجى المحاولة مرة أخرى.',
       )
     }
   }

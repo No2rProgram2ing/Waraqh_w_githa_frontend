@@ -2,11 +2,24 @@ import { axiosAdminClient } from '@/api/axiosAdminClient'
 import type { CustomizationRequest, CustomizationStatus } from '../types/customizations.types'
 
 export const customizationsApi = {
-  async list() {
+  async list(): Promise<{
+    data: CustomizationRequest[]
+    meta?: {
+      current_page?: number
+      last_page?: number
+      per_page?: number
+      total?: number
+    }
+  }> {
     const r = await axiosAdminClient.get('/admin/customizations')
-    return { ...r.data, data: Array.isArray(r.data?.data) ? r.data.data as CustomizationRequest[] : [] }
-  },
 
+    return {
+      ...r.data,
+      data: Array.isArray(r.data?.data)
+        ? (r.data.data as CustomizationRequest[])
+        : [],
+    }
+  },
   async create(payload: Record<string, unknown>) {
     const r = await axiosAdminClient.post('/admin/customizations', payload)
     return (r.data?.data ?? r.data) as CustomizationRequest

@@ -11,6 +11,7 @@ import { OpPagination } from '../components/OpPagination'
 import { OpIconButton } from '../components/OpIconButton'
 import { OpStatusBadge } from '../components/OpStatusBadge'
 import { useSystemCurrency } from '@/lib/currency'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 const PAGE_SIZE = 10
 
@@ -36,8 +37,25 @@ export default function CustomizationsPage() {
   const lastPage = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
 
   const deleteItem = (id: number, requestCode: string) => {
-    if (!window.confirm(`هل أنت متأكد من حذف طلب التخصيص ${requestCode}؟ لا يمكن التراجع عن هذا الإجراء.`)) return
-    remove.mutate(id)
+    if (
+      !window.confirm(
+        `هل أنت متأكد من حذف طلب التخصيص ${requestCode}؟ لا يمكن التراجع عن هذا الإجراء.`,
+      )
+    ) {
+      return
+    }
+
+    remove.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف طلب التخصيص بنجاح')
+      },
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في حذف طلب التخصيص، يرجى المحاولة مرة أخرى.',
+        )
+      },
+    })
   }
 
   return (
