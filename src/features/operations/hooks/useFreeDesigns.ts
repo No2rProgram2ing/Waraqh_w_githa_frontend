@@ -3,14 +3,21 @@ import { freeDesignApi } from '../api/freeDesignApi'
 
 export const freeDesignKeys = {
   all: ['admin', 'custom-design-requests'] as const,
-  list: (params: Record<string, unknown>) => [...freeDesignKeys.all, 'list', params] as const,
-  detail: (id: number) => [...freeDesignKeys.all, 'detail', id] as const,
+
+  list: (params: Record<string, unknown>) =>
+    [...freeDesignKeys.all, 'list', params] as const,
+
+  detail: (id: number) =>
+    [...freeDesignKeys.all, 'detail', id] as const,
 }
 
 export function useFreeDesigns(params: Record<string, unknown>) {
   return useQuery({
     queryKey: freeDesignKeys.list(params),
-    queryFn: () => freeDesignApi.list(params as Parameters<typeof freeDesignApi.list>[0]),
+    queryFn: () =>
+      freeDesignApi.list(
+        params as Parameters<typeof freeDesignApi.list>[0],
+      ),
   })
 }
 
@@ -24,27 +31,77 @@ export function useFreeDesign(id: number) {
 
 export function useUpdateFreeDesign() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof freeDesignApi.update>[1] }) => freeDesignApi.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number
+      payload: FormData
+    }) => freeDesignApi.update(id, payload),
+
     onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({ queryKey: freeDesignKeys.all })
-      void queryClient.invalidateQueries({ queryKey: freeDesignKeys.detail(variables.id) })
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.all,
+      })
+
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.detail(variables.id),
+      })
+    },
+  })
+}
+
+export function useDeleteFreeDesignImage() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      requestId,
+      imageId,
+    }: {
+      requestId: number
+      imageId: number
+    }) => freeDesignApi.deleteImage(requestId, imageId),
+
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.detail(variables.requestId),
+      })
+
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.all,
+      })
     },
   })
 }
 
 export function useDeleteFreeDesign() {
   const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: (id: number) => freeDesignApi.remove(id),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: freeDesignKeys.all }),
+
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.all,
+      })
+    },
   })
 }
 
 export function useCreateFreeDesign() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: (payload: Parameters<typeof freeDesignApi.create>[0]) => freeDesignApi.create(payload),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: freeDesignKeys.all }),
+    mutationFn: (payload: FormData) =>
+      freeDesignApi.create(payload),
+
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: freeDesignKeys.all,
+      })
+    },
   })
 }

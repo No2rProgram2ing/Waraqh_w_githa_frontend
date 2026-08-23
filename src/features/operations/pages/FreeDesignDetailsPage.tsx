@@ -1,9 +1,17 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { ArrowRight, Save, Trash2 } from 'lucide-react'
-import { useDeleteFreeDesign, useFreeDesign, useUpdateFreeDesign } from '../hooks/useFreeDesigns'
+import { ArrowRight, Image, Save, Trash2 } from 'lucide-react'
+
+import {
+  useDeleteFreeDesign,
+  useDeleteFreeDesignImage,
+  useFreeDesign,
+  useUpdateFreeDesign,
+} from '../hooks/useFreeDesigns'
+
 import type { FreeDesignStatus } from '../types/freeDesign.types'
+
 import { OpButton } from '../components/OpButton'
 import { OpCard } from '../components/OpCard'
 import { OpEmptyState } from '../components/OpEmptyState'
@@ -17,17 +25,37 @@ export default function FreeDesignDetailsPage() {
   const query = useFreeDesign(requestId)
   const update = useUpdateFreeDesign()
   const remove = useDeleteFreeDesign()
+  const removeImage = useDeleteFreeDesignImage()
   const item = query.data?.data
   const [status, setStatus] = useState<FreeDesignStatus | ''>('')
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState<string | null>(null)
+  const [images, setImages] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   if (query.isLoading) return <div dir="rtl" className="min-h-[300px]"><OpEmptyState>جاري تحميل الطلب...</OpEmptyState></div>
   if (query.isError || !item) return <div dir="rtl" className="min-h-[300px]"><OpEmptyState tone="error">تعذر تحميل الطلب.</OpEmptyState></div>
 
   const currentStatus = status || item.status
-  const currentDescription = description || item.description || ''
+  const currentDescription =
+    description !== null
+      ? description
+      : item.description || ''
 
-  const save = () => update.mutate({ id: requestId, payload: { status: currentStatus, description: currentDescription } })
+    const save = () => {
+      const formData = new FormData()
+
+      formData.append('status', currentStatus)
+      formData.append('description', currentDescription)
+
+      images.forEach((file) => {
+        formData.append('images[]', file)
+      })
+
+      update.mutate({
+        id: requestId,
+        payload: formData,
+      })
+    }
 
   const destroy = () => {
     if (!window.confirm('هل أنت متأكد من حذف الطلب؟')) return
@@ -65,7 +93,6 @@ export default function FreeDesignDetailsPage() {
             />
           </div>
         </OpCard>
-
         <OpCard>
           <div className="space-y-5 text-sm">
             <div>
@@ -99,6 +126,135 @@ export default function FreeDesignDetailsPage() {
             </div>
           </div>
         </OpCard>
+        {item.images && item.images.length > 0 && (
+        <OpCard className="lg:col-span-3">
+          <div className="space-y-5">
+            <div>
+              <h2 className="font-bold text-[var(--color-text-primary)]">
+                الصور المرجعية
+              </h2>
+
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                الصور المرفقة لتوضيح التصميم المطلوب.
+              </p>
+            </div>
+
+            {item.images && item.images.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                {item.images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)]"
+                  >
+                    <a
+                      href={image.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group block"
+                    >
+                      <img
+                        src={image.url}
+                        alt="صورة مرجعية للتصميم"
+                        className="aspect-square w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      />
+                    </a>
+
+                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                      <a
+                        href={image.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+                      >
+                        <Image className="h-3.5 w-3.5" />
+                        <span>فتح الصورة</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        disabled={removeImage.isPending}
+                        onClick={() => {
+                          if (!window.confirm('هل أنت متأكد من حذف هذه الصورة؟')) {
+                            return
+                          }
+
+                          removeImage.mutate({
+                            requestId,
+                            imageId: image.id,
+                          })
+                        }}
+                        className="rounded-lg p-2 text-[var(--color-text-muted)] transition hover:bg-[var(--color-danger-subtle)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label="حذف الصورة"
+                        title="حذف الصورة"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-muted)]">
+                لا توجد صور مرجعية مرفقة حاليًا.
+              </div>
+            )}
+
+            <div className="space-y-3 border-t border-[var(--color-border)] pt-5">
+              <div>
+                <label
+                  htmlFor="free-design-additional-images"
+                  className="text-xs font-semibold text-[var(--color-text-secondary)]"
+                >
+                  إضافة صور مرجعية جديدة (اختياري)
+                </label>
+
+                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                  يمكنك إضافة صور جديدة إلى الطلب، بحد أقصى 10 صور، وحجم 10MB للصورة الواحدة.
+                </p>
+              </div>
+
+              <input
+                id="free-design-additional-images"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                onChange={(event) => {
+                  const selectedFiles = Array.from(event.target.files ?? [])
+                  setImages(selectedFiles.slice(0, 10))
+                }}
+                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)]"
+              />
+
+              {images.length > 0 && (
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3">
+                  <p className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                    الصور الجديدة: {images.length}
+                  </p>
+
+                  <div className="mt-2 space-y-1">
+                    {images.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]"
+                      >
+                        <span className="truncate">{file.name}</span>
+
+                        <span className="shrink-0">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </OpCard>
+      )}
+      
+        
+        
       </div>
     </div>
   )

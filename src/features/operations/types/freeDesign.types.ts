@@ -1,5 +1,11 @@
 export type FreeDesignStatus = 'new' | 'in_review' | 'quoted' | 'converted' | 'rejected'
 
+export interface FreeDesignImage {
+  id: number
+  url: string
+  sort_order: number
+}
+
 export interface FreeDesignRequest {
   id: number
   customer: {
@@ -8,6 +14,9 @@ export interface FreeDesignRequest {
   }
   description: string | null
   status: FreeDesignStatus
+  images?: FreeDesignImage[]
   created_at: string | null
   updated_at: string | null
 }
+
+

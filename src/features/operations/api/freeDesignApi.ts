@@ -17,27 +17,57 @@ export interface FreeDesignUpdatePayload {
 }
 
 export const freeDesignApi = {
-  async list(params: { page?: number; per_page?: number; search?: string; status?: string } = {}) {
-    const response = await axiosAdminClient.get<FreeDesignListResponse>('/admin/custom-design-requests', { params })
+  async list(
+    params: {
+      page?: number
+      per_page?: number
+      search?: string
+      status?: string
+    } = {},
+  ) {
+    const response = await axiosAdminClient.get<FreeDesignListResponse>(
+      '/admin/custom-design-requests',
+      { params },
+    )
+
     return response.data
   },
 
-  async create(payload: { customer_id: number; description: string; status?: FreeDesignStatus }) {
-    const response = await axiosAdminClient.post<{ data: FreeDesignRequest }>('/admin/custom-design-requests', payload)
+  async create(payload: FormData) {
+    const response = await axiosAdminClient.post<{
+      data: FreeDesignRequest
+    }>('/admin/custom-design-requests', payload)
+
     return response.data
   },
 
   async show(id: number) {
-    const response = await axiosAdminClient.get<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`)
+    const response = await axiosAdminClient.get<{
+      data: FreeDesignRequest
+    }>(`/admin/custom-design-requests/${id}`)
+
     return response.data
   },
 
-  async update(id: number, payload: FreeDesignUpdatePayload) {
-    const response = await axiosAdminClient.put<{ data: FreeDesignRequest }>(`/admin/custom-design-requests/${id}`, payload)
+  async update(id: number, payload: FormData) {
+    payload.append('_method', 'PUT')
+
+    const response = await axiosAdminClient.post<{
+      data: FreeDesignRequest
+    }>(`/admin/custom-design-requests/${id}`, payload)
+
     return response.data
+  },
+
+  async deleteImage(requestId: number, imageId: number) {
+    return axiosAdminClient.delete(
+      `/admin/custom-design-requests/${requestId}/images/${imageId}`,
+    )
   },
 
   async remove(id: number) {
-    return axiosAdminClient.delete(`/admin/custom-design-requests/${id}`)
+    return axiosAdminClient.delete(
+      `/admin/custom-design-requests/${id}`,
+    )
   },
 }
