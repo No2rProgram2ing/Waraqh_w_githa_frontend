@@ -2,6 +2,7 @@
 import { X, Plus, Trash2 } from 'lucide-react'
 import type { ProductAttribute, AttributeType } from '../../types/product-attribute'
 import { useCreateAttribute, useUpdateAttribute } from '../../hooks/useAttributes'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 interface AttributeFormModalProps {
     isOpen: boolean
@@ -57,7 +58,11 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
         e.preventDefault()
 
         const safeName = (name || attributeToEdit?.name || '').trim()
-        const safeDisplayName = (displayName || attributeToEdit?.display_name || safeName).trim()
+        const safeDisplayName = (
+            displayName ||
+            attributeToEdit?.display_name ||
+            safeName
+        ).trim()
         const safeType = type || attributeToEdit?.input_type || 'text'
 
         const payload = {
@@ -69,9 +74,39 @@ export default function AttributeFormModal({ isOpen, onClose, attributeToEdit }:
         }
 
         if (attributeToEdit) {
-            updateAttribute({ id: attributeToEdit.id, data: payload }, { onSuccess: onClose })
+            updateAttribute(
+                { id: attributeToEdit.id, data: payload },
+                {
+                    onSuccess: () => {
+                        showSuccessToast('تم تحديث الخاصية بنجاح')
+                        onClose()
+                    },
+                    onError: (error: any) => {
+                        const message =
+                            error?.response?.data?.message ||
+                            'فشل في تحديث الخاصية، يرجى المحاولة مرة أخرى.'
+
+                        showErrorToast(message)
+                    },
+                },
+            )
         } else {
-            createAttribute(payload, { onSuccess: onClose })
+            createAttribute(
+                payload,
+                {
+                    onSuccess: () => {
+                        showSuccessToast('تمت إضافة الخاصية بنجاح')
+                        onClose()
+                    },
+                    onError: (error: any) => {
+                        const message =
+                            error?.response?.data?.message ||
+                            'فشل في إضافة الخاصية، يرجى المحاولة مرة أخرى.'
+
+                        showErrorToast(message)
+                    },
+                },
+            )
         }
     }
 
