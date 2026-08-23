@@ -10,6 +10,7 @@ import { OpSearch } from '../components/OpSearch'
 import { OpPagination } from '../components/OpPagination'
 import { FreeDesignList } from '../components/FreeDesignList'
 import { useDeleteFreeDesign, useFreeDesigns } from '../hooks/useFreeDesigns'
+import { showErrorToast, showSuccessToast } from '@/lib/toast'
 
 export default function FreeDesignRequestsPage() {
   const navigate = useNavigate()
@@ -23,7 +24,18 @@ export default function FreeDesignRequestsPage() {
 
   const deleteItem = (id: number) => {
     if (!window.confirm('هل أنت متأكد من حذف طلب التصميم هذا؟')) return
-    remove.mutate(id)
+
+    remove.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast('تم حذف طلب التصميم الحر بنجاح')
+      },
+      onError: (error: any) => {
+        showErrorToast(
+          error?.response?.data?.message ||
+            'فشل في حذف طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
+        )
+      },
+    })
   }
 
   return (
