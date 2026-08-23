@@ -1,4 +1,8 @@
-export type ActivityLogAction = 'created' | 'updated' | 'deleted'
+export type ActivityLogAction =
+    | 'created'
+    | 'updated'
+    | 'deleted'
+    | `${'created' | 'updated' | 'deleted'}_${string}`
 
 export interface ActivityLog {
     id: number

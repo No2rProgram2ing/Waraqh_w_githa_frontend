@@ -1,5 +1,7 @@
 ﻿import type { ActivityLog } from '../types/activity-log'
-import ActivityLogBadge from './ActivityLogBadge'
+import ActivityLogBadge, {
+    ActivityLogTypeBadge,
+} from './ActivityLogBadge'
 
 interface ActivityLogTableProps {
     logs: ActivityLog[]
@@ -46,10 +48,9 @@ export default function ActivityLogTable({ logs }: ActivityLogTableProps) {
                             <td className="px-5 py-4">
                                 <ActivityLogBadge action={log.action} />
                             </td>
+
                             <td className="px-5 py-4">
-                                <code className="inline-block rounded-md border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-primary)]">
-                                    {log.subject_type}
-                                </code>
+                                <ActivityLogTypeBadge subjectType={log.subject_type} />
                             </td>
                             <td className="px-5 py-4 font-mono text-sm text-[var(--color-text-primary)] text-center">
                                 {log.subject_id ?? '—'}

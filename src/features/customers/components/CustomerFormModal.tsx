@@ -78,21 +78,33 @@ export default function CustomerFormModal({ isOpen, onClose, customerToEdit }: C
             return
         }
 
+        if (customerToEdit) {
+            const payload = {
+                full_name: form.full_name.trim(),
+                email: form.email.trim(),
+                phone_country_code: form.phone_country_code.trim(),
+                phone: form.phone.trim(),
+                category: form.category,
+                ...(form.password
+                    ? { password: form.password }
+                    : {}),
+            }
+
+            updateCustomer(
+                { id: customerToEdit.id, data: payload },
+                { onSuccess: onClose },
+            )
+
+            return
+        }
+
         const payload = {
             full_name: form.full_name.trim(),
             email: form.email.trim(),
             phone_country_code: form.phone_country_code.trim(),
             phone: form.phone.trim(),
             category: form.category,
-            ...(customerToEdit ? (form.password ? { password: form.password } : {}) : { password: form.password }),
-        }
-
-        if (customerToEdit) {
-            updateCustomer(
-                { id: customerToEdit.id, data: payload },
-                { onSuccess: onClose },
-            )
-            return
+            password: form.password,
         }
 
         createCustomer(payload, { onSuccess: onClose })
@@ -111,7 +123,7 @@ export default function CustomerFormModal({ isOpen, onClose, customerToEdit }: C
                 </div>
 
                 <div className="p-5 overflow-y-auto">
-                    <form id="customer-form" onSubmit={handleSubmit} className="space-y-4">
+                    <form id="customer-form" onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">الاسم الكامل</label>
                             <input
@@ -128,6 +140,8 @@ export default function CustomerFormModal({ isOpen, onClose, customerToEdit }: C
                                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">البريد الإلكتروني</label>
                                 <input
                                     type="email"
+                                    name="customer-email"
+                                    autoComplete="off"
                                     value={form.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-sm outline-none focus:border-[#45592D] transition-colors"
@@ -185,6 +199,8 @@ export default function CustomerFormModal({ isOpen, onClose, customerToEdit }: C
                             <div className="relative">
                                 <input
                                     type={showPassword ? 'text' : 'password'}
+                                    name="customer-password"
+                                    autoComplete="new-password"
                                     value={form.password}
                                     required={!customerToEdit}
                                     onChange={(e) => handleChange('password', e.target.value)}
