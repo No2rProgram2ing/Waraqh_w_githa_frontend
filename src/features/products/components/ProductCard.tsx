@@ -113,7 +113,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 text-[#c09a5d]">
             <span className="text-xs">★</span>
-            <span className="text-[11px] font-bold text-[#8a6e45]">{product.rating.toFixed(1)}</span>
+            <span className="text-[11px] font-bold text-[#8a6e45]">{Number.isFinite(Number(product?.rating ?? NaN)) ? Number(product.rating).toFixed(1) : '—'}</span>
           </div>
           {product.badge ? (
             <span className="rounded-full border border-[#d9cfbf] bg-[#f3efe8] px-2 py-1 text-[10px] font-medium text-[#546143]">
@@ -130,7 +130,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
 
         <div className="flex items-center justify-between gap-3 pt-1">
           <span className="text-[18px] font-extrabold text-[#1e241d]">
-            {product.price.toLocaleString("ar-SA")} ر.س
+          {Number(product?.price ?? 0).toLocaleString("ar-SA")} ر.س
           </span>
         </div>
       </div>
