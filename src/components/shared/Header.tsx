@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/images/Warqah & Jitha Logo.png";
 import {
   BellIcon,
@@ -11,36 +11,101 @@ import {
   XMarkIcon,
 } from "@/components/ui/icons";
 import { ROUTES } from "@/routes/paths";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
+import { useUnreadNotificationsCount } from "@/features/notifications/hooks/useNotifications";
+import { cartApi } from '@/api/cartApi';
 
-interface NavLink {
-  label: string;
-  path: string;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Returns the user's initials (first letter of first name) for the fallback avatar. */
+function getInitials(fullName: string): string {
+  return fullName.trim().charAt(0).toUpperCase() || "؟";
 }
 
-const navLinks: NavLink[] = [
-  { label: "الرئيسية", path: ROUTES.home },
+// ── Profile Avatar (simple link — no dropdown) ───────────────────────────────
+
+interface AvatarProps {
+  avatarUrl?: string | null;
+  fullName: string;
+}
+
+function ProfileAvatar({ avatarUrl, fullName }: AvatarProps) {
+  return (
+    <Link
+      to={ROUTES.profile}
+      id="header-profile-avatar-btn"
+      aria-label="الملف الشخصي"
+      className="
+        relative flex items-center justify-center
+        h-9 w-9 rounded-full overflow-hidden
+        ring-2 ring-brand-olive-700/30
+        transition-all duration-200
+        hover:ring-brand-olive-700
+        hover:scale-105
+        focus:outline-none focus:ring-brand-olive-700
+      "
+    >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={fullName}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span className="
+          flex h-full w-full items-center justify-center
+          bg-brand-olive-700 text-white
+          text-sm font-bold select-none
+        ">
+          {getInitials(fullName)}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// ── Main Header ───────────────────────────────────────────────────────────────
+
+const navLinks = [
+  { label: "الرئيسية", path: ROUTES.dashboard },
   { label: "منتجات", path: ROUTES.products },
-  { label: "من نحن", path: ROUTES.aboutUs },
+  { label: "قصتنا", path: ROUTES.story },
   { label: "طلب خاص", path: ROUTES.customRequests },
   { label: "تواصل معنا", path: ROUTES.contact },
-  { label: "تسجيل الدخول", path: ROUTES.login },
-  { label: "إنشاء الحساب", path: ROUTES.signup },
 ];
 
-const iconButtonClass =
-  "relative p-2.5 text-[#20251B] transition-colors hover:text-[#536A3A]";
+const iconButtonClass = "relative p-2.5 text-[#20251B] transition-colors hover:text-[#536A3A]";
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Auth state
+  const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
+  const user = useCustomerAuthStore((state) => state.user);
+  const logout = useCustomerAuthStore((state) => state.logout);
+  const unreadNotificationsQuery = useUnreadNotificationsCount();
+  const unreadNotificationsCount = unreadNotificationsQuery.data ?? 0;
+
+  // Scroll shadow
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate(ROUTES.home, { replace: true });
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -53,71 +118,120 @@ export function Header() {
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[84px] items-center justify-between gap-4">
-          <Link to={ROUTES.home} className="group flex shrink-0 items-center gap-3">
+        <div className="flex h-20 items-center justify-between gap-4">
+
+          {/* ── Logo ─── */}
+          <Link to={ROUTES.dashboard} className="flex items-center gap-3 group">
             <img
               src={logo}
               alt="ورقة وجذع"
-              className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105"
+              className="h-20 w-20 object-contain transition-transform duration-300 group-hover:scale-105"
             />
-            <span className="font-display text-2xl font-extrabold tracking-tight text-[#20251B]">
-              ورقة وجذع
-            </span>
+            <div className="flex flex-col">
+            </div>
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex xl:gap-8" aria-label="التنقل الرئيسي">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`relative py-2 text-[15px] font-bold transition-colors ${
-                  isActive(link.path)
-                    ? "text-[#3E522C]"
-                    : "text-[#25291F] hover:text-[#536A3A]"
-                }`}
-              >
-                {link.label}
-                {isActive(link.path) && (
-                  <motion.span
-                    layoutId="activeHeaderNav"
-                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#536A3A]"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </Link>
-            ))}
+          {/* ── Desktop Navigation ─── */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+            {navLinks.map((link) => {
+              const active = isActive(link.path);
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`relative py-1 text-sm font-semibold transition-colors duration-200 ${
+                    active ? "text-brand-olive-700" : "text-brand-ink/80 hover:text-brand-olive-600"
+                  }`}
+                >
+                  {link.label}
+                  {active && (
+                    <motion.div
+                      layoutId="activeHeaderNav"
+                      className="absolute bottom-0 right-0 left-0 h-0.5 bg-brand-olive-700 rounded-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+
+            {/* Auth links — unauthenticated only */}
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to={ROUTES.login}
+                  className={`relative py-1 text-sm font-semibold transition-colors duration-200 ${isActive(ROUTES.login) ? "text-brand-olive-700" : "text-brand-ink/80 hover:text-brand-olive-600"}`}
+                >
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  to={ROUTES.signup}
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold bg-brand-olive-700 text-white transition-all duration-200 hover:bg-brand-olive-800 hover:shadow-md"
+                >
+                  إنشاء حساب
+                </Link>
+              </>
+            )}
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link to={ROUTES.notifications} className={iconButtonClass} title="التنبيهات" aria-label="التنبيهات">
-              <BellIcon className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-[#F8F6F1]" />
+          {/* ── Actions ─── */}
+          <div className="flex items-center gap-3 sm:gap-4">
+
+            {/* Notification */}
+            <Link
+              to={ROUTES.notifications}
+              className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
+              title="التنبيهات"
+            >
+              <BellIcon className="h-5 w-5 text-brand-olive-700" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-amber-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-[#F8F6F1]">
+                  {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
+                </span>
+              )}
             </Link>
-            <Link to={ROUTES.search} className={iconButtonClass} title="البحث" aria-label="البحث">
-              <SearchIcon className="h-5 w-5" />
+
+            {/* Search */}
+            <Link to={ROUTES.search} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="البحث">
+              <SearchIcon className="h-5 w-5 text-brand-olive-700" />
             </Link>
-            <Link to={ROUTES.wishlist} className={iconButtonClass} title="قائمة الأمنيات" aria-label="قائمة الأمنيات">
-              <HeartIcon className="h-5 w-5" />
+
+            {/* Wishlist */}
+            <Link to={ROUTES.wishlist} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="قائمة الأمنيات">
+              <HeartIcon className="h-5 w-5 text-brand-olive-700" />
             </Link>
-            <Link to={ROUTES.cart} className={iconButtonClass} title="حقيبة التسوق" aria-label="حقيبة التسوق">
-              <ShoppingBagIcon className="h-5 w-5" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#536A3A] text-[10px] font-bold text-white">
-                2
-              </span>
+
+            {/* Shopping Bag */}
+            <Link to={ROUTES.cart} className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="حقيبة التسوق">
+              <ShoppingBagIcon className="h-5 w-5 text-brand-olive-700" />
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-olive-700 text-[10px] font-bold text-white shadow-sm">2</span>
             </Link>
+
+            {/* ── Auth: Profile avatar (authenticated) OR Login/Register (unauthenticated) ── */}
+            {isAuthenticated ? (
+              <ProfileAvatar avatarUrl={user?.avatarUrl} fullName={user?.fullName ?? ""} />
+            ) : (
+              <div className="hidden sm:flex lg:hidden items-center gap-2">
+                <Link to={ROUTES.login} className="text-sm font-semibold text-brand-ink/80 hover:text-brand-olive-600 transition-colors">تسجيل الدخول</Link>
+                <Link to={ROUTES.signup} className="px-3 py-1.5 rounded-full text-sm font-semibold bg-brand-olive-700 text-white hover:bg-brand-olive-800 transition-colors">إنشاء حساب</Link>
+              </div>
+            )}
+
+            {/* Mobile Menu Toggle */}
             <button
-              type="button"
-              onClick={() => setMobileMenuOpen((open) => !open)}
-              className={iconButtonClass + " lg:hidden"}
+              id="header-mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-lg p-2 text-brand-ink lg:hidden"
               aria-label="القائمة"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <XMarkIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+              {mobileMenuOpen ? <XMarkIcon className="h-5 w-5 text-brand-olive-700" /> : <MenuIcon className="h-5 w-5 text-brand-olive-700" />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* ── Mobile Drawer ───────────────────────────────────────────────── */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.nav
@@ -133,15 +247,29 @@ export function Header() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`rounded-lg px-3 py-3 text-base font-bold ${
-                    isActive(link.path)
-                      ? "bg-[#E5EBDD] text-[#3E522C]"
-                      : "text-[#25291F] hover:bg-[#F2EEE6]"
-                  }`}
+                  className={`rounded-lg px-3 py-3 text-base font-bold ${isActive(link.path) ? "bg-[#E5EBDD] text-[#3E522C]" : "text-[#25291F] hover:bg-[#F2EEE6]"}`}
                 >
                   {link.label}
                 </Link>
               ))}
+
+              {/* Mobile auth section */}
+              <div className="mt-2 pt-3 border-t border-[#D8D2C5]/70 flex flex-col gap-2">
+                {isAuthenticated ? (
+                  <>
+                    <p className="px-3 text-xs text-brand-muted">مرحباً، <span className="font-semibold text-brand-ink">{user?.fullName}</span></p>
+                    <Link to={ROUTES.profile} onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 text-base font-medium text-brand-ink hover:bg-brand-surface transition-colors">الملف الشخصي</Link>
+                    <Link to={ROUTES.orders} onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 text-base font-medium text-brand-ink hover:bg-brand-surface transition-colors">طلباتي</Link>
+                    <Link to={ROUTES.wishlist} onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 text-base font-medium text-brand-ink hover:bg-brand-surface transition-colors">قائمة الأمنيات</Link>
+                    <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="rounded-lg px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 transition-colors text-right w-full">تسجيل الخروج</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to={ROUTES.login} onClick={() => setMobileMenuOpen(false)} className={`rounded-lg px-3 py-2 text-base font-medium transition-colors ${isActive(ROUTES.login) ? "bg-brand-olive-50 text-brand-olive-700 font-bold" : "text-brand-ink hover:bg-brand-surface"}`}>تسجيل الدخول</Link>
+                    <Link to={ROUTES.signup} onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2 text-base font-semibold bg-brand-olive-700 text-white text-center hover:bg-brand-olive-800 transition-colors">إنشاء حساب</Link>
+                  </>
+                )}
+              </div>
             </div>
           </motion.nav>
         )}

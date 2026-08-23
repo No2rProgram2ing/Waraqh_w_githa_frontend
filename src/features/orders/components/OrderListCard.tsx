@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { PackageIcon } from "@/components/ui/icons";
 import type { OrderItem } from "@/features/orders/types";
 
@@ -7,6 +8,9 @@ interface OrderListCardProps {
 }
 
 export function OrderListCard({ order }: OrderListCardProps) {
+  // Use numeric id for routing to match backend resource identifier
+  const orderPath = order.id;
+
   return (
     <motion.article
       whileHover={{ y: -2 }}
@@ -40,8 +44,8 @@ export function OrderListCard({ order }: OrderListCardProps) {
           {order.price}
         </div>
 
-        <button
-          type="button"
+        <Link
+          to={`/orders/${orderPath}`}
           className={[
             "inline-flex items-center justify-center rounded-xl px-4 py-2 text-[12px] font-bold transition-all",
             order.isActive
@@ -50,7 +54,7 @@ export function OrderListCard({ order }: OrderListCardProps) {
           ].join(" ")}
         >
           <span>التفاصيل</span>
-        </button>
+        </Link>
       </div>
     </motion.article>
   );

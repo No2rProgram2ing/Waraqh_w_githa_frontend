@@ -65,8 +65,8 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
             avatar: avatarFile ?? undefined,
             ...(newPassword ? {
                 current_password: currentPassword,
-                new_password: newPassword,
-                new_password_confirmation: confirmPassword
+                password: newPassword,
+                password_confirmation: confirmPassword
             } : {})
         }, {
             onSuccess: (updatedProfile) => {

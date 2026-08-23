@@ -7,6 +7,7 @@ export const signupSchema = z
       .trim()
       .min(2, "الاسم الكامل يجب أن يتكون من حرفين على الأقل"),
     email: z.string().trim().min(1, "البريد الإلكتروني مطلوب").email("صيغة البريد الإلكتروني غير صحيحة"),
+    phoneCountryCode: z.string().trim().min(1, "رمز الدولة مطلوب"),
     phone: z
       .string()
       .trim()
@@ -24,3 +25,17 @@ export const signupSchema = z
   });
 
 export type SignupSchema = z.infer<typeof signupSchema>;
+
+// ---------------------------------------------------------------------------
+// Login schema
+// ---------------------------------------------------------------------------
+export const loginSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .min(1, "رقم الهاتف مطلوب")
+    .regex(/^\+?[0-9\s]{8,15}$/, "رقم الهاتف غير صحيح"),
+  password: z.string().min(1, "كلمة المرور مطلوبة"),
+});
+
+export type LoginSchema = z.infer<typeof loginSchema>;

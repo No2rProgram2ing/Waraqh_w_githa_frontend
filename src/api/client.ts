@@ -22,6 +22,42 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
 }
 
+function normalizeFieldErrors(data: unknown): Record<string, string> | undefined {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+
+  const candidate = data as {
+    fieldErrors?: Record<string, string | string[]>;
+    errors?: Record<string, string | string[]>;
+  };
+
+  const rawErrors = candidate.fieldErrors ?? candidate.errors;
+  if (!rawErrors || typeof rawErrors !== "object") {
+    return undefined;
+  }
+
+  const normalized: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(rawErrors)) {
+    const firstMessage = Array.isArray(value)
+      ? value[0]
+      : typeof value === "string"
+        ? value
+        : undefined;
+
+    if (!firstMessage) {
+      continue;
+    }
+
+    const camelKey = key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    normalized[key] = firstMessage;
+    normalized[camelKey] = firstMessage;
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
 async function request<TResponse>(path: string, options: RequestOptions = {}): Promise<TResponse> {
   const { body, headers, ...rest } = options;
 
@@ -40,8 +76,9 @@ async function request<TResponse>(path: string, options: RequestOptions = {}): P
 
     try {
       const data = await response.json();
-      message = data?.message ?? message;
-      fieldErrors = data?.fieldErrors;
+      fieldErrors = normalizeFieldErrors(data);
+      const firstFieldMessage = Object.values(fieldErrors ?? {})[0];
+      message = data?.message ?? firstFieldMessage ?? message;
     } catch {
       // Response had no JSON body — fall back to the generic message.
     }

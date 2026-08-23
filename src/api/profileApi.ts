@@ -1,9 +1,11 @@
+import { customerApi } from "@/api/customerApi";
+
 export interface UserProfileData {
   id: string;
   fullName: string;
   email: string;
   phone: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   joinedDate: string;
   isOnline: boolean;
 }
@@ -17,39 +19,76 @@ export interface UpdateProfileParams {
 export interface UpdatePasswordParams {
   currentPassword: string;
   newPassword: string;
+  confirmPassword?: string;
 }
 
-// Initial state matching the Figma Screen 1
-const mockProfile: UserProfileData = {
-  id: "user-101",
-  fullName: "أحمد اليمني",
-  email: "ahmed@example.com",
-  phone: "+967 777 000 000",
-  avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80",
-  joinedDate: "يناير 2023",
-  isOnline: true,
+const PROFILE_ENDPOINT = "/customer/profile";
+const PROFILE_PASSWORD_ENDPOINT = "/customer/profile/password";
+
+const extractProfilePayload = (responseData: any) => {
+  if (!responseData || typeof responseData !== "object") return {};
+
+  return (
+    responseData.user ??
+    responseData.data ??
+    responseData.profile ??
+    responseData.customer ??
+    responseData
+  );
 };
+
+const normalizeProfile = (user: any): UserProfileData => ({
+  id: String(user?.id ?? ""),
+  fullName:
+    user?.full_name ??
+    user?.fullName ??
+    user?.name ??
+    user?.customer_name ??
+    "",
+  email: user?.email ?? "",
+  phone: user?.phone ?? user?.phone_number ?? user?.mobile ?? "",
+  avatarUrl: user?.avatar_url ?? user?.avatarUrl ?? null,
+  joinedDate: user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("ar-EG", {
+        month: "long",
+        year: "numeric",
+      })
+    : "يناير 2023",
+  isOnline: true,
+});
 
 export const profileApi = {
   getProfile: async (): Promise<UserProfileData> => {
-    // Simulate network latency
-    await new Promise((res) => setTimeout(res, 300));
-    return { ...mockProfile };
+    const response = await customerApi.get(PROFILE_ENDPOINT);
+    const profile = extractProfilePayload(response.data);
+    return normalizeProfile(profile);
   },
 
   updateProfile: async (params: UpdateProfileParams): Promise<UserProfileData> => {
-    await new Promise((res) => setTimeout(res, 500));
-    mockProfile.fullName = params.fullName;
-    mockProfile.email = params.email;
-    mockProfile.phone = params.phone;
-    return { ...mockProfile };
+    const response = await customerApi.put(PROFILE_ENDPOINT, {
+      full_name: params.fullName,
+      email: params.email,
+      phone: params.phone,
+    });
+
+    const profile = extractProfilePayload(response.data);
+    return normalizeProfile(profile);
   },
 
-  updatePassword: async (_params: UpdatePasswordParams): Promise<{ success: boolean; message: string }> => {
-    await new Promise((res) => setTimeout(res, 600));
+  updatePassword: async (
+    params: UpdatePasswordParams,
+  ): Promise<{ success: boolean; message: string }> => {
+    const confirmation = params.confirmPassword ?? params.newPassword;
+
+    const response = await customerApi.put(PROFILE_PASSWORD_ENDPOINT, {
+      current_password: params.currentPassword,
+      password: params.newPassword,
+      password_confirmation: confirmation,
+    });
+
     return {
       success: true,
-      message: "تم تحديث كلمة المرور بنجاح",
+      message: response.data?.message ?? "تم تحديث كلمة المرور بنجاح",
     };
   },
 };

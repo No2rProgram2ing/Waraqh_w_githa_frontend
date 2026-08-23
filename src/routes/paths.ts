@@ -3,6 +3,7 @@ export const ROUTES = {
   home: "/home",
   dashboard: "/",
   products: "/products",
+  productDetail: "/product/:productId",
   productDetails: (productId: string) => `/products/${productId}`,
   cart: "/cart",
   checkout: "/checkout",
@@ -23,4 +24,10 @@ export const ROUTES = {
   checkEmail: "/check-email",
   resetPassword: "/reset-password",
   otpVerification: "/otp-verification",
+  personalInfo: "/personal-info",
+  profile: "/profile",
+  addresses: "/addresses",
+  orderDetail: "/orders/:orderId",
+  designDetail: "/orders/:orderId/design",
+  help: "/help",
 } as const;

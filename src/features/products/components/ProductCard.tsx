@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { Product } from "@/features/products/types";
-import { ShoppingBagIcon } from "@/components/ui/icons";
+import { HeartIcon, ShoppingBagIcon } from "@/components/ui/icons";
+import { favoritesApi } from "@/api/favoritesApi";
+import { cartApi } from "@/api/cartApi";
+import { showErrorToast, showSuccessToast } from "@/lib/toast";
 
 interface ProductCardProps {
   product: Product;
@@ -9,6 +13,43 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index, featured = false }: ProductCardProps) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isCartLoading, setIsCartLoading] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (isCartLoading) return;
+
+    try {
+      setIsCartLoading(true);
+      await cartApi.addToCart(product.id);
+      showSuccessToast("تمت إضافة المنتج إلى السلة");
+    } catch (error) {
+      console.error(error);
+      showErrorToast("تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsCartLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (isFavoriteLoading) return;
+
+    try {
+      setIsFavoriteLoading(true);
+      const favoriteState = await favoritesApi.toggleFavorite(product.id);
+      setIsFavorite(favoriteState);
+      showSuccessToast(
+        favoriteState ? "تمت إضافة المنتج إلى المفضلة" : "تمت إزالة المنتج من المفضلة",
+      );
+    } catch (error) {
+      console.error(error);
+      showErrorToast("تعذر تحديث قائمة المفضلة، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  };
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 18 }}
@@ -27,13 +68,35 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
           className="h-[300px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
 
-        <button
-          type="button"
-          aria-label={`إضافة ${product.name} إلى السلة`}
-          className="absolute bottom-4 left-4 flex h-12 w-12 items-center justify-center rounded-full border border-[#dfe7d6] bg-[#edf2e8] text-[#3d4b2f] shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 hover:scale-105"
-        >
-          <ShoppingBagIcon className="h-5 w-5" />
-        </button>
+        <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            aria-label={isFavorite ? `إزالة ${product.name} من المفضلة` : `إضافة ${product.name} إلى المفضلة`}
+            onClick={handleToggleFavorite}
+            disabled={isFavoriteLoading}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              isFavorite
+                ? "border-[#f5c4c4] bg-[#fff1f1] text-[#d64d4d]"
+                : "border-[#e7e0d9] bg-white/90 text-[#4d564a] hover:scale-105"
+            }`}
+          >
+            {isFavoriteLoading ? (
+              <span className="text-xs font-bold">...</span>
+            ) : (
+              <HeartIcon className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+            )}
+          </button>
+
+          <button
+            type="button"
+            aria-label={`إضافة ${product.name} إلى السلة`}
+            onClick={handleAddToCart}
+            disabled={isCartLoading}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dfe7d6] bg-[#edf2e8] text-[#3d4b2f] shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isCartLoading ? <span className="text-xs font-bold">...</span> : <ShoppingBagIcon className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3 p-4">
@@ -59,12 +122,6 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
           <span className="text-[18px] font-extrabold text-[#1e241d]">
             {product.price.toLocaleString("ar-SA")} ر.س
           </span>
-          <button
-            type="button"
-            className="rounded-full border border-[#d4c7b9] bg-[#f4efe9] px-3 py-1.5 text-[11px] font-medium text-[#4a5248] transition-colors hover:bg-[#ece4d7]"
-          >
-            أضف إلى السلة
-          </button>
         </div>
       </div>
     </motion.article>
