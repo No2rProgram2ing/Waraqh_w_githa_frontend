@@ -96,10 +96,6 @@ const DashboardPage = lazy(() =>
   import('@/features/operations/pages/DashboardPage')
 )
 
-// ======================================================
-// Orders
-// ======================================================
-
 const OrdersPage = lazy(() =>
   import('@/features/operations/pages/OrdersPage')
 )
@@ -112,9 +108,7 @@ const OrderDetailsPage = lazy(() =>
   import('@/features/operations/pages/OrderDetailsPage')
 )
 
-// ======================================================
-// Customizations
-// ======================================================
+// -------------------- Customizations --------------------
 
 const CustomizationsPage = lazy(() =>
   import('@/features/operations/pages/CustomizationsPage')
@@ -128,9 +122,7 @@ const CustomizationDetailsPage = lazy(() =>
   import('@/features/operations/pages/CustomizationDetailsPage')
 )
 
-// ======================================================
-// Free Design
-// ======================================================
+// -------------------- Free Design --------------------
 
 const FreeDesignRequestsPage = lazy(() =>
   import('@/features/operations/pages/FreeDesignRequestsPage')
@@ -144,9 +136,7 @@ const FreeDesignDetailsPage = lazy(() =>
   import('@/features/operations/pages/FreeDesignDetailsPage')
 )
 
-// ======================================================
-// Other Operations
-// ======================================================
+// -------------------- Other Operations --------------------
 
 const ProductionPage = lazy(() =>
   import('@/features/operations/pages/ProductionPage')
@@ -168,10 +158,6 @@ const ReportsPage = lazy(() =>
   import('@/features/operations/pages/ReportsPage')
 )
 
-// ======================================================
-// Loading
-// ======================================================
-
 function PageFallback() {
   return (
     <div
@@ -183,238 +169,81 @@ function PageFallback() {
   )
 }
 
-// ======================================================
-// Admin Routes
-// ======================================================
-
 export function AdminRoutes() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
-
-        <Route
-          path="login"
-          element={<AdminLoginPage />}
-        />
+        <Route path="login" element={<AdminLoginPage />} />
 
         <Route element={<AdminProtectedRoute />}>
           <Route element={<AdminLayout />}>
-
             <Route
               index
-              element={
-                <Navigate
-                  to="dashboard"
-                  replace
-                />
-              }
+              element={<Navigate to="dashboard" replace />}
             />
 
-            {/* Dashboard */}
-            <Route
-              path="dashboard"
-              element={<DashboardPage />}
-            />
+            {/* Operations */}
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="orders" element={<OrdersPage />} />
 
-            {/* ==================================================
-                Orders
-            ================================================== */}
+            {/* IMPORTANT: create must be a real route. */}
+            <Route path="orders/create" element={<OrderCreatePage />} />
 
-            <Route
-              path="orders"
-              element={<OrdersPage />}
-            />
+            <Route path="orders/:orderId" element={<OrderDetailsPage />} />
 
-            {/* إنشاء طلب جديد */}
-            <Route
-              path="orders/new"
-              element={<OrderCreatePage />}
-            />
+            {/* Customizations */}
+            <Route path="customizations" element={<CustomizationsPage />} />
+            <Route path="customizations/new" element={<CustomizationCreatePage />} />
+            <Route path="customizations/:id" element={<CustomizationDetailsPage />} />
 
-            {/* تفاصيل الطلب */}
-            <Route
-              path="orders/:orderId"
-              element={<OrderDetailsPage />}
-            />
+            {/* Free Design Requests */}
+            <Route path="free-design-requests" element={<FreeDesignRequestsPage />} />
+            <Route path="free-design-requests/new" element={<FreeDesignCreatePage />} />
+            <Route path="free-design-requests/:id" element={<FreeDesignDetailsPage />} />
 
-            {/* ==================================================
-                Customizations
-            ================================================== */}
+            {/* Production */}
+            <Route path="production-stages" element={<ProductionPage />} />
 
-            <Route
-              path="customizations"
-              element={<CustomizationsPage />}
-            />
+            {/* Payments */}
+            <Route path="payments" element={<PaymentsPage />} />
 
-            <Route
-              path="customizations/new"
-              element={<CustomizationCreatePage />}
-            />
+            {/* Notifications */}
+            <Route path="notifications" element={<NotificationsPage />} />
 
-            <Route
-              path="customizations/:id"
-              element={<CustomizationDetailsPage />}
-            />
+            {/* Inventory */}
+            <Route path="raw-materials" element={<InventoryPage />} />
 
-            {/* ==================================================
-                Free Design
-            ================================================== */}
+            {/* Reports */}
+            <Route path="reports" element={<ReportsPage />} />
 
-            <Route
-              path="free-design-requests"
-              element={<FreeDesignRequestsPage />}
-            />
+            {/* Catalog */}
+            <Route path="products" element={<ProductsPage />} />
+            <Route path="products/:productId" element={<ProductDetailsPage />} />
+            <Route path="products/:productId/edit" element={<ProductEditPage />} />
+            <Route path="product-categories" element={<CategoriesPage />} />
+            <Route path="product-attributes" element={<AttributesPage />} />
 
-            <Route
-              path="free-design-requests/new"
-              element={<FreeDesignCreatePage />}
-            />
+            {/* System */}
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="activity-logs" element={<ActivityLogsPage />} />
+            <Route path="design" element={<DesignPage />} />
 
-            <Route
-              path="free-design-requests/:id"
-              element={<FreeDesignDetailsPage />}
-            />
+            {/* Customers */}
+            <Route path="customers" element={<CustomersPage />} />
+            <Route path="customers/:id" element={<CustomerDetailsPage />} />
 
-            {/* ==================================================
-                Other Operations
-            ================================================== */}
-
-            <Route
-              path="production-stages"
-              element={<ProductionPage />}
-            />
-
-            <Route
-              path="payments"
-              element={<PaymentsPage />}
-            />
-
-            <Route
-              path="notifications"
-              element={<NotificationsPage />}
-            />
-
-            <Route
-              path="raw-materials"
-              element={<InventoryPage />}
-            />
-
-            <Route
-              path="reports"
-              element={<ReportsPage />}
-            />
-
-            {/* ==================================================
-                Catalog
-            ================================================== */}
-
-            <Route
-              path="products"
-              element={<ProductsPage />}
-            />
-
-            <Route
-              path="products/:productId"
-              element={<ProductDetailsPage />}
-            />
-
-            <Route
-              path="products/:productId/edit"
-              element={<ProductEditPage />}
-            />
-
-            <Route
-              path="product-categories"
-              element={<CategoriesPage />}
-            />
-
-            <Route
-              path="product-attributes"
-              element={<AttributesPage />}
-            />
-
-            {/* ==================================================
-                Roles / Activity
-            ================================================== */}
-
-            <Route
-              path="roles"
-              element={<RolesPage />}
-            />
-
-            <Route
-              path="activity-logs"
-              element={<ActivityLogsPage />}
-            />
-
-            {/* ==================================================
-                Design
-            ================================================== */}
-
-            <Route
-              path="design"
-              element={<DesignPage />}
-            />
-
-            {/* ==================================================
-                Customers
-            ================================================== */}
-
-            <Route
-              path="customers"
-              element={<CustomersPage />}
-            />
-
-            <Route
-              path="customers/:id"
-              element={<CustomerDetailsPage />}
-            />
-
-            {/* ==================================================
-                Reviews
-            ================================================== */}
-
-            <Route
-              path="reviews"
-              element={<ReviewsPage />}
-            />
-
-            {/* ==================================================
-                Admin Users
-            ================================================== */}
-
-            <Route
-              path="admin-users"
-              element={<AdminUsersPage />}
-            />
-
-            {/* ==================================================
-                Settings
-            ================================================== */}
-
-            <Route
-              path="profile"
-              element={<ProfilePage />}
-            />
-
-            <Route
-              path="settings"
-              element={<SettingsPage />}
-            />
-
+            {/* Reviews / Users / Settings */}
+            <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="admin-users" element={<AdminUsersPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
 
         <Route
           path="*"
-          element={
-            <Navigate
-              to="/admin/login"
-              replace
-            />
-          }
+          element={<Navigate to="/admin/login" replace />}
         />
-
       </Routes>
     </Suspense>
   )
