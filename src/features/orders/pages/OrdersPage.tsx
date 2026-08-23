@@ -72,20 +72,14 @@ export function OrdersPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex items-end justify-between">
             <div>
-              <p className="text-xs font-bold tracking-[0.16em] text-[#8b7652]">طلبك الحالي</p>
-              <h1 className="mt-2 text-3xl font-bold text-[#52663c] sm:text-4xl">تتبع طلبك</h1>
-              <p className="mt-2 text-xs text-[#77766d]">
-                رقم الطلب: <span className="font-bold text-[#795238]">#WJ-188429</span>
-              </p>
+              <p className="text-xs font-bold tracking-[0.16em] text-[#8b7652]">طلباتي</p>
+              <h1 className="mt-2 text-3xl font-bold text-[#52663c] sm:text-4xl">قائمة الطلبات</h1>
+              <p className="mt-2 text-xs text-[#77766d]">عرض سجلك من الطلبات السابقة والحالية. اضغط على "التفاصيل" أو "تتبع الطلب" لكل طلب.</p>
             </div>
             <Link to={ROUTES.products} className="hidden items-center gap-1 text-xs font-bold text-[#52663c] sm:flex">
               متابعة التسوق <ChevronLeft className="size-4" />
             </Link>
           </div>
-
-          <section className="mb-8 border-b border-[#ddd9d0] pb-8">
-            <Timeline />
-          </section>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_270px]">
             <div className="space-y-5">
