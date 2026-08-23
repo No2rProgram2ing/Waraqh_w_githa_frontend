@@ -14,6 +14,7 @@ export interface FreeDesignListResponse {
 export interface FreeDesignUpdatePayload {
   status?: FreeDesignStatus
   description?: string
+  quoted_price?: number | null
 }
 
 export const freeDesignApi = {

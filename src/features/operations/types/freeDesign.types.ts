@@ -1,4 +1,9 @@
-export type FreeDesignStatus = 'new' | 'in_review' | 'quoted' | 'converted' | 'rejected'
+export type FreeDesignStatus =
+  | 'new'
+  | 'in_review'
+  | 'quoted'
+  | 'converted'
+  | 'rejected'
 
 export interface FreeDesignImage {
   id: number
@@ -14,9 +19,8 @@ export interface FreeDesignRequest {
   }
   description: string | null
   status: FreeDesignStatus
+  quoted_price: string | null
   images?: FreeDesignImage[]
   created_at: string | null
   updated_at: string | null
 }
-
-

@@ -32,6 +32,7 @@ export default function FreeDesignDetailsPage() {
   const [description, setDescription] = useState<string | null>(null)
   const [images, setImages] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [quotedPrice, setQuotedPrice] = useState('')
 
   if (query.isLoading) return <div dir="rtl" className="min-h-[300px]"><OpEmptyState>جاري تحميل الطلب...</OpEmptyState></div>
   if (query.isError || !item) return <div dir="rtl" className="min-h-[300px]"><OpEmptyState tone="error">تعذر تحميل الطلب.</OpEmptyState></div>
@@ -41,40 +42,70 @@ export default function FreeDesignDetailsPage() {
     description !== null
       ? description
       : item.description || ''
+  const currentQuotedPrice =
+    quotedPrice !== ''
+      ? quotedPrice
+      : item.quoted_price ?? ''
 
-    const save = () => {
-      const formData = new FormData()
+  const finalStatus: FreeDesignStatus =
+    quotedPrice !== ''
+      ? 'quoted'
+      : currentStatus
 
-      formData.append('status', currentStatus)
-      formData.append('description', currentDescription)
+  const save = () => {
+    const formData = new FormData()
 
-      images.forEach((file) => {
-        formData.append('images[]', file)
-      })
-
-      update.mutate(
-        {
-          id: requestId,
-          payload: formData,
-        },
-        {
-          onSuccess: () => {
-            showSuccessToast('تم تحديث طلب التصميم الحر بنجاح')
-            setImages([])
-
-            if (fileInputRef.current) {
-              fileInputRef.current.value = ''
-            }
-          },
-          onError: (error: any) => {
-            showErrorToast(
-              error?.response?.data?.message ||
-                'فشل في تحديث طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
-            )
-          },
-        },
+    if (
+      finalStatus === 'quoted' &&
+      (
+        currentQuotedPrice === '' ||
+        !Number.isFinite(Number(currentQuotedPrice)) ||
+        Number(currentQuotedPrice) < 0
       )
+    ) {
+      showErrorToast(
+        'يرجى إدخال سعر صحيح قبل اعتماد الطلب كـ "تم التسعير".',
+      )
+      return
     }
+
+    formData.append('status', finalStatus)
+    formData.append('description', currentDescription)
+
+    if (quotedPrice !== '') {
+      formData.append('quoted_price', quotedPrice)
+    }
+
+    images.forEach((file) => {
+      formData.append('images[]', file)
+    })
+
+    update.mutate(
+      {
+        id: requestId,
+        payload: formData,
+      },
+      {
+        onSuccess: () => {
+          showSuccessToast('تم تحديث طلب التصميم الحر بنجاح')
+          setImages([])
+          setQuotedPrice('')
+
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+
+          void query.refetch()
+        },
+        onError: (error: any) => {
+          showErrorToast(
+            error?.response?.data?.message ||
+              'فشل في تحديث طلب التصميم الحر، يرجى المحاولة مرة أخرى.',
+          )
+        },
+      },
+    )
+  }
 
   const destroy = () => {
     if (!window.confirm('هل أنت متأكد من حذف الطلب؟')) return
@@ -136,6 +167,37 @@ export default function FreeDesignDetailsPage() {
             <div>
               <span className="text-xs text-[var(--color-text-muted)]">الحالة الحالية</span>
               <div className="mt-2"><OpStatusBadge status={String(currentStatus)} /></div>
+            </div>
+            <div>
+              <label
+                htmlFor="free-design-quoted-price"
+                className="text-xs text-[var(--color-text-muted)]"
+              >
+                السعر المحدد للعميل
+              </label>
+
+              <div className="relative mt-2">
+                <input
+                  id="free-design-quoted-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={currentQuotedPrice}
+                  onChange={(event) => setQuotedPrice(event.target.value)}
+                  placeholder="أدخل السعر"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 pl-14 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]"
+                />
+
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
+                  السعر
+                </span>
+              </div>
+
+              {currentQuotedPrice !== '' && (
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  سيتم اعتماد هذا السعر وإرساله للعميل عند التسعير.
+                </p>
+              )}
             </div>
             <div>
               <span className="text-xs text-[var(--color-text-muted)]">تغيير الحالة</span>
