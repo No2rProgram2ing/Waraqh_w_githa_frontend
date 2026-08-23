@@ -10,58 +10,65 @@ import type {
 
 function normalizeItem(item: any): OrderItem {
   return {
-    id: Number(item.id),
+    id: Number(item?.id ?? 0),
 
-    product: item.product ?? null,
+    product: item?.product ?? null,
 
     name:
-      item.name ??
-      item.product?.name ??
+      item?.name ??
+      item?.product?.name ??
       null,
 
     quantity: Number(
-      item.quantity ??
-        item.qty ??
+      item?.quantity ??
+        item?.qty ??
         0,
     ),
 
     qty: Number(
-      item.quantity ??
-        item.qty ??
+      item?.quantity ??
+        item?.qty ??
         0,
     ),
 
     price: Number(
-      item.price ??
-        item.unit_price ??
+      item?.price ??
+        item?.unit_price ??
         0,
     ),
 
     customized: Boolean(
-      item.customized ??
-        item.is_customized,
+      item?.customized ??
+        item?.is_customized,
     ),
 
     customization_id:
-      item.customization_id ??
+      item?.customization_id ??
       null,
 
     customization_note:
-      item.customization_note ??
+      item?.customization_note ??
       null,
   }
 }
 
 function normalizeOrder(raw: any): Order {
-  const source =
-    raw?.data && !raw.id
-      ? raw.data
-      : raw
+  let source = raw
+
+  if (source?.data) {
+    source = source.data
+  }
+
+  if (source?.data && !source?.id) {
+    source = source.data
+  }
+
+  source = source ?? {}
 
   return {
     ...source,
 
-    id: Number(source.id),
+    id: Number(source.id ?? 0),
 
     order_number: String(
       source.order_number ??
@@ -75,18 +82,6 @@ function normalizeOrder(raw: any): Order {
       source.order_type ??
       null,
 
-    subtotal: Number(
-      source.subtotal ??
-        source.sub_total ??
-        0,
-    ),
-
-    shipping_fee: Number(
-      source.shipping_fee ??
-        source.shipping ??
-        0,
-    ),
-
     total: Number(
       source.total ??
         source.total_amount ??
@@ -95,7 +90,8 @@ function normalizeOrder(raw: any): Order {
 
     status:
       source.status?.value ??
-      source.status,
+      source.status ??
+      'received',
 
     customer: source.customer
       ? {
@@ -131,7 +127,7 @@ function normalizeOrder(raw: any): Order {
     payment: source.payment
       ? {
           id: Number(
-            source.payment.id,
+            source.payment.id ?? 0,
           ),
 
           method:
@@ -139,8 +135,7 @@ function normalizeOrder(raw: any): Order {
             null,
 
           amount: Number(
-            source.payment.amount ??
-              0,
+            source.payment.amount ?? 0,
           ),
 
           status:
@@ -155,14 +150,11 @@ function normalizeOrder(raw: any): Order {
       : null,
 
     created_at:
-      source.created_at,
+      source.created_at ?? '',
   }
 }
 
 export const ordersApi = {
-  /**
-   * جلب قائمة الطلبات
-   */
   async list(
     params: {
       page?: number
@@ -180,23 +172,22 @@ export const ordersApi = {
         },
       )
 
-    return {
-      ...response.data,
+    const payload = response.data
 
-      data:
-        Array.isArray(
-          response.data?.data,
-        )
-          ? response.data.data.map(
-              normalizeOrder,
-            )
-          : [],
+    const data =
+      payload?.data?.data ??
+      payload?.data ??
+      []
+
+    return {
+      ...payload,
+
+      data: Array.isArray(data)
+        ? data.map(normalizeOrder)
+        : [],
     }
   },
 
-  /**
-   * جلب تفاصيل طلب
-   */
   async getById(
     id: number,
   ): Promise<Order> {
@@ -210,9 +201,6 @@ export const ordersApi = {
     )
   },
 
-  /**
-   * إنشاء طلب جديد
-   */
   async create(
     payload: CreateOrderPayload,
   ): Promise<Order> {
@@ -227,9 +215,6 @@ export const ordersApi = {
     )
   },
 
-  /**
-   * تحديث حالة الطلب
-   */
   async updateStatus(
     id: number,
     status: OrderStatus,
@@ -244,9 +229,6 @@ export const ordersApi = {
     )
   },
 
-  /**
-   * حذف الطلب
-   */
   async delete(
     id: number,
   ): Promise<void> {
@@ -255,9 +237,6 @@ export const ordersApi = {
     )
   },
 
-  /**
-   * سجل مراحل الإنتاج
-   */
   async getProductionHistory(
     id: number,
   ) {
@@ -269,9 +248,6 @@ export const ordersApi = {
     return response.data
   },
 
-  /**
-   * سجل حالات الطلب
-   */
   async getStatusHistory(
     id: number,
   ) {

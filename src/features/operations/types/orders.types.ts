@@ -58,7 +58,10 @@ export interface ProductionStage {
   id: number
   key: string
   name: string
-  status: 'pending' | 'in_progress' | 'done'
+  status:
+    | 'pending'
+    | 'in_progress'
+    | 'done'
   date?: string | null
 }
 
