@@ -14,7 +14,8 @@ export function ProductDetailsPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
-n  const [product, setProduct] = useState<any | null>(null);
+
+  const [product, setProduct] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -43,7 +44,8 @@ export function ProductDetailsPage() {
     };
 
     fetchProduct();
-n    return () => {
+
+    return () => {
       mounted = false;
     };
   }, [productId]);
@@ -54,7 +56,13 @@ export function ProductDetailsPage() {
       setIsAddingToCart(true);
       await cartApi.addToCart(product.id ?? product.product_id ?? productId, 1);
       // Update local cart state for immediate UX
-      addItem({ id: String(product.id ?? product.product_id ?? productId), name: product.name ?? '', subtitle: product.subtitle ?? product.description ?? '', price: Number(product.price ?? 0), image: (product.image ?? product.image_url) ?? '' });
+      addItem({
+        id: String(product.id ?? product.product_id ?? productId),
+        name: product.name ?? '',
+        subtitle: product.subtitle ?? product.description ?? '',
+        price: Number(product.price ?? 0),
+        image: (product.image ?? product.image_url) ?? '',
+      });
       showSuccessToast('تمت إضافة المنتج إلى السلة');
       navigate(ROUTES.cart);
     } catch (err: any) {
@@ -97,7 +105,8 @@ export function ProductDetailsPage() {
       </CatalogLayout>
     );
   }
-n  if (isError || !product) {
+
+  if (isError || !product) {
     return (
       <CatalogLayout>
         <main dir="rtl" className="space-y-6">
@@ -105,7 +114,8 @@ export function ProductDetailsPage() {
             <h1 className="text-[28px] font-extrabold text-[var(--color-text-primary)]">تعذر تحميل المنتج</h1>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">حدث خطأ أثناء تحميل بيانات المنتج.</p>
           </div>
-n          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-3">
             <button type="button" onClick={() => window.location.reload()} className="rounded-xl bg-[#45592D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5D7243]">إعادة المحاولة</button>
             <Link to={ROUTES.products} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition hover:bg-[var(--color-surface)]">العودة للمتجر</Link>
           </div>

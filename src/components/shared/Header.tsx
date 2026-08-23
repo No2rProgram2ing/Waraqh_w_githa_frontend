@@ -67,9 +67,9 @@ function ProfileAvatar({ avatarUrl, fullName }: AvatarProps) {
 // ── Main Header ───────────────────────────────────────────────────────────────
 
 const navLinks = [
-  { label: "الرئيسية", path: ROUTES.dashboard },
+  { label: "الرئيسية", path: ROUTES.home },
   { label: "منتجات", path: ROUTES.products },
-  { label: "قصتنا", path: ROUTES.story },
+  { label: "قصتنا", path: ROUTES.aboutUs },
   { label: "طلب خاص", path: ROUTES.customRequests },
   { label: "تواصل معنا", path: ROUTES.contact },
 ];
