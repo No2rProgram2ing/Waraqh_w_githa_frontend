@@ -189,7 +189,7 @@ export function ProductsPage() {
               </div>
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : visibleProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#d9d0c6] bg-[#faf8f5] p-8 text-center text-[#666a61]">
             لا توجد منتجات متاحة حالياً.
           </div>

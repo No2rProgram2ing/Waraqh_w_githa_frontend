@@ -11,6 +11,7 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  setItems: (items: CartItem[]) => void;
   addItem: (item: Omit<CartItem, "quantity">) => void;
   updateQuantity: (id: string, amount: number) => void;
   removeItem: (id: string) => void;
@@ -19,6 +20,7 @@ interface CartState {
 
 export const useCartStore = create<CartState>((set) => ({
   items: [],
+  setItems: (items) => set({ items }),
   addItem: (item) =>
     set((state) => {
       const existingItem = state.items.find((currentItem) => currentItem.id === item.id);

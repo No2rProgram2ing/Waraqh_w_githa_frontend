@@ -13,12 +13,14 @@ import { HomePage } from "@/features/home/pages/HomePage";
 import { AboutPage } from "@/features/about/pages/AboutPage";
 
 import { ProductDetailsPage } from "@/features/products/pages/ProductDetailsPage";
+import { ProductsPage } from "@/features/products/pages/ProductsPage";
 
 import { CartPage } from "@/features/cart/pages/CartPage";
 import { CheckoutPage } from "@/features/checkout/pages/CheckoutPage";
 import { CheckoutSuccessPage } from "@/features/checkout/pages/CheckoutSuccessPage";
 
 import { OrdersPage } from "@/features/orders/pages/OrdersPage";
+import { OrderDetailsPage } from "@/features/orders/pages/OrderDetailsPage";
 
 import { CustomRequestsPage } from "@/features/custom-requests/pages/CustomRequestsPage";
 import { RequestSubmittedPage } from "@/features/custom-requests/pages/RequestSubmittedPage";
@@ -38,6 +40,8 @@ export function AppRoutes() {
 
         <Route path={ROUTES.aboutUs} element={<AboutPage />} />
 
+        <Route path={ROUTES.products} element={<ProductsPage />} />
+
         <Route
           path="/products/:productId"
           element={<ProductDetailsPage />}
@@ -53,6 +57,8 @@ export function AppRoutes() {
         />
 
         <Route path={ROUTES.orders} element={<OrdersPage />} />
+
+        <Route path={ROUTES.orderDetail} element={<OrderDetailsPage />} />
 
         <Route
           path={ROUTES.customRequests}

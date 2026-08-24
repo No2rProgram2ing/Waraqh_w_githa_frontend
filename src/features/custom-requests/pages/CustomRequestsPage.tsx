@@ -13,14 +13,21 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import type { CreateCustomRequestInput } from "@/api/customRequestsApi";
+import { customRequestsApi, type CreateCustomRequestInput } from "@/api/customRequestsApi";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { useCustomRequests } from "@/features/custom-requests/hooks/useCustomRequests";
 import { ROUTES } from "@/routes/paths";
+import { profileApi } from "@/api/profileApi";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
 type Step = 1 | 2 | 3 | 4;
 type DimensionKey = "length" | "width" | "height";
 type Dimensions = Record<DimensionKey, string>;
+
+interface ProductOption {
+  id: string | number;
+  name: string;
+}
 
 const requestTypes = [
   { label: "سلة تخزين", icon: Archive },
@@ -105,12 +112,18 @@ function Stepper({ currentStep }: { currentStep: Step }) {
 function TypeStep({
   selectedType,
   setSelectedType,
+  products,
+  selectedProductId,
+  setSelectedProductId,
   description,
   setDescription,
   onNext,
 }: {
   selectedType: string;
   setSelectedType: (value: string) => void;
+  products: ProductOption[];
+  selectedProductId: string;
+  setSelectedProductId: (value: string) => void;
   description: string;
   setDescription: (value: string) => void;
   onNext: (event: FormEvent<HTMLFormElement>) => void;
@@ -150,6 +163,14 @@ function TypeStep({
       </div>
 
       <div className="mt-7 border-t border-[#ded8cf] pt-6">
+        <label htmlFor="base-product" className="mb-3 block text-lg font-extrabold text-[#3e522c]">
+          المنتج الأساسي للتخصيص
+        </label>
+        <select id="base-product" value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)} required className="mb-6 w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm outline-none focus:border-[#3e522c]">
+          <option value="">اختر منتجًا</option>
+          {products.map((product) => <option key={product.id} value={String(product.id)}>{product.name}</option>)}
+        </select>
+
         <label
           htmlFor="request-description"
           className="mb-3 block text-lg font-extrabold text-[#3e522c]"
@@ -177,7 +198,7 @@ function TypeStep({
 
         <button
           type="submit"
-          disabled={!selectedType || !description.trim()}
+          disabled={!selectedType || !selectedProductId || !description.trim()}
           className="inline-flex min-w-40 items-center justify-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#3e522c] disabled:cursor-not-allowed disabled:bg-[#aeb6a2]"
         >
           التالي
@@ -193,6 +214,7 @@ function DetailsStep({
   setDimensions,
   selectedMaterial,
   setSelectedMaterial,
+  setSelectedMaterialImage,
   files,
   setFiles,
   onBack,
@@ -202,6 +224,7 @@ function DetailsStep({
   setDimensions: (value: Dimensions) => void;
   selectedMaterial: string;
   setSelectedMaterial: (value: string) => void;
+  setSelectedMaterialImage: (value: string) => void;
   files: File[];
   setFiles: (value: File[]) => void;
   onBack: () => void;
@@ -268,7 +291,10 @@ function DetailsStep({
             <button
               key={option.label}
               type="button"
-              onClick={() => setSelectedMaterial(option.label)}
+              onClick={() => {
+                setSelectedMaterial(option.label);
+                setSelectedMaterialImage(option.image);
+              }}
               className={`overflow-hidden rounded-[5px] border text-xs font-bold transition ${
                 selectedMaterial === option.label
                   ? "border-[#3e522c] bg-[#e5eddc] text-[#26351e]"
@@ -370,6 +396,15 @@ function Preview({ file }: { file: File }) {
       className="aspect-square w-full rounded border border-[#b9a88e] object-cover"
     />
   ) : null;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error ?? new Error("تعذر قراءة الصورة"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function BudgetStep({
@@ -555,32 +590,79 @@ export function CustomRequestsPage() {
     height: "",
   });
   const [material, setMaterial] = useState("");
+  const [materialImage, setMaterialImage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
 
   const { createRequest, isCreating } = useCustomRequests();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    void customRequestsApi.getProducts().then((items) => setProducts(items));
+    void profileApi.getProfile().then((profile) => {
+      setName(profile.fullName);
+      setEmail(profile.email);
+      setPhone(profile.phone);
+    }).catch((error) => {
+      console.error("Failed to load customer profile", error);
+      const user = useCustomerAuthStore.getState().user;
+      setName(user?.fullName ?? "");
+      setEmail(user?.email ?? "");
+      setPhone(user?.phone ?? "");
+    });
+  }, []);
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const input: CreateCustomRequestInput = {
-      title: selectedType,
-      budget: "",
-      dimensions: `${dimensions.length || "-"} × ${dimensions.width || "-"} × ${dimensions.height || "-"} سم`,
-      description: `${description}
+    let uploadedImage = "";
+    try {
+      uploadedImage = files[0] ? await readFileAsDataUrl(files[0]) : "";
+    } catch (error) {
+      console.error("Failed to read reference image", error);
+    }
+
+    const notes = `${selectedType}
+${description}
 الخامة: ${material || "غير محددة"}
 التسليم: ${deliveryDate}
 التواصل: ${name}، ${email}، ${phone}
-الصور: ${files.map((file) => file.name).join(", ") || "لا توجد"}`,
+الصور: ${files.map((file) => file.name).join(", ") || "لا توجد"}`;
+
+    const input: CreateCustomRequestInput = {
+      title: selectedType,
+      base_product_id: selectedProductId,
+      quantity: 1,
+      length_cm: dimensions.length || undefined,
+      width_cm: dimensions.width || undefined,
+      height_cm: dimensions.height || undefined,
+      customer_notes: notes,
     };
 
-    const createdRequest = await createRequest(input);
+    try {
+      const createdRequest = await createRequest(input);
 
-    navigate(ROUTES.customRequestDetails(createdRequest.id));
+      const referenceImage = materialImage || uploadedImage;
+      localStorage.setItem(`custom-request-review-${createdRequest.id}`, JSON.stringify({
+        ...createdRequest,
+        description: notes,
+        referenceImageUrl: referenceImage || undefined,
+        customer: { name, email, phone },
+      }));
+
+      if (referenceImage) {
+        localStorage.setItem(`custom-request-reference-image-${createdRequest.id}`, referenceImage);
+      }
+
+      navigate(ROUTES.customRequestDetails(createdRequest.id));
+    } catch (error) {
+      console.error("Failed to submit custom request", error);
+    }
   };
 
   return (
@@ -600,6 +682,9 @@ export function CustomRequestsPage() {
               <TypeStep
                 selectedType={selectedType}
                 setSelectedType={setSelectedType}
+                products={products}
+                selectedProductId={selectedProductId}
+                setSelectedProductId={setSelectedProductId}
                 description={description}
                 setDescription={setDescription}
                 onNext={(event) => {
@@ -615,6 +700,7 @@ export function CustomRequestsPage() {
                 setDimensions={setDimensions}
                 selectedMaterial={material}
                 setSelectedMaterial={setMaterial}
+                setSelectedMaterialImage={setMaterialImage}
                 files={files}
                 setFiles={setFiles}
                 onBack={() => setStep(1)}

@@ -3,18 +3,85 @@ import { Minus, Plus, ShoppingBag, Trash2, Truck, ShieldCheck, RotateCcw } from 
 import { Link } from "react-router-dom";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { ROUTES } from "@/routes/paths";
-import { useCartStore } from "@/features/cart/stores/cartStore";
+import { useEffect } from "react";
+import { cartApi } from "@/api/cartApi";
+import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
+import { useCartStore, type CartItem } from "@/features/cart/stores/cartStore";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ar-SA")} ر.س`;
 
+interface ApiCartItem {
+  id: string | number;
+  quantity: number;
+  product: {
+    id: string | number;
+    name: string;
+    price: number | string;
+    description?: string | null;
+    image?: string | null;
+  };
+}
+
+interface ApiCartResponse {
+  data?: {
+    items?: ApiCartItem[] | { data?: ApiCartItem[] };
+  };
+}
+
+function mapCartItems(response: ApiCartResponse): CartItem[] {
+  const items = response.data?.items;
+  const apiItems = Array.isArray(items) ? items : items?.data ?? [];
+
+  return apiItems.map((item) => ({
+    id: String(item.id),
+    name: item.product.name,
+    subtitle: item.product.description ?? "",
+    price: Number(item.product.price),
+    quantity: item.quantity,
+    image: item.product.image ?? "",
+  }));
+}
+
 export function CartPage() {
   const items = useCartStore((state) => state.items);
+  const setItems = useCartStore((state) => state.setItems);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
+
+  useEffect(() => {
+    if (!customerAuthStorage.getToken()) return;
+
+    cartApi.getCart()
+      .then((response) => setItems(mapCartItems(response as ApiCartResponse)))
+      .catch((error) => console.error("Failed to load customer cart", error));
+  }, [setItems]);
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 30 : 0;
   const total = subtotal + shipping;
+
+  const handleQuantityChange = async (item: CartItem, amount: number) => {
+    const quantity = Math.max(1, item.quantity + amount);
+    try {
+      if (customerAuthStorage.getToken()) {
+        await cartApi.updateItem(item.id, quantity);
+      }
+      updateQuantity(item.id, amount);
+    } catch (error) {
+      console.error("Failed to update cart item", error);
+    }
+  };
+
+  const handleRemoveItem = async (item: CartItem) => {
+    try {
+      if (customerAuthStorage.getToken()) {
+        await cartApi.removeItem(item.id);
+      }
+      removeItem(item.id);
+    } catch (error) {
+      console.error("Failed to remove cart item", error);
+    }
+  };
 
   return (
     <CatalogLayout>
@@ -45,8 +112,8 @@ export function CartPage() {
                       <p className="mt-3 text-base font-extrabold text-[#795238]">{formatPrice(item.price)}</p>
                     </div>
                     <div className="flex items-center justify-between gap-5 sm:flex-col sm:items-end">
-                      <div className="flex items-center gap-3 rounded-full border border-[#d8d0c3] bg-white px-2 py-1"><button type="button" onClick={() => updateQuantity(item.id, 1)} aria-label="زيادة الكمية" className="text-[#52663c]"><Plus className="size-4" /></button><span className="min-w-5 text-center text-sm font-bold">{item.quantity}</span><button type="button" onClick={() => updateQuantity(item.id, -1)} aria-label="تقليل الكمية" className="text-[#52663c]"><Minus className="size-4" /></button></div>
-                      <button type="button" onClick={() => removeItem(item.id)} className="inline-flex items-center gap-1 text-xs text-[#8b7652] hover:text-[#a04a3a]"><Trash2 className="size-4" /> حذف</button>
+                      <div className="flex items-center gap-3 rounded-full border border-[#d8d0c3] bg-white px-2 py-1"><button type="button" onClick={() => void handleQuantityChange(item, 1)} aria-label="زيادة الكمية" className="text-[#52663c]"><Plus className="size-4" /></button><span className="min-w-5 text-center text-sm font-bold">{item.quantity}</span><button type="button" onClick={() => void handleQuantityChange(item, -1)} aria-label="تقليل الكمية" className="text-[#52663c]"><Minus className="size-4" /></button></div>
+                      <button type="button" onClick={() => void handleRemoveItem(item)} className="inline-flex items-center gap-1 text-xs text-[#8b7652] hover:text-[#a04a3a]"><Trash2 className="size-4" /> حذف</button>
                     </div>
                   </motion.article>
                 ))}

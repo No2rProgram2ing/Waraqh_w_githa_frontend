@@ -1,9 +1,14 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Heart, ShoppingBag, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { ROUTES } from "@/routes/paths";
-import { catalogProducts } from "@/features/products/data/products";
+import { customerApi } from "@/api/customerApi";
+import { cartApi } from "@/api/cartApi";
+import { favoritesApi } from "@/api/favoritesApi";
+import { showErrorToast, showSuccessToast } from "@/lib/toast";
+import { useCartStore } from "@/features/cart/stores/cartStore";
 
 const images = {
   hero: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=88",
@@ -16,15 +21,82 @@ const images = {
   home: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1800&q=88",
 };
 
-const featured = catalogProducts.slice(0, 3);
-
 const categories = [
   { name: "إضاءة وأجواء", image: images.lamp },
   { name: "أثاث ريفي", image: images.chair },
   { name: "سلال ومنسوجات", image: images.basket },
 ];
 
+interface FeaturedProductRecord {
+  id: string | number;
+  name: string;
+  description?: string | null;
+  price?: number | string;
+  is_bestseller?: boolean;
+  is_new?: boolean;
+  media?: Array<{ url?: string | null; is_primary?: boolean } | null>;
+  category?: { name?: string } | null;
+}
+
+interface FeaturedProductsResponse {
+  data: {
+    bestsellers?: FeaturedProductRecord[];
+    new_arrivals?: FeaturedProductRecord[];
+  };
+}
+
+interface HomeProduct {
+  id: string;
+  name: string;
+  type: string;
+  image: string;
+  description: string;
+  price: number;
+}
+
+const fallbackProductImage = images.basket;
+
+function normalizeHomeProduct(product: FeaturedProductRecord): HomeProduct {
+  const primaryMedia = product.media?.find((media) => media?.is_primary) ?? product.media?.[0];
+
+  return {
+    id: String(product.id),
+    name: product.name,
+    type: product.category?.name ?? "منتج حرفي",
+    image: primaryMedia?.url ?? fallbackProductImage,
+    description: product.description ?? "",
+    price: Number(product.price ?? 0),
+  };
+}
+
 function HomePage() {
+  const [bestsellers, setBestsellers] = useState<HomeProduct[]>([]);
+  const [newArrivals, setNewArrivals] = useState<HomeProduct[]>([]);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    customerApi.get<FeaturedProductsResponse>("/products/featured")
+      .then(({ data }) => {
+        if (!isMounted) return;
+        setBestsellers((data.data.bestsellers ?? []).map(normalizeHomeProduct));
+        setNewArrivals((data.data.new_arrivals ?? []).map(normalizeHomeProduct));
+      })
+      .catch((error) => {
+        console.error("Failed to load featured products", error);
+        if (isMounted) setFeaturedError(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsFeaturedLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <CatalogLayout>
       <main dir="rtl" className="overflow-hidden bg-[#fbfaf7] text-[#2b3024]">
@@ -39,10 +111,10 @@ function HomePage() {
 
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
         <SectionHeading eyebrow="اختياراتنا" title="الأكثر مبيعًا" link="تصفح الكل" />
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">{featured.map((item, index) => <ProductTile key={item.name} item={item} index={index} />)}</div>
+        <FeaturedProductsGrid products={bestsellers} isLoading={isFeaturedLoading} hasError={featuredError} />
       </section>
 
-      <section className="bg-[#f2f0e9] px-5 py-16 sm:px-8"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow="من الطبيعة" title="وصلنا جديدًا" link="اكتشف الجديد" /><div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">{catalogProducts.slice(3).map((item, index) => <ProductTile key={item.name} item={item} index={index} />)}</div></div></section>
+      <section className="bg-[#f2f0e9] px-5 py-16 sm:px-8"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow="من الطبيعة" title="وصلنا جديدًا" link="اكتشف الجديد" /><FeaturedProductsGrid products={newArrivals} isLoading={isFeaturedLoading} hasError={featuredError} /></div></section>
 
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8"><SectionHeading eyebrow="تشكيلة الموسم" title="تسوق حسب الفئة" /><div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">{categories.map((category) => <Link to={ROUTES.products} key={category.name} className="group relative aspect-[.86] overflow-hidden"><img src={category.image} alt={category.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /><div className="absolute inset-x-5 bottom-5 text-white"><h3 className="text-xl font-bold">{category.name}</h3><span className="mt-2 inline-flex items-center gap-1 text-xs text-white/80">استكشف المجموعة <ArrowLeft className="size-3" /></span></div></Link>)}</div></section>
 
@@ -59,12 +131,61 @@ function HomePage() {
   );
 }
 
+function FeaturedProductsGrid({ products, isLoading, hasError }: { products: HomeProduct[]; isLoading: boolean; hasError: boolean }) {
+  if (isLoading) {
+    return <div className="mt-8 flex min-h-60 items-center justify-center text-sm text-[#77766d]">جارٍ تحميل المنتجات...</div>;
+  }
+
+  if (hasError || products.length === 0) {
+    return <div className="mt-8 flex min-h-60 items-center justify-center text-sm text-[#77766d]">لا توجد منتجات متاحة حاليًا.</div>;
+  }
+
+  return <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">{products.map((item, index) => <ProductTile key={item.id} item={item} index={index} />)}</div>;
+}
+
 function SectionHeading({ eyebrow, title, link }: { eyebrow: string; title: string; link?: string }) {
   return <div className="flex items-end justify-between border-b border-[#e5e0d7] pb-4"><div><p className="text-xs font-bold text-[#8b7652]">{eyebrow}</p><h2 className="mt-2 text-2xl font-bold text-[#39432d] sm:text-3xl">{title}</h2></div>{link && <Link to={ROUTES.products} className="flex items-center gap-1 text-xs font-bold text-[#617049]">{link}<ArrowLeft className="size-3" /></Link>}</div>;
 }
 
-function ProductTile({ item, index }: { item: { id: string; name: string; type: string; image: string }; index: number }) {
-  return <motion.article initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .08 }} className="group"><div className="relative aspect-[.8] overflow-hidden bg-[#eee9df]"><img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><button type="button" aria-label={`إضافة ${item.name} للمفضلة`} className="absolute left-3 top-3 rounded-full bg-white/90 p-2 text-[#52683b]"><Heart className="size-4" /></button><div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-2"><Link to={ROUTES.productDetails(item.id)} className="bg-white px-3 py-2 text-xs font-bold text-[#52683b] shadow-sm transition hover:bg-[#f2eee5]">تفاصيل المنتج</Link><Link to={ROUTES.products} aria-label={`إضافة ${item.name} إلى السلة`} className="flex size-9 items-center justify-center rounded-full bg-[#52683b] text-white"><ShoppingBag className="size-4" /></Link></div></div><h3 className="mt-4 text-base font-bold text-[#34392d]">{item.name}</h3><p className="mt-1 text-xs text-[#85877d]">{item.type}</p></motion.article>;
+function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isCartLoading, setIsCartLoading] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAddToCart = async () => {
+    if (isCartLoading) return;
+
+    try {
+      setIsCartLoading(true);
+      await cartApi.addToCart(item.id);
+      addItem({ id: item.id, name: item.name, subtitle: item.description, price: item.price, image: item.image });
+      showSuccessToast("تمت إضافة المنتج إلى السلة");
+    } catch (error) {
+      console.error(error);
+      showErrorToast("تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsCartLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (isFavoriteLoading) return;
+
+    try {
+      setIsFavoriteLoading(true);
+      const favoriteState = await favoritesApi.toggleFavorite(item.id);
+      setIsFavorite(favoriteState);
+      showSuccessToast(favoriteState ? "تمت إضافة المنتج إلى المفضلة" : "تمت إزالة المنتج من المفضلة");
+    } catch (error) {
+      console.error(error);
+      showErrorToast("تعذر تحديث قائمة المفضلة، يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  };
+
+  return <motion.article initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .08 }} className="group"><div className="relative aspect-[.8] overflow-hidden bg-[#eee9df]"><img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><button type="button" aria-label={isFavorite ? `إزالة ${item.name} من المفضلة` : `إضافة ${item.name} للمفضلة`} onClick={() => void handleToggleFavorite()} disabled={isFavoriteLoading} className="absolute left-3 top-3 rounded-full bg-white/90 p-2 text-[#52683b] disabled:opacity-60"><Heart className={`size-4 ${isFavorite ? "fill-current" : ""}`} /></button><div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-2"><Link to={ROUTES.productDetails(item.id)} className="bg-white px-3 py-2 text-xs font-bold text-[#52683b] shadow-sm transition hover:bg-[#f2eee5]">تفاصيل المنتج</Link><button type="button" onClick={() => void handleAddToCart()} disabled={isCartLoading} aria-label={`إضافة ${item.name} إلى السلة`} className="flex size-9 items-center justify-center rounded-full bg-[#52683b] text-white disabled:opacity-60">{isCartLoading ? <span className="text-xs font-bold">...</span> : <ShoppingBag className="size-4" />}</button></div></div><h3 className="mt-4 text-base font-bold text-[#34392d]">{item.name}</h3><p className="mt-1 text-xs text-[#85877d]">{item.type}</p></motion.article>;
 }
 
 export { HomePage };

@@ -1,19 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import type { Product } from "@/features/products/types";
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-import { ShoppingBagIcon } from "@/components/ui/icons";
-import { useSystemCurrency } from '@/lib/currency'
-=======
-=======
 import { useCartStore } from "@/features/cart/stores/cartStore";
->>>>>>> Stashed changes
 import { HeartIcon, ShoppingBagIcon } from "@/components/ui/icons";
 import { favoritesApi } from "@/api/favoritesApi";
 import { cartApi } from "@/api/cartApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
+import { formatCurrency } from "@/lib/currency";
+import { ROUTES } from "@/routes/paths";
 
 interface ProductCardProps {
   product: Product;
@@ -22,9 +17,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index, featured = false }: ProductCardProps) {
-<<<<<<< HEAD
-  const { formatAmount } = useSystemCurrency()
-=======
   const [isFavorite, setIsFavorite] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
@@ -70,7 +62,6 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
     }
   };
 
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
   return (
     <motion.article
       initial={{ opacity: 0, y: 18 }}
@@ -141,12 +132,14 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
 
         <div className="flex items-center justify-between gap-3 pt-1">
           <span className="text-[18px] font-extrabold text-[#1e241d]">
-<<<<<<< HEAD
-            {formatAmount(product.price)}
-=======
-          {Number(product?.price ?? 0).toLocaleString("ar-SA")} ر.س
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
+            {formatCurrency(product.price, 'YER')}
           </span>
+          <Link
+            to={ROUTES.productDetails(product.id)}
+            className="text-xs font-bold text-[#52663c] transition hover:text-[#3e522c]"
+          >
+            عرض التفاصيل
+          </Link>
         </div>
       </div>
     </motion.article>
