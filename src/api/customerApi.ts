@@ -29,7 +29,9 @@ customerApi.interceptors.request.use((config) => {
 customerApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    const hasStoredToken = Boolean(customerAuthStorage.getToken());
+
+    if (error?.response?.status === 401 && hasStoredToken) {
       // Clear local auth state without calling the API (token is already invalid)
       useCustomerAuthStore.getState().clearAuth();
       // Hard redirect flushes React Query cache and any in-memory auth state

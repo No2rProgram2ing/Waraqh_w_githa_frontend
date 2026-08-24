@@ -7,4 +7,5 @@ export interface Product {
   imageAlt: string;
   rating: number;
   badge?: string;
+  categoryName?: string;
 }

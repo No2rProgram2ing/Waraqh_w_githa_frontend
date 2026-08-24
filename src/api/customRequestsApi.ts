@@ -12,10 +12,20 @@ export interface CustomRequestItem {
   status: RequestStatus;
   statusText: string;
   imageUrl?: string;
+  referenceImageUrl?: string;
   artisanName?: string;
   artisanInitials?: string;
   artisanAvatar?: string;
   detailsStatusText?: string;
+  requestCode?: string;
+  customer?: { id?: string | number; name?: string; phone?: string; email?: string };
+  productId?: string;
+  productName?: string;
+  quantity?: number;
+  dimensions?: { length?: number | string | null; width?: number | string | null; height?: number | string | null };
+  color?: string;
+  designPattern?: string;
+  price?: { base?: number | string | null; customization?: number | string | null; total?: number | string | null };
 }
 
 export interface ProductOption {
@@ -37,6 +47,7 @@ export interface CreateCustomRequestInput {
   width_cm?: number | string;
   height_cm?: number | string;
   customer_notes?: string;
+  reference_image_url?: string;
 }
 
 interface ProductCustomizationApiItem {
@@ -61,6 +72,7 @@ interface ProductCustomizationApiItem {
   } | null;
   status?: string | null;
   customer_notes?: string | null;
+  reference_image_url?: string | null;
   created_at?: string | null;
 }
 
@@ -125,7 +137,17 @@ function mapCustomizationToCustomRequest(item: ProductCustomizationApiItem): Cus
     status: requestStatus,
     statusText: statusTextMap[requestStatus],
     detailsStatusText: statusTextMap[requestStatus],
-    imageUrl: undefined,
+    requestCode: item.request_code ?? undefined,
+    productId: item.product?.id == null ? undefined : String(item.product.id),
+    productName: item.product?.name ?? undefined,
+    customer: item.customer ?? undefined,
+    quantity: item.quantity ?? undefined,
+    dimensions: item.dimensions ?? undefined,
+    color: item.color ?? undefined,
+    designPattern: item.design_pattern ?? undefined,
+    price: item.price ?? undefined,
+    imageUrl: item.reference_image_url ?? undefined,
+    referenceImageUrl: item.reference_image_url ?? undefined,
     artisanName: undefined,
     artisanInitials: undefined,
   };
@@ -191,47 +213,21 @@ export function seedMockCustomRequestsForCustomer(customerId: string | number = 
 
 export const customRequestsApi = {
   getCustomRequests: async (): Promise<CustomRequestItem[]> => {
-    const currentCustomerId = getCurrentCustomerId();
-    const localMock = localStorage.getItem(`mock_custom_requests_customer_${currentCustomerId}`);
+    const { data } = await customerApi.get("/customer/customizations", { headers: getAuthHeaders() });
+    return unwrapRequestList(data).map(mapCustomizationToCustomRequest);
+  },
 
-    if (currentCustomerId === "233") {
-      const seeded = localMock ? JSON.parse(localMock) as ProductCustomizationApiItem[] : seedMockCustomRequestsForCustomer(233);
-      return seeded.map((item: ProductCustomizationApiItem) => mapCustomizationToCustomRequest(item));
-    }
-
-    const endpoints = [
-      "/customer/customizations",
-      "/customer/custom-design-requests",
-      "/custom-design-requests",
-    ];
-
-    let lastError: unknown;
-
-    for (const endpoint of endpoints) {
-      try {
-        const { data } = await customerApi.get(endpoint, { headers: getAuthHeaders() });
-        const items = unwrapRequestList(data);
-
-        if (items.length > 0 || (data && typeof data === "object" && Object.keys(data as Record<string, unknown>).length > 0)) {
-          return items.map((item: ProductCustomizationApiItem) => mapCustomizationToCustomRequest(item));
-        }
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (lastError) {
-      throw lastError;
-    }
-
-    return [];
+  getCustomRequest: async (id: string | number): Promise<CustomRequestItem> => {
+    const { data } = await customerApi.get(`/customer/customizations/${id}`, { headers: getAuthHeaders() });
+    const item = (data?.data ?? data) as ProductCustomizationApiItem;
+    return mapCustomizationToCustomRequest(item);
   },
 
   getProducts: async (): Promise<ProductOption[]> => {
     const { data } = await customerApi.get("/products", { headers: getAuthHeaders() });
-    const items = unwrapRequestList(data) as any[];
+    const items = unwrapRequestList(data);
 
-    return items.map((item: any) => ({
+    return items.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,
@@ -249,28 +245,8 @@ export const customRequestsApi = {
       customer_notes: input.customer_notes || input.description || input.title || "",
     };
 
-    const endpoints = [
-      "/customer/customizations",
-      "/customer/custom-design-requests",
-      "/custom-design-requests",
-    ];
-
-    let lastError: unknown;
-
-    for (const endpoint of endpoints) {
-      try {
-        const { data } = await customerApi.post(endpoint, payload, { headers: getAuthHeaders() });
-        const item = (Array.isArray(data) ? data[0] : data?.data ?? data) as ProductCustomizationApiItem | undefined;
-        if (item) return mapCustomizationToCustomRequest(item);
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    if (lastError) {
-      throw lastError;
-    }
-
-    throw new Error("تعذر إرسال طلب التصميم الخاص.");
+    const { data } = await customerApi.post("/customer/customizations", payload, { headers: getAuthHeaders() });
+    const item = (data?.data ?? data) as ProductCustomizationApiItem;
+    return mapCustomizationToCustomRequest(item);
   },
 };

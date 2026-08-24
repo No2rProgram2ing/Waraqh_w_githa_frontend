@@ -86,7 +86,7 @@ export function Header() {
   const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
   const user = useCustomerAuthStore((state) => state.user);
   const logout = useCustomerAuthStore((state) => state.logout);
-  const unreadNotificationsQuery = useUnreadNotificationsCount();
+  const unreadNotificationsQuery = useUnreadNotificationsCount({ enabled: isAuthenticated });
   const unreadNotificationsCount = unreadNotificationsQuery.data ?? 0;
 
   // Scroll shadow

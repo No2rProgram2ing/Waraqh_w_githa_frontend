@@ -1,11 +1,9 @@
 ﻿import { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import type { Product } from "@/features/products/types";
-import { customerApiBase } from "@/api/customerApi";
-import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
+import { customerApi } from "@/api/customerApi";
 
 interface ApiProductRecord {
   id?: string | number;
@@ -124,6 +122,7 @@ function normalizeProductRecord(item: ApiProductRecord): Product {
     badge,
     image: firstImage || defaultImage,
     imageAlt: item.image_alt ?? productName,
+    categoryName: typeof item.category === "string" ? item.category : item.category?.name,
   };
 }
 
@@ -145,6 +144,11 @@ export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("كل المنتجات");
+
+  const visibleProducts = selectedCategory === "كل المنتجات"
+    ? products
+    : products.filter((product) => product.categoryName?.includes(selectedCategory));
 
   useEffect(() => {
     let isMounted = true;
@@ -154,45 +158,18 @@ export function ProductsPage() {
       setError(null);
 
       try {
-        const token = customerAuthStorage.getToken();
-        const baseUrl = customerApiBase.replace(/\/+$/, "");
-        const endpoints = [`${baseUrl}/products`];
-
-        let lastError: unknown;
-
-        for (const endpoint of endpoints) {
-          try {
-            const { data } = await axios.get(endpoint, {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-
-            const items = unwrapProductsPayload(data);
-
-            if (items.length > 0 || (data && typeof data === "object" && Object.keys(data as Record<string, unknown>).length > 0)) {
-              const normalized = items.map((item) => normalizeProductRecord(item));
-              if (isMounted) {
-                setProducts(normalized.length > 0 ? normalized : fallbackProducts);
-              }
-              return;
-            }
-          } catch (requestError) {
-            lastError = requestError;
-          }
-        }
-
-        if (lastError) {
-          console.warn("Using fallback product data because the API request failed.", lastError);
-        }
+        const { data } = await customerApi.get("/products");
+        const items = unwrapProductsPayload(data);
+        const normalized = items.map((item) => normalizeProductRecord(item));
 
         if (isMounted) {
-          setProducts(fallbackProducts);
-          setError(null);
+          setProducts(normalized);
         }
       } catch (fetchError) {
         console.error("Failed to fetch products:", fetchError);
         if (isMounted) {
-          setProducts(fallbackProducts);
-          setError(null);
+          setProducts([]);
+          setError("تعذر تحميل المنتجات، يرجى المحاولة مرة أخرى.");
         }
       } finally {
         if (isMounted) {
@@ -228,8 +205,9 @@ export function ProductsPage() {
               <button
                 key={category}
                 type="button"
+                onClick={() => setSelectedCategory(category)}
                 className={`rounded-full border px-3 py-2 text-[12px] font-medium transition-colors ${
-                  index === 0
+                  selectedCategory === category
                     ? "border-[#d7cdbd] bg-[#f2ebdf] text-[#2d3329]"
                     : "border-[#e0d9d1] bg-[#f7f4f0] text-[#5b6157] hover:bg-[#efe8df]"
                 }`}
@@ -249,20 +227,20 @@ export function ProductsPage() {
               <span className="text-sm font-medium">جارٍ تحميل المنتجات...</span>
             </div>
           </div>
-        ) : products.length === 0 ? (
+        ) : visibleProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#d9d0c6] bg-[#faf8f5] p-8 text-center text-[#666a61]">
             لا توجد منتجات متاحة حالياً.
           </div>
         ) : (
           <>
             <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {products.slice(0, 3).map((product, index) => (
+              {visibleProducts.slice(0, 3).map((product, index) => (
                 <ProductCard key={product.id} product={product} index={index} featured />
               ))}
             </section>
 
             <section className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {products.slice(3).map((product, index) => (
+              {visibleProducts.slice(3).map((product, index) => (
                 <ProductCard key={product.id} product={product} index={index} />
               ))}
             </section>

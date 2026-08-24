@@ -6,17 +6,19 @@ export const notificationKeys = {
   unreadCount: ["unread-count"] as const,
 };
 
-export function useNotifications() {
+export function useNotifications(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: notificationKeys.all,
     queryFn: notificationsApi.getAll,
+    enabled: options?.enabled ?? true,
   });
 }
 
-export function useUnreadNotificationsCount() {
+export function useUnreadNotificationsCount(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
     queryFn: notificationsApi.getUnreadCount,
+    enabled: options?.enabled ?? true,
   });
 }
 

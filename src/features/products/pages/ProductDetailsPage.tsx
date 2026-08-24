@@ -9,13 +9,41 @@ import { customerApi } from "@/api/customerApi";
 import { cartApi } from "@/api/cartApi";
 import { favoritesApi } from "@/api/favoritesApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
+import { catalogProducts } from "@/features/products/data/products";
+
+interface ProductDetailsData {
+  id: string | number;
+  name: string;
+  subtitle?: string;
+  short_description?: string;
+  description?: string;
+  price?: number | string;
+  image?: string;
+  image_url?: string;
+  imageAlt?: string;
+  media?: Array<{ url?: string | null; is_primary?: boolean } | null>;
+}
+
+interface ProductDetailsResponse {
+  data: ProductDetailsData;
+}
+
+function normalizeProductDetails(product: ProductDetailsData): ProductDetailsData {
+  const primaryMedia = product.media?.find((media) => media?.is_primary) ?? product.media?.[0];
+
+  return {
+    ...product,
+    image: product.image ?? product.image_url ?? primaryMedia?.url ?? undefined,
+    imageAlt: product.imageAlt ?? product.name,
+  };
+}
 
 export function ProductDetailsPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
 
-  const [product, setProduct] = useState<any | null>(null);
+  const [product, setProduct] = useState<ProductDetailsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -31,13 +59,15 @@ export function ProductDetailsPage() {
       setIsLoading(true);
       setIsError(false);
       try {
-        const resp = await customerApi.get(`/products/${id}`);
-        // Accept both { data: Product } and raw product objects
-        const payload = resp.data?.data ?? resp.data;
-        if (mounted) setProduct(payload ?? null);
+        const resp = await customerApi.get<ProductDetailsResponse>(`/products/${id}`);
+        if (mounted) setProduct(normalizeProductDetails(resp.data.data));
       } catch (err) {
         console.error('Failed to fetch product', err);
-        if (mounted) setIsError(true);
+        const fallbackProduct = catalogProducts.find((item) => item.id === id);
+        if (mounted) {
+          setProduct(fallbackProduct ? normalizeProductDetails({ ...fallbackProduct, imageAlt: fallbackProduct.name }) : null);
+          setIsError(!fallbackProduct);
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }
