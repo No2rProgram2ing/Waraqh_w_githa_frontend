@@ -57,7 +57,6 @@ export function useOrderDetails(id?: string | null) {
     queryFn: async () => {
       if (!id) throw new Error("No order id");
       const res = await ordersApi.getOrder(id);
-      console.log("API Response:", res.data);
       return res.data;
     },
     enabled: !!id,

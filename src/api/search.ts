@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { customerApi } from '@/api/customerApi'
 import type { Product } from '@/features/catalog/types/product'
 
 export interface SearchFiltersDTO {
@@ -23,17 +23,52 @@ export interface SearchResponsePayload {
   }
 }
 
+function extractArray(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return []
+  }
+
+  const record = payload as Record<string, unknown>
+  const candidates = [record.data, record.products, record.items, record.result, record.records]
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate
+    }
+  }
+
+  return []
+}
+
 export const searchApi = {
   async getProducts(params: SearchFiltersDTO = {}): Promise<SearchResponsePayload> {
-    const response = await axiosAdminClient.get<SearchResponsePayload>('/products', {
-      params,
-    })
+    const response = await customerApi.get<unknown>('/products', { params })
+    const payload = response.data
+    const data = extractArray(payload) as Product[]
 
-    return response.data
+    const metaSource = payload && typeof payload === 'object' ? (payload as Record<string, unknown>).meta : undefined
+    const meta = metaSource && typeof metaSource === 'object'
+      ? (metaSource as Record<string, unknown>)
+      : {}
+
+    return {
+      data,
+      meta: {
+        current_page: Number(meta.current_page ?? 1),
+        last_page: Number(meta.last_page ?? 1),
+        per_page: Number(meta.per_page ?? params.per_page ?? (data.length > 0 ? data.length : 12)),
+        total: Number(meta.total ?? data.length),
+      },
+    }
   },
 
   async getCategories(): Promise<{ data: { id: number; name: string }[] } | any> {
-    const response = await axiosAdminClient.get('/categories')
-    return response.data
+    const response = await customerApi.get<unknown>('/categories')
+    const payload = response.data
+    return { data: extractArray(payload) as { id: number; name: string }[] }
   },
 }

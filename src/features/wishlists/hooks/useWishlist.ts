@@ -3,12 +3,13 @@ import { favoritesApi, type WishlistItem } from "@/api/favoritesApi";
 
 export const WISHLIST_QUERY_KEY = ["wishlist"];
 
-export function useWishlist() {
+export function useWishlist(enabled = true) {
   const queryClient = useQueryClient();
 
   const wishlistQuery = useQuery({
     queryKey: WISHLIST_QUERY_KEY,
     queryFn: () => favoritesApi.getFavorites(),
+    enabled,
   });
 
   const toggleFavoriteMutation = useMutation({

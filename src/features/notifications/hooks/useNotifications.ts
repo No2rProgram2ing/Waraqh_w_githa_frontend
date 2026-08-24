@@ -14,11 +14,11 @@ export function useNotifications(options?: { enabled?: boolean }) {
   });
 }
 
-export function useUnreadNotificationsCount(options?: { enabled?: boolean }) {
+export function useUnreadNotificationsCount(enabled = true) {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
     queryFn: notificationsApi.getUnreadCount,
-    enabled: options?.enabled ?? true,
+    enabled,
   });
 }
 
