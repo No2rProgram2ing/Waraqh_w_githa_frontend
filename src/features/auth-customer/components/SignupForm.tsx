@@ -71,12 +71,8 @@ export function SignupForm() {
             message: Array.isArray(message) ? message[0] : String(message),
           });
         });
-
-        console.error("🔴 Laravel validation errors (422):", validationErrors);
         return;
       }
-
-      console.error("🔴 Signup error:", err?.response?.data ?? err?.message ?? err);
     }
   });
 

@@ -2,7 +2,28 @@ import axios from "axios";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
-export const customerApiBase = (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api").replace(/\/+$/, "");
+function normalizeApiBaseUrl(rawBaseUrl: string): string {
+  const trimmed = rawBaseUrl.trim().replace(/\/+$/, "");
+
+  if (!trimmed) {
+    return "/api";
+  }
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  if (/\/api(?:\/v1)?$/i.test(trimmed) || /\/v1$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `${trimmed}/api`;
+}
+
+const isLocalFrontend = typeof window !== "undefined" && ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL ?? "/api";
+
+export const customerApiBase = isLocalFrontend ? "/api" : normalizeApiBaseUrl(configuredApiBase);
 
 export const customerApi = axios.create({
   baseURL: customerApiBase,
@@ -30,10 +51,14 @@ customerApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      // Clear local auth state without calling the API (token is already invalid)
-      useCustomerAuthStore.getState().clearAuth();
-      // Hard redirect flushes React Query cache and any in-memory auth state
-      window.location.replace("/login");
+      const hasStoredToken = Boolean(customerAuthStorage.getToken());
+
+      if (hasStoredToken) {
+        // Clear local auth state without calling the API (token is already invalid)
+        useCustomerAuthStore.getState().clearAuth();
+        // Hard redirect flushes React Query cache and any in-memory auth state
+        window.location.replace("/login");
+      }
     }
     return Promise.reject(error);
   },

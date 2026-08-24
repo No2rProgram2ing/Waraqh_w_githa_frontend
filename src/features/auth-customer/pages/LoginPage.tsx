@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 import { useLogin } from "@/features/auth-customer/hooks/useLogin";
 import { loginSchema, type LoginSchema } from "@/features/auth-customer/schema";
+import { ROUTES } from "@/routes/paths";
 import logo from "@/assets/images/Warqah & Jitha Logo.png";
 
 export function LoginPage() {
@@ -18,10 +19,10 @@ export function LoginPage() {
   const login = useLogin();
   const navigate = useNavigate();
   const location = useLocation();
-  const setUser = useCustomerAuthStore((state) => state.setUser);
+  const setAuth = useCustomerAuthStore((state) => state.setAuth);
   // Where to redirect after a successful login (set by CustomerProtectedRoute)
   const from = (location.state as { from?: Location })?.from;
-  const redirectTo = (from as unknown as { pathname?: string })?.pathname || "/";
+  const redirectTo = (from as unknown as { pathname?: string })?.pathname || ROUTES.home;
 
   const {
     register,
@@ -36,17 +37,14 @@ export function LoginPage() {
 
   // ── Submit handler ────────────────────────────────────────────────────────
   const onSubmit = handleSubmit(async (values) => {
-    console.log("🟢 [LoginPage] handleSubmit fired — validation passed", values);
-
     try {
       const result = await login.mutateAsync({
         phone: values.phone,
         password: values.password,
       });
 
-      console.log("✅ [LoginPage] Login successful:", result);
       // Hydrate the auth store so the header & guards reflect the new session immediately
-      setUser(result.user);
+      setAuth({ user: result.user, token: result.token });
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
       const validationErrors = err?.fieldErrors ?? err?.response?.data?.errors;
@@ -59,20 +57,9 @@ export function LoginPage() {
             message: Array.isArray(message) ? message[0] : String(message),
           });
         });
-
-        console.error("🔴 [LoginPage] Backend validation errors (422):", validationErrors);
         return;
       }
-
-      console.error(
-        "🔴 [LoginPage] Login error:",
-        err?.response?.data ?? err?.message ?? err,
-      );
     }
-  },
-  // Called when react-hook-form blocks submission due to validation errors
-  (formErrors) => {
-    console.warn("🟡 [LoginPage] Form validation blocked submission. Errors:", formErrors);
   });
 
   return (

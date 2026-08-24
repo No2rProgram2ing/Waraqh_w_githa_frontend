@@ -35,8 +35,7 @@ export function ProductDetailsPage() {
         // Accept both { data: Product } and raw product objects
         const payload = resp.data?.data ?? resp.data;
         if (mounted) setProduct(payload ?? null);
-      } catch (err) {
-        console.error('Failed to fetch product', err);
+      } catch {
         if (mounted) setIsError(true);
       } finally {
         if (mounted) setIsLoading(false);
@@ -66,7 +65,6 @@ export function ProductDetailsPage() {
       showSuccessToast('تمت إضافة المنتج إلى السلة');
       navigate(ROUTES.cart);
     } catch (err: any) {
-      console.error('Add to cart failed', err);
       const message = err?.response?.data?.message ?? 'تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.';
       showErrorToast(message);
     } finally {
@@ -83,8 +81,7 @@ export function ProductDetailsPage() {
       const favoriteState = await favoritesApi.toggleFavorite(product.id ?? product.product_id ?? productId);
       setIsFavorite(Boolean(favoriteState));
       showSuccessToast(favoriteState ? 'تمت إضافة المنتج إلى المفضلة' : 'تمت إزالة المنتج من المفضلة');
-    } catch (err) {
-      console.error('Toggle favorite failed', err);
+    } catch {
       // Revert optimistic update on error
       setIsFavorite((prev) => !prev);
       showErrorToast('تعذر تحديث قائمة المفضلة، يرجى المحاولة مرة أخرى.');

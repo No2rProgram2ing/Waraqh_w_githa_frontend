@@ -3,7 +3,7 @@ import { adminAuthStorage } from '@/features/auth/services/adminAuthStorage'
 import { useAdminAuthStore } from '@/features/auth/stores/adminAuthStore'
 import { sanitizeErrorMessage, showErrorToast } from '@/lib/toast'
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 const SAFE_SERVER_ERROR_MESSAGE =
   'حدث خطأ غير متوقع، يرجى المحاولة لاحقًا.'

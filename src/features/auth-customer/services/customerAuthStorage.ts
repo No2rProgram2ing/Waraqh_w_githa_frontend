@@ -1,4 +1,5 @@
 const CUSTOMER_TOKEN_KEY = 'customer_access_token';
+const CUSTOMER_USER_KEY = 'customer_user';
 
 export const customerAuthStorage = {
   getToken(): string | null {
@@ -9,7 +10,32 @@ export const customerAuthStorage = {
     localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
   },
 
+  getUser<T = unknown>(): T | null {
+    const raw = localStorage.getItem(CUSTOMER_USER_KEY);
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      localStorage.removeItem(CUSTOMER_USER_KEY);
+      return null;
+    }
+  },
+
+  setUser<T>(user: T): void {
+    localStorage.setItem(CUSTOMER_USER_KEY, JSON.stringify(user));
+  },
+
   clearToken(): void {
     localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+  },
+
+  clearUser(): void {
+    localStorage.removeItem(CUSTOMER_USER_KEY);
+  },
+
+  clearAll(): void {
+    this.clearToken();
+    this.clearUser();
   },
 };
