@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { AccountLayout } from "@/layouts/AccountLayout";
 <<<<<<< HEAD
 import { useSystemCurrency } from '@/lib/currency'
@@ -52,16 +53,49 @@ export function WishlistsPage() {
 =======
 import { WishlistCard } from "@/features/wishlists/components/WishlistCard";
 import { useWishlist } from "@/features/wishlists/hooks/useWishlist";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
+import { ROUTES } from "@/routes/paths";
 
 export function WishlistsPage() {
+<<<<<<< Updated upstream
   const { items, isLoading, isError, error, refetch, toggleFavorite, isToggling } = useWishlist();
 >>>>>>> dad121843105060107acde3b906c6c7d331c9270
+=======
+  const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
+  const { items, isLoading, isError, error, refetch, toggleFavorite, isToggling } = useWishlist(isAuthenticated);
+>>>>>>> Stashed changes
 
   const handleRemove = async (productId: string) => {
     await toggleFavorite(productId);
   };
 
   const renderContent = () => {
+    if (!isAuthenticated) {
+      return (
+        <div className="rounded-[24px] border border-[#e9e0d5] bg-[#f8f5f1] p-8 text-center shadow-sm sm:p-12">
+          <p className="text-[28px] font-extrabold text-[#1d2218]">قائمة المفضلات</p>
+          <p className="mt-4 text-[15px] leading-8 text-[#5d645b]">
+            لتتمكن من مشاهدة منتجاتك المفضلة، عليك تسجيل الدخول إلى حسابك أولاً.
+          </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              to={ROUTES.login}
+              className="rounded-full bg-[#4f5f3d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#3d4d2c]"
+            >
+              تسجيل الدخول
+            </Link>
+            <Link
+              to={ROUTES.products}
+              className="rounded-full border border-[#d9d0c2] bg-white px-6 py-3 text-sm font-semibold text-[#1d2218] transition hover:bg-[#f3efe9]"
+            >
+              تصفح المنتجات
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
     if (isLoading) {
       return (
         <div className="flex min-h-[220px] items-center justify-center rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] text-[#4f5f3d]">
@@ -116,7 +150,7 @@ export function WishlistsPage() {
   };
 
   return (
-    <AccountLayout>
+    <AccountLayout hideSidebar={!isAuthenticated}>
       <motion.section
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -125,14 +159,16 @@ export function WishlistsPage() {
         className="flex flex-col gap-6"
         dir="rtl"
       >
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-[28px] font-extrabold text-[#1d2218]">قائمة المفضلات</h1>
-          {!isLoading && !isError ? (
-            <span className="rounded-full border border-[#dacfbf] bg-[#f3efe9] px-3 py-1.5 text-[12px] font-medium text-[#4f5f3d]">
-              {items.length} عناصر
-            </span>
-          ) : null}
-        </div>
+        {isAuthenticated ? (
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-[28px] font-extrabold text-[#1d2218]">قائمة المفضلات</h1>
+            {!isLoading && !isError ? (
+              <span className="rounded-full border border-[#dacfbf] bg-[#f3efe9] px-3 py-1.5 text-[12px] font-medium text-[#4f5f3d]">
+                {items.length} عناصر
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
 <<<<<<< HEAD
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

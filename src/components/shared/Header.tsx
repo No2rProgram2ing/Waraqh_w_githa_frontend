@@ -85,8 +85,9 @@ export function Header() {
   // Auth state
   const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
   const user = useCustomerAuthStore((state) => state.user);
+  const isHydrated = useCustomerAuthStore((state) => state.isHydrated);
   const logout = useCustomerAuthStore((state) => state.logout);
-  const unreadNotificationsQuery = useUnreadNotificationsCount();
+  const unreadNotificationsQuery = useUnreadNotificationsCount(isAuthenticated);
   const unreadNotificationsCount = unreadNotificationsQuery.data ?? 0;
 
   // Scroll shadow
@@ -103,8 +104,11 @@ export function Header() {
   }, [location.pathname]);
 
   const handleLogout = async () => {
-    await logout();
-    navigate(ROUTES.home, { replace: true });
+    try {
+      await logout();
+    } finally {
+      navigate(ROUTES.home, { replace: true });
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -177,28 +181,32 @@ export function Header() {
           {/* ── Actions ─── */}
           <div className="flex items-center gap-3 sm:gap-4">
 
-            {/* Notification */}
-            <Link
-              to={ROUTES.notifications}
-              className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
-              title="التنبيهات"
-            >
-              <BellIcon className="h-5 w-5 text-brand-olive-700" />
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-amber-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-[#F8F6F1]">
-                  {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
-                </span>
-              )}
-            </Link>
+            {isAuthenticated ? (
+              <>
+                {/* Notification */}
+                <Link
+                  to={ROUTES.notifications}
+                  className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
+                  title="التنبيهات"
+                >
+                  <BellIcon className="h-5 w-5 text-brand-olive-700" />
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-amber-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-[#F8F6F1]">
+                      {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Wishlist */}
+                <Link to={ROUTES.wishlist} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="قائمة الأمنيات">
+                  <HeartIcon className="h-5 w-5 text-brand-olive-700" />
+                </Link>
+              </>
+            ) : null}
 
             {/* Search */}
             <Link to={ROUTES.search} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="البحث">
               <SearchIcon className="h-5 w-5 text-brand-olive-700" />
-            </Link>
-
-            {/* Wishlist */}
-            <Link to={ROUTES.wishlist} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="قائمة الأمنيات">
-              <HeartIcon className="h-5 w-5 text-brand-olive-700" />
             </Link>
 
             {/* Shopping Bag */}
@@ -209,7 +217,11 @@ export function Header() {
 
             {/* ── Auth: Profile avatar (authenticated) OR Login/Register (unauthenticated) ── */}
             {isAuthenticated ? (
-              <ProfileAvatar avatarUrl={user?.avatarUrl} fullName={user?.fullName ?? ""} />
+              isHydrated && user ? (
+                <ProfileAvatar avatarUrl={user.avatarUrl} fullName={user.fullName ?? ""} />
+              ) : (
+                <div className="h-9 w-9 animate-pulse rounded-full bg-brand-olive-700/15 ring-2 ring-brand-olive-700/20" aria-label="جارٍ تحميل الملف الشخصي" />
+              )
             ) : (
               <div className="hidden sm:flex lg:hidden items-center gap-2">
                 <Link to={ROUTES.login} className="text-sm font-semibold text-brand-ink/80 hover:text-brand-olive-600 transition-colors">تسجيل الدخول</Link>

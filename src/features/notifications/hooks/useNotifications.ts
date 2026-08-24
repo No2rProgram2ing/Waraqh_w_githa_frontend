@@ -13,10 +13,11 @@ export function useNotifications() {
   });
 }
 
-export function useUnreadNotificationsCount() {
+export function useUnreadNotificationsCount(enabled = true) {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
     queryFn: notificationsApi.getUnreadCount,
+    enabled,
   });
 }
 
