@@ -86,38 +86,63 @@ function extractPaginationMeta(payload: unknown): PaginatedResponse<Product>['me
 
 export const productsCatalogApi = {
   async getProducts(filters: ProductFiltersDTO = {}): Promise<PaginatedResponse<Product>> {
-    try {
-      const params: Record<string, number | string> = {
-        page: Number(filters.page ?? 1) || 1,
-        per_page: Number(filters.per_page ?? 9) || 9,
-      };
+    const params: Record<string, number | string> = {
+      page: Number(filters.page ?? 1) || 1,
+      per_page: Number(filters.per_page ?? 9) || 9,
+    };
 
-      if (filters.category_id !== undefined && filters.category_id !== null && filters.category_id !== '') {
-        params.category_id = String(filters.category_id);
-      }
-
-      const response = await customerApi.get<unknown>('/products', { params });
-      const payload = response.data;
-      const rawItems = extractArray<Record<string, unknown>>(payload);
-      const items = rawItems.length > 0 ? rawItems.map(normalizeProductRecord) : [];
-
-      return {
-        data: items,
-        meta: extractPaginationMeta(payload),
-      };
-    } catch (error) {
-      throw error;
+    if (filters.category_id !== undefined && filters.category_id !== null && filters.category_id !== '') {
+      params.category_id = String(filters.category_id);
     }
+
+    // Try primary endpoint first, then fallback to common alternatives on 404
+    const endpoints = ['/products', '/product-catalog', '/product-list', '/products/catalog'];
+
+    for (const ep of endpoints) {
+      try {
+        const response = await customerApi.get<unknown>(ep, { params });
+        const payload = response.data;
+        const rawItems = extractArray<Record<string, unknown>>(payload);
+        const items = rawItems.length > 0 ? rawItems.map(normalizeProductRecord) : [];
+
+        return {
+          data: items,
+          meta: extractPaginationMeta(payload),
+        };
+      } catch (err: any) {
+        // If 404, try next endpoint; otherwise rethrow
+        if (err?.response?.status === 404) {
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    // If none of the endpoints worked, throw a descriptive error
+    const notFoundError: any = new Error('Products endpoint not found on server (404)');
+    notFoundError.status = 404;
+    throw notFoundError;
   },
 
   async getCategories(): Promise<ProductCategory[]> {
-    try {
-      const response = await customerApi.get<unknown>('/categories');
-      const rawItems = extractArray<Record<string, unknown>>(response.data);
-      return rawItems.map(normalizeCategoryRecord);
-    } catch (error) {
-      throw error;
+    const endpoints = ['/categories', '/product-categories', '/categories/list'];
+
+    for (const ep of endpoints) {
+      try {
+        const response = await customerApi.get<unknown>(ep);
+        const rawItems = extractArray<Record<string, unknown>>(response.data);
+        return rawItems.map(normalizeCategoryRecord);
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          continue;
+        }
+        throw err;
+      }
     }
+
+    const notFoundError: any = new Error('Categories endpoint not found on server (404)');
+    notFoundError.status = 404;
+    throw notFoundError;
   },
 
   async getPriceRange(): Promise<ProductPriceRange> {

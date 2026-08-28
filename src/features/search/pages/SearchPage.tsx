@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import { motion } from "framer-motion";
-import { ShoppingBagIcon } from "@/components/ui/icons";
-import { AccountLayout } from "@/layouts/AccountLayout";
-import { useSystemCurrency } from '@/lib/currency'
-=======
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ShoppingBagIcon } from '@/components/ui/icons'
@@ -11,7 +5,6 @@ import { AccountLayout } from '@/layouts/AccountLayout'
 import { useSearchProducts, useSearchCategories } from '@/features/search/hooks/useSearchProducts'
 import type { SearchFiltersDTO } from '@/api/search'
 import type { Product } from '@/features/catalog/types/product'
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
 
 const SKELETON_COUNT = 6
 
@@ -22,9 +15,6 @@ function formatPrice(price: string | number) {
 }
 
 export function SearchPage() {
-<<<<<<< HEAD
-  const { formatAmount } = useSystemCurrency()
-=======
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState(query)
   const [filters, setFilters] = useState<SearchFiltersDTO>({ page: 1, per_page: 12 })
@@ -51,7 +41,6 @@ export function SearchPage() {
     return ['خيزران', 'ديكور', 'سلة', 'مصباح', 'طاولة', 'تراث']
   }, [categoriesQuery.data])
 
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
   return (
     <AccountLayout hideSidebar>
       <motion.section
@@ -165,29 +154,8 @@ export function SearchPage() {
                     </button>
                   </div>
                 </div>
-<<<<<<< HEAD
-
-                <p className="text-[16px] font-bold text-[#1c211b]">{item.name}</p>
-
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[17px] font-extrabold text-[#1d2218]">
-                    {formatAmount(item.price)}
-                  </span>
-                  <button
-                    type="button"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4f5f3d] text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] transition-transform duration-200 hover:scale-105"
-                    aria-label={`إضافة ${item.name} إلى السلة`}
-                  >
-                    <ShoppingBagIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.article>
-          ))}
-=======
               </motion.article>
             ))}
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
         </div>
       </motion.section>
     </AccountLayout>

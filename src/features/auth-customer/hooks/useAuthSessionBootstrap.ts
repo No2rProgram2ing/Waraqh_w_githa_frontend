@@ -11,7 +11,15 @@ const normalizeUser = (payload: any): CustomerUser => ({
   fullName: payload?.full_name ?? payload?.fullName ?? "",
   email: payload?.email ?? "",
   phone: payload?.phone ?? null,
-  avatarUrl: payload?.avatar_url ?? payload?.avatarUrl ?? null,
+  avatarUrl:
+    payload?.avatar_url ??
+    payload?.avatarUrl ??
+    payload?.avatar ??
+    payload?.image_url ??
+    payload?.imageUrl ??
+    payload?.avatar_data_url ??
+    payload?.avatarDataUrl ??
+    null,
 });
 
 export function useAuthSessionBootstrap() {
@@ -31,9 +39,20 @@ export function useAuthSessionBootstrap() {
     queryFn: async () => {
       const { data } = await customerApi.get("/customer/profile");
       const payload = data?.user ?? data?.data ?? data?.profile ?? data;
-      const user = normalizeUser(payload);
-      setUser(user);
-      return user;
+      const apiUser = normalizeUser(payload);
+      const storedUser = useCustomerAuthStore.getState().user;
+      const fallbackAvatar =
+        storedUser?.avatarUrl && storedUser.avatarUrl.startsWith("data:image/")
+          ? storedUser.avatarUrl
+          : apiUser.avatarUrl;
+
+      const mergedUser = {
+        ...apiUser,
+        avatarUrl: fallbackAvatar ?? apiUser.avatarUrl ?? null,
+      };
+
+      setUser(mergedUser);
+      return mergedUser;
     },
     throwOnError: false,
   });

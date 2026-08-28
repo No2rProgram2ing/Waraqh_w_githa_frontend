@@ -21,9 +21,12 @@ function normalizeApiBaseUrl(rawBaseUrl: string): string {
 }
 
 const isLocalFrontend = typeof window !== "undefined" && ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
-const configuredApiBase = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const rawConfiguredApiBase = import.meta.env.VITE_API_BASE_URL;
+const configuredApiBase = typeof rawConfiguredApiBase === 'string' && rawConfiguredApiBase.trim() !== '' ? rawConfiguredApiBase : undefined;
 
-export const customerApiBase = isLocalFrontend ? "/api" : normalizeApiBaseUrl(configuredApiBase);
+// If VITE_API_BASE_URL is explicitly provided (e.g. http://127.0.0.1:8000), prefer it.
+// Otherwise keep the previous behavior: use a relative /api during local frontend runs.
+export const customerApiBase = configuredApiBase ? normalizeApiBaseUrl(configuredApiBase) : (isLocalFrontend ? "/api" : "/api");
 
 export const customerApi = axios.create({
   baseURL: customerApiBase,

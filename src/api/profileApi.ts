@@ -22,6 +22,10 @@ export interface UpdatePasswordParams {
   confirmPassword?: string;
 }
 
+export interface UpdateAvatarParams {
+  file: File;
+}
+
 const PROFILE_ENDPOINT = "/customer/profile";
 const PROFILE_PASSWORD_ENDPOINT = "/customer/profile/password";
 
@@ -37,6 +41,51 @@ const extractProfilePayload = (responseData: any) => {
   );
 };
 
+const extractAvatarUrl = (value: any): string | null => {
+  if (!value || typeof value !== "object") return null;
+
+  const candidates = [
+    value.avatar_url,
+    value.avatarUrl,
+    value.avatar,
+    value.image_url,
+    value.imageUrl,
+    value.photo_url,
+    value.photoUrl,
+    value.url,
+    value.profile_image,
+    value.profileImage,
+    value.user?.avatar_url,
+    value.user?.avatarUrl,
+    value.user?.avatar,
+    value.user?.image_url,
+    value.user?.imageUrl,
+    value.user?.photo_url,
+    value.user?.photoUrl,
+    value.data?.avatar_url,
+    value.data?.avatarUrl,
+    value.data?.avatar,
+    value.data?.image_url,
+    value.data?.imageUrl,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("فشل تحويل الصورة إلى بيانات قابلة للتخزين."));
+    reader.readAsDataURL(file);
+  });
+
 const normalizeProfile = (user: any): UserProfileData => ({
   id: String(user?.id ?? ""),
   fullName:
@@ -47,7 +96,7 @@ const normalizeProfile = (user: any): UserProfileData => ({
     "",
   email: user?.email ?? "",
   phone: user?.phone ?? user?.phone_number ?? user?.mobile ?? "",
-  avatarUrl: user?.avatar_url ?? user?.avatarUrl ?? null,
+  avatarUrl: extractAvatarUrl(user),
   joinedDate: user?.created_at
     ? new Date(user.created_at).toLocaleDateString("ar-EG", {
         month: "long",
@@ -73,6 +122,29 @@ export const profileApi = {
 
     const profile = extractProfilePayload(response.data);
     return normalizeProfile(profile);
+  },
+
+  updateAvatar: async (file: File): Promise<UserProfileData> => {
+    const formData = new FormData();
+    formData.append("_method", "PUT");
+    formData.append("avatar", file);
+
+    const response = await customerApi.post(PROFILE_ENDPOINT, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    const profile = extractProfilePayload(response.data);
+    const normalized = normalizeProfile(profile);
+
+    if (!normalized.avatarUrl) {
+      const fallbackAvatar = extractAvatarUrl(response.data) ?? (await fileToDataUrl(file));
+      return {
+        ...normalized,
+        avatarUrl: fallbackAvatar,
+      };
+    }
+
+    return normalized;
   },
 
   updatePassword: async (

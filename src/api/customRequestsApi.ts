@@ -1,4 +1,4 @@
-import { customerApi } from "@/api/customerApi";
+﻿import { customerApi } from "@/api/customerApi";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
@@ -41,7 +41,11 @@ export interface CreateCustomRequestInput {
   woodType?: string;
   dimensions?: string;
   budget?: string;
+  customer_id?: number | string;
+  product_id?: number | string;
   base_product_id?: number | string;
+  color_id?: number | string;
+  design_pattern_id?: number | string;
   quantity?: number | string;
   length_cm?: number | string;
   width_cm?: number | string;
@@ -83,9 +87,9 @@ const statusMap: Record<string, RequestStatus> = {
 };
 
 const statusTextMap: Record<RequestStatus, string> = {
-  completed: "مكتمل",
-  in_progress: "قيد التنفيذ",
-  pending_review: "بانتظار المراجعة",
+  completed: "ظ…ظƒطھظ…ظ„",
+  in_progress: "ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°",
+  pending_review: "ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ…ط±ط§ط¬ط¹ط©",
 };
 
 function formatCustomRequestDate(value?: string | null): string {
@@ -126,8 +130,8 @@ function unwrapRequestList(payload: unknown): ProductCustomizationApiItem[] {
 
 function mapCustomizationToCustomRequest(item: ProductCustomizationApiItem): CustomRequestItem {
   const requestStatus = statusMap[String(item.status ?? "")] ?? "pending_review";
-  const title = item.product?.name ?? item.request_code ?? `طلب تخصيص #${item.id}`;
-  const description = item.customer_notes || item.product?.name || "لا توجد تفاصيل إضافية.";
+  const title = item.product?.name ?? item.request_code ?? `ط·ظ„ط¨ طھط®طµظٹطµ #${item.id}`;
+  const description = item.customer_notes || item.product?.name || "ظ„ط§ طھظˆط¬ط¯ طھظپط§طµظٹظ„ ط¥ط¶ط§ظپظٹط©.";
 
   return {
     id: String(item.id),
@@ -155,7 +159,7 @@ function mapCustomizationToCustomRequest(item: ProductCustomizationApiItem): Cus
 
 function getAuthHeaders() {
   const token = customerAuthStorage.getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? { Authorization: 'Bearer ' + token } : {};
 }
 
 function getCurrentCustomerId(): string {
@@ -163,46 +167,47 @@ function getCurrentCustomerId(): string {
   return String(userId ?? "");
 }
 
+
 export function seedMockCustomRequestsForCustomer(customerId: string | number = 233): CustomRequestItem[] {
   const normalizedId = String(customerId);
   const mockItems: ProductCustomizationApiItem[] = [
     {
       id: 1001,
       request_code: "CR-233-1001",
-      product: { id: 55, name: "خزانة سفرة خشبية" },
-      color: "دردار" ,
-      design_pattern: "مخطط عربي" ,
+      product: { id: 55, name: "ط®ط²ط§ظ†ط© ط³ظپط±ط© ط®ط´ط¨ظٹط©" },
+      color: "ط¯ط±ط¯ط§ط±" ,
+      design_pattern: "ظ…ط®ط·ط· ط¹ط±ط¨ظٹ" ,
       quantity: 1,
       dimensions: { length: 120, width: 60, height: 80 },
       price: { base: 1200, customization: 500, total: 1700 },
       status: "pending_approval",
-      customer_notes: "أريد خشب مائل مع لمسة عربية دافئة ومقاس مناسب لغرفة الطعام.",
+      customer_notes: "ط£ط±ظٹط¯ ط®ط´ط¨ ظ…ط§ط¦ظ„ ظ…ط¹ ظ„ظ…ط³ط© ط¹ط±ط¨ظٹط© ط¯ط§ظپط¦ط© ظˆظ…ظ‚ط§ط³ ظ…ظ†ط§ط³ط¨ ظ„ط؛ط±ظپط© ط§ظ„ط·ط¹ط§ظ….",
       created_at: "2026-08-20T13:00:00Z",
     },
     {
       id: 1002,
       request_code: "CR-233-1002",
-      product: { id: 66, name: "مكتبة مخصصة للمنطقة" },
-      color: "اللون الطبيعي" ,
-      design_pattern: "تقليدي" ,
+      product: { id: 66, name: "ظ…ظƒطھط¨ط© ظ…ط®طµطµط© ظ„ظ„ظ…ظ†ط·ظ‚ط©" },
+      color: "ط§ظ„ظ„ظˆظ† ط§ظ„ط·ط¨ظٹط¹ظٹ" ,
+      design_pattern: "طھظ‚ظ„ظٹط¯ظٹ" ,
       quantity: 2,
       dimensions: { length: 180, width: 35, height: 210 },
       price: { base: 2100, customization: 900, total: 3000 },
       status: "in_production",
-      customer_notes: "أريد رفوف في المنتصف وواجهة خشبية منمقة مع رسومات بسيطة.",
+      customer_notes: "ط£ط±ظٹط¯ ط±ظپظˆظپ ظپظٹ ط§ظ„ظ…ظ†طھطµظپ ظˆظˆط§ط¬ظ‡ط© ط®ط´ط¨ظٹط© ظ…ظ†ظ…ظ‚ط© ظ…ط¹ ط±ط³ظˆظ…ط§طھ ط¨ط³ظٹط·ط©.",
       created_at: "2026-08-18T09:30:00Z",
     },
     {
       id: 1003,
       request_code: "CR-233-1003",
-      product: { id: 77, name: "طاولة قهوة مخصصة" },
-      color: "البلوط الداكن" ,
-      design_pattern: "معاصر" ,
+      product: { id: 77, name: "ط·ط§ظˆظ„ط© ظ‚ظ‡ظˆط© ظ…ط®طµطµط©" },
+      color: "ط§ظ„ط¨ظ„ظˆط· ط§ظ„ط¯ط§ظƒظ†" ,
+      design_pattern: "ظ…ط¹ط§طµط±" ,
       quantity: 1,
       dimensions: { length: 90, width: 50, height: 45 },
       price: { base: 980, customization: 420, total: 1400 },
       status: "completed",
-      customer_notes: "تم تجهيز الطاولة مع قاعدة معدنية خفيفة وواجهة خشبية فاخرة.",
+      customer_notes: "طھظ… طھط¬ظ‡ظٹط² ط§ظ„ط·ط§ظˆظ„ط© ظ…ط¹ ظ‚ط§ط¹ط¯ط© ظ…ط¹ط¯ظ†ظٹط© ط®ظپظٹظپط© ظˆظˆط§ط¬ظ‡ط© ط®ط´ط¨ظٹط© ظپط§ط®ط±ط©.",
       created_at: "2026-08-10T16:10:00Z",
     },
   ];
@@ -218,9 +223,50 @@ export const customRequestsApi = {
   },
 
   getCustomRequest: async (id: string | number): Promise<CustomRequestItem> => {
-    const { data } = await customerApi.get(`/customer/customizations/${id}`, { headers: getAuthHeaders() });
-    const item = (data?.data ?? data) as ProductCustomizationApiItem;
-    return mapCustomizationToCustomRequest(item);
+    const currentCustomerId = getCurrentCustomerId();
+
+    // If using seeded mock data for customer 233, return from local mock storage
+    if (currentCustomerId === "233") {
+      const localMock = localStorage.getItem(`mock_custom_requests_customer_${currentCustomerId}`);
+      const seeded = localMock ? (JSON.parse(localMock) as ProductCustomizationApiItem[]) : seedMockCustomRequestsForCustomer(233);
+      const found = seeded.find((it) => String(it.id) === String(id) || String(it.request_code) === String(id));
+      if (found) return mapCustomizationToCustomRequest(found);
+    }
+
+    const endpoints = [
+      `/customer/customizations/${id}`,
+      `/customer/custom-design-requests/${id}`,
+      `/custom-design-requests/${id}`,
+      `/customer/customizations`,
+      `/customer/custom-design-requests`,
+      `/custom-design-requests`,
+    ];
+
+    let lastError: unknown;
+
+    for (const endpoint of endpoints) {
+      try {
+        const { data } = await customerApi.get(endpoint, { headers: getAuthHeaders() });
+
+        // Single-item responses often come wrapped under data
+        const candidate = (data?.data ?? data) as any;
+        if (candidate && (String(candidate.id) === String(id) || String(candidate.request_code) === String(id))) {
+          return mapCustomizationToCustomRequest(candidate as ProductCustomizationApiItem);
+        }
+
+        // Otherwise, try to find in a returned list
+        const list = unwrapRequestList(data);
+        if (Array.isArray(list) && list.length > 0) {
+          const found = list.find((it) => String(it.id) === String(id) || String(it.request_code) === String(id));
+          if (found) return mapCustomizationToCustomRequest(found);
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    throw new Error("Custom request not found");
   },
 
   getProducts: async (): Promise<ProductOption[]> => {
@@ -236,17 +282,49 @@ export const customRequestsApi = {
   },
 
   createCustomRequest: async (input: CreateCustomRequestInput): Promise<CustomRequestItem> => {
-    const payload = {
-      base_product_id: Number(input.base_product_id ?? 0),
+    const customerId = Number(input.customer_id ?? useCustomerAuthStore.getState().user?.id ?? 0);
+    const productId = Number(input.product_id ?? input.base_product_id ?? 0);
+    const notes = input.customer_notes || input.description || input.title || "";
+
+    const payload: Record<string, unknown> = {
+      ...(customerId > 0 ? { customer_id: customerId } : {}),
+      ...(productId > 0 ? { product_id: productId, base_product_id: productId } : {}),
       quantity: Number(input.quantity ?? 1),
-      length_cm: input.length_cm === undefined || input.length_cm === "" ? null : Number(input.length_cm),
-      width_cm: input.width_cm === undefined || input.width_cm === "" ? null : Number(input.width_cm),
-      height_cm: input.height_cm === undefined || input.height_cm === "" ? null : Number(input.height_cm),
-      customer_notes: input.customer_notes || input.description || input.title || "",
+      ...(input.color_id ? { color_id: Number(input.color_id) } : {}),
+      ...(input.design_pattern_id ? { design_pattern_id: Number(input.design_pattern_id) } : {}),
+      ...(input.length_cm === undefined || input.length_cm === "" ? {} : { length_cm: Number(input.length_cm) }),
+      ...(input.width_cm === undefined || input.width_cm === "" ? {} : { width_cm: Number(input.width_cm) }),
+      ...(input.height_cm === undefined || input.height_cm === "" ? {} : { height_cm: Number(input.height_cm) }),
+      customer_notes: notes,
     };
 
-    const { data } = await customerApi.post("/customer/customizations", payload, { headers: getAuthHeaders() });
-    const item = (data?.data ?? data) as ProductCustomizationApiItem;
-    return mapCustomizationToCustomRequest(item);
+    const endpoints = ["/customer/customizations", "/customer/custom-design-requests"];
+    let lastError: unknown;
+
+    for (const endpoint of endpoints) {
+      try {
+        console.debug("[customRequestsApi] createCustomRequest payload:", { endpoint, payload });
+        const headers = getAuthHeaders();
+        console.debug("[customRequestsApi] request headers:", headers);
+
+        const response = await customerApi.post(endpoint, payload, { headers });
+        console.debug("[customRequestsApi] response:", response);
+
+        const item = (response.data?.data ?? response.data) as ProductCustomizationApiItem;
+        console.debug("[customRequestsApi] mapped item:", item);
+        return mapCustomizationToCustomRequest(item);
+      } catch (error) {
+        lastError = error;
+        console.error(`[customRequestsApi] Failed createCustomRequest at ${endpoint}:`, error);
+      }
+    }
+
+    throw lastError ?? new Error("Failed to create custom request");
   },
 };
+
+
+
+
+
+

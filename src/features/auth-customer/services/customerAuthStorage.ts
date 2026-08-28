@@ -1,5 +1,6 @@
 const CUSTOMER_TOKEN_KEY = 'customer_access_token';
 const CUSTOMER_USER_KEY = 'customer_user';
+const CUSTOMER_AVATAR_KEY_PREFIX = 'customer_avatar_';
 
 export const customerAuthStorage = {
   getToken(): string | null {
@@ -24,6 +25,22 @@ export const customerAuthStorage = {
 
   setUser<T>(user: T): void {
     localStorage.setItem(CUSTOMER_USER_KEY, JSON.stringify(user));
+  },
+
+  getAvatar(userId: string): string | null {
+    const avatar = localStorage.getItem(`${CUSTOMER_AVATAR_KEY_PREFIX}${userId}`);
+    if (avatar?.startsWith('blob:')) {
+      localStorage.removeItem(`${CUSTOMER_AVATAR_KEY_PREFIX}${userId}`);
+      return null;
+    }
+
+    return avatar;
+  },
+
+  setAvatar(userId: string, avatar: string | null | undefined): void {
+    if (avatar && !avatar.startsWith('blob:')) {
+      localStorage.setItem(`${CUSTOMER_AVATAR_KEY_PREFIX}${userId}`, avatar);
+    }
   },
 
   clearToken(): void {

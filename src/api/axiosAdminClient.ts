@@ -29,7 +29,15 @@ axiosAdminClient.interceptors.request.use((config) => {
   }
 
   if (config.data instanceof FormData) {
-    config.headers.delete('Content-Type')
+    // Axios headers can be a plain object or an AxiosHeaders instance.
+    // Remove the Content-Type so the browser sets the correct multipart boundary.
+    if (config.headers && typeof (config.headers as any).delete === 'function') {
+      // AxiosHeaders (supported in newer axios versions)
+      ;(config.headers as any).delete('Content-Type')
+    } else if (config.headers) {
+      // Plain object
+      delete (config.headers as any)['Content-Type']
+    }
   }
 
   return config

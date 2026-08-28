@@ -4,9 +4,18 @@ import { productsApi } from '../api/productsApi'
 import type { CreateProductPayload, ProductsQueryParams } from '../api/productsApi'
 
 export function useProducts(params: ProductsQueryParams = {}) {
+    const key = [
+        'admin',
+        'products',
+        params.page ?? 1,
+        params.per_page ?? null,
+        params.search ?? '',
+    ]
+
     return useQuery({
-        queryKey: ['admin', 'products', params],
+        queryKey: key,
         queryFn: () => productsApi.getAll(params),
+        keepPreviousData: true,
         placeholderData: (previousData) => previousData,
     })
 }

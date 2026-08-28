@@ -15,17 +15,31 @@ export interface LoginResponse {
     fullName: string;
     email: string;
     phone: string | null;
+    avatar?: string | null;
     avatarUrl?: string | null;
   };
 }
 
-const normalizeUser = (user: any) => ({
-  id: String(user?.id ?? ""),
-  fullName: user?.full_name ?? user?.fullName ?? "",
-  email: user?.email ?? "",
-  phone: user?.phone ?? null,
-  avatarUrl: user?.avatar_url ?? user?.avatarUrl ?? null,
-});
+const normalizeUser = (user: any) => {
+  const avatar =
+    user?.avatar ??
+    user?.avatar_url ??
+    user?.avatarUrl ??
+    user?.image_url ??
+    user?.imageUrl ??
+    user?.avatar_data_url ??
+    user?.avatarDataUrl ??
+    null;
+
+  return {
+    id: String(user?.id ?? ""),
+    fullName: user?.full_name ?? user?.fullName ?? "",
+    email: user?.email ?? "",
+    phone: user?.phone ?? null,
+    avatar,
+    avatarUrl: avatar,
+  };
+};
 
 export const authApi = {
   signup: async (payload: SignupPayload): Promise<SignupResponse> => {

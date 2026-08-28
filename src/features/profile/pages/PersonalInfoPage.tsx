@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
@@ -9,6 +9,15 @@ import { Loader } from "@/components/ui/Loader";
 import { TrashIcon } from "@/components/ui/icons";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { extractMessage } from "@/utils/apiErrors";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("فشل قراءة الصورة."));
+    reader.readAsDataURL(file);
+  });
 
 export function PersonalInfoPage() {
   const {
@@ -19,9 +28,23 @@ export function PersonalInfoPage() {
     refetch,
     updateProfile,
     isUpdatingProfile,
+    updateAvatar,
+    isUpdatingAvatar,
     updatePassword,
     isUpdatingPassword,
   } = useProfile();
+  const currentUserAvatar = useCustomerAuthStore((state) => state.user?.avatarUrl ?? state.user?.avatar ?? null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(currentUserAvatar ?? profile?.avatarUrl ?? null);
+
+  useEffect(() => {
+    setAvatarPreviewUrl((previous) => {
+      if (previous && (previous.startsWith("blob:") || previous.startsWith("data:image/"))) {
+        return previous;
+      }
+
+      return currentUserAvatar ?? profile?.avatarUrl ?? null;
+    });
+  }, [currentUserAvatar, profile?.avatarUrl]);
 
   useEffect(() => {
     if (isError && error) {
@@ -33,6 +56,52 @@ export function PersonalInfoPage() {
   const handleUpdateProfile = async (data: { fullName: string; email: string; phone: string }) => {
     await updateProfile(data);
     showSuccessToast("تم حفظ التغييرات بنجاح");
+  };
+
+  const handleAvatarChange = async (file: File) => {
+    const currentUser = useCustomerAuthStore.getState().user;
+
+    try {
+      const permanentUrl = await fileToDataUrl(file);
+
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          avatar: permanentUrl,
+          avatarUrl: permanentUrl,
+        });
+      }
+
+      setAvatarPreviewUrl(permanentUrl);
+
+      const updatedProfile = await updateAvatar(file);
+      const nextAvatarUrl = updatedProfile.avatarUrl ?? permanentUrl;
+
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          fullName: updatedProfile.fullName || currentUser.fullName,
+          email: updatedProfile.email || currentUser.email,
+          phone: updatedProfile.phone || currentUser.phone || null,
+          avatar: nextAvatarUrl,
+          avatarUrl: nextAvatarUrl,
+        });
+      }
+
+      setAvatarPreviewUrl(nextAvatarUrl);
+      showSuccessToast("تم تحديث صورة الملف الشخصي بنجاح");
+    } catch (error: any) {
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          avatar: currentUser.avatar ?? currentUser.avatarUrl ?? null,
+          avatarUrl: currentUser.avatar ?? currentUser.avatarUrl ?? null,
+        });
+      }
+      setAvatarPreviewUrl(profile?.avatarUrl ?? null);
+      const message = extractMessage(error, "حدث خطأ أثناء تحديث الصورة الشخصية.");
+      showErrorToast(message);
+    }
   };
 
   const handleUpdatePassword = async (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
@@ -83,8 +152,10 @@ export function PersonalInfoPage() {
           <>
             <ProfileHeader
               fullName={profile?.fullName}
-              avatarUrl={profile?.avatarUrl}
+              avatarUrl={avatarPreviewUrl ?? profile?.avatarUrl}
               isOnline={profile?.isOnline}
+              isUploadingAvatar={isUpdatingAvatar}
+              onAvatarChange={handleAvatarChange}
             />
 
             <PersonalInfoForm

@@ -6,6 +6,17 @@ import type { LoginResponse } from '@/api/auth';
 
 type CustomerUser = LoginResponse['user'];
 
+const normalizeStoredUser = (user: CustomerUser | null | undefined): CustomerUser | null => {
+  if (!user) return null;
+
+  const avatar = user.avatar ?? user.avatarUrl ?? null;
+  return {
+    ...user,
+    avatar,
+    avatarUrl: user.avatarUrl ?? avatar,
+  };
+};
+
 interface CustomerAuthState {
   user: CustomerUser | null;
   token: string | null;
@@ -36,8 +47,12 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
       isLoading: false,
 
       setUser: (user: CustomerUser): void => {
-        customerAuthStorage.setUser(user);
-        set({ user, isAuthenticated: true, token: get().token ?? customerAuthStorage.getToken() });
+        const normalizedUser = normalizeStoredUser(user);
+        if (!normalizedUser) return;
+
+        customerAuthStorage.setUser(normalizedUser);
+        customerAuthStorage.setAvatar(normalizedUser.id, normalizedUser.avatarUrl ?? normalizedUser.avatar);
+        set({ user: normalizedUser, isAuthenticated: true, token: get().token ?? customerAuthStorage.getToken() });
       },
 
       setToken: (token: string | null): void => {
@@ -51,14 +66,28 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
       },
 
       setAuth: ({ user, token }: { user: CustomerUser; token: string }): void => {
+        const normalizedUser = normalizeStoredUser(user);
+        const cachedAvatar = normalizedUser ? customerAuthStorage.getAvatar(normalizedUser.id) : null;
+        const existing = normalizeStoredUser(customerAuthStorage.getUser<CustomerUser>());
+        const mergedUser = normalizedUser
+          ? {
+              ...normalizedUser,
+              avatar: normalizedUser.avatar ?? cachedAvatar ?? existing?.avatar ?? null,
+              avatarUrl: normalizedUser.avatarUrl ?? cachedAvatar ?? existing?.avatarUrl ?? existing?.avatar ?? null,
+            }
+          : existing ?? null;
+
         customerAuthStorage.setToken(token);
-        customerAuthStorage.setUser(user);
-        set({ user, token, isAuthenticated: true, isHydrated: true });
+        if (mergedUser) {
+          customerAuthStorage.setUser(mergedUser);
+          customerAuthStorage.setAvatar(mergedUser.id, mergedUser.avatarUrl ?? mergedUser.avatar);
+        }
+        set({ user: mergedUser, token, isAuthenticated: Boolean(token && mergedUser), isHydrated: true });
       },
 
       hydrateFromStorage: (): void => {
         const token = customerAuthStorage.getToken();
-        const user = customerAuthStorage.getUser<CustomerUser>();
+        const user = normalizeStoredUser(customerAuthStorage.getUser<CustomerUser>());
         set({
           token,
           user,

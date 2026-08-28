@@ -74,15 +74,9 @@ export function AddressCard({ address, onEdit, onDelete, onSetDefault }: Address
 
           <p className="text-[13px] leading-7 text-[#51574d]">{safeAddress}</p>
 
-<<<<<<< HEAD
-          <div className="flex items-center gap-3 rounded-2xl border border-[#e5e1d9] bg-white/70 px-3 py-2 text-[13px] text-[#3d423a]">
-            <Phone className="h-4 w-4 text-[#4b5d39]" aria-hidden="true"/>
-            <span dir="ltr">{address.phone}</span>
-          </div>
-=======
-          {address.phone && (
+{address.phone && (
             <div className="flex items-center gap-3 rounded-2xl border border-[#e5e1d9] bg-white/70 px-3 py-2 text-[13px] text-[#3d423a]">
-              <PhoneIcon className="h-4 w-4 text-[#4b5d39]" />
+              <Phone className="h-4 w-4 text-[#4b5d39]" aria-hidden="true" />
               <span dir="ltr">{address.phone}</span>
             </div>
           )}
@@ -90,7 +84,6 @@ export function AddressCard({ address, onEdit, onDelete, onSetDefault }: Address
           {address.postal_code && (
             <div className="text-[12px] text-[#5e655d]">الرمز البريدي: {address.postal_code}</div>
           )}
->>>>>>> dad121843105060107acde3b906c6c7d331c9270
         </div>
 
         {onDelete && (

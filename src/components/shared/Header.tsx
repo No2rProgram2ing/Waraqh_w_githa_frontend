@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/images/Warqah & Jitha Logo.png";
 import {
   BellIcon,
@@ -30,9 +30,12 @@ interface AvatarProps {
 }
 
 function ProfileAvatar({ avatarUrl, fullName }: AvatarProps) {
+  const navigate = useNavigate();
+
   return (
-    <Link
-      to={ROUTES.profile}
+    <button
+      type="button"
+      onClick={() => navigate(ROUTES.profile)}
       id="header-profile-avatar-btn"
       aria-label="الملف الشخصي"
       className="
@@ -60,7 +63,7 @@ function ProfileAvatar({ avatarUrl, fullName }: AvatarProps) {
           {getInitials(fullName)}
         </span>
       )}
-    </Link>
+    </button>
   );
 }
 
@@ -125,7 +128,8 @@ export function Header() {
         <div className="flex h-20 items-center justify-between gap-4">
 
           {/* ── Logo ─── */}
-          <Link to={ROUTES.dashboard} className="flex items-center gap-3 group">
+          {/* Changed: logo navigates to ROUTES.home instead of ROUTES.dashboard to ensure clicking the logo goes to the application's main landing page */}
+          <Link to={ROUTES.home} className="flex items-center gap-3 group">
             <img
               src={logo}
               alt="ورقة وجذع"
@@ -137,27 +141,27 @@ export function Header() {
 
           {/* ── Desktop Navigation ─── */}
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
-            {navLinks.map((link) => {
-              const active = isActive(link.path);
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`relative py-1 text-sm font-semibold transition-colors duration-200 ${
-                    active ? "text-brand-olive-700" : "text-brand-ink/80 hover:text-brand-olive-600"
-                  }`}
-                >
-                  {link.label}
-                  {active && (
-                    <motion.div
-                      layoutId="activeHeaderNav"
-                      className="absolute bottom-0 right-0 left-0 h-0.5 bg-brand-olive-700 rounded-full"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              );
-            })}
+            {navLinks.map((link) => (
+              /* Switched to NavLink to be route-aware and render active state reliably */
+              <NavLink
+                key={link.path}
+                to={link.path}
+                className={({ isActive: navIsActive }) => `relative py-1 text-sm font-semibold transition-colors duration-200 ${navIsActive ? "text-brand-olive-700" : "text-brand-ink/80 hover:text-brand-olive-600"}`}
+              >
+                {({ isActive: navIsActive }) => (
+                  <>
+                    {link.label}
+                    {navIsActive && (
+                      <motion.div
+                        layoutId="activeHeaderNav"
+                        className="absolute bottom-0 right-0 left-0 h-0.5 bg-brand-olive-700 rounded-full"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
 
             {/* Auth links — unauthenticated only */}
             {!isAuthenticated && (
@@ -184,8 +188,9 @@ export function Header() {
             {isAuthenticated ? (
               <>
                 {/* Notification */}
-                <Link
-                  to={ROUTES.notifications}
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.notifications)}
                   className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
                   title="التنبيهات"
                 >
@@ -195,19 +200,29 @@ export function Header() {
                       {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
                     </span>
                   )}
-                </Link>
+                </button>
 
                 {/* Wishlist */}
-                <Link to={ROUTES.wishlist} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="قائمة الأمنيات">
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.wishlist)}
+                  className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
+                  title="قائمة الأمنيات"
+                >
                   <HeartIcon className="h-5 w-5 text-brand-olive-700" />
-                </Link>
+                </button>
               </>
             ) : null}
 
             {/* Search */}
-            <Link to={ROUTES.search} className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="البحث">
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.search)}
+              className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
+              title="البحث"
+            >
               <SearchIcon className="h-5 w-5 text-brand-olive-700" />
-            </Link>
+            </button>
 
             {/* Shopping Bag */}
             <Link to={ROUTES.cart} className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="حقيبة التسوق">
@@ -218,7 +233,7 @@ export function Header() {
             {/* ── Auth: Profile avatar (authenticated) OR Login/Register (unauthenticated) ── */}
             {isAuthenticated ? (
               isHydrated && user ? (
-                <ProfileAvatar avatarUrl={user.avatarUrl} fullName={user.fullName ?? ""} />
+                <ProfileAvatar avatarUrl={user.avatar ?? user.avatarUrl ?? null} fullName={user.fullName ?? ""} />
               ) : (
                 <div className="h-9 w-9 animate-pulse rounded-full bg-brand-olive-700/15 ring-2 ring-brand-olive-700/20" aria-label="جارٍ تحميل الملف الشخصي" />
               )
@@ -255,15 +270,16 @@ export function Header() {
           >
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`rounded-lg px-3 py-3 text-base font-bold ${isActive(link.path) ? "bg-[#E5EBDD] text-[#3E522C]" : "text-[#25291F] hover:bg-[#F2EEE6]"}`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+                              /* Use NavLink here too so mobile items are route-aware; keep onClick to close the drawer */
+                              <NavLink
+                                key={link.path}
+                                to={link.path}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={({ isActive: navIsActive }) => `rounded-lg px-3 py-3 text-base font-bold ${navIsActive ? "bg-[#E5EBDD] text-[#3E522C]" : "text-[#25291F] hover:bg-[#F2EEE6]"}`}
+                              >
+                                {link.label}
+                              </NavLink>
+                            ))}
 
               {/* Mobile auth section */}
               <div className="mt-2 pt-3 border-t border-[#D8D2C5]/70 flex flex-col gap-2">
