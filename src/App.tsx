@@ -1,9 +1,31 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import {QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppRoutes } from "@/routes/AppRoutes";
+import { AdminRoutes } from "@/routes/AdminRoutes";
+import { HelmetProvider } from "react-helmet-async";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
-    <div>
-      <h1>Waraqah w Githa</h1>
-    </div>
-  )
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin/*" element={<AdminRoutes />} />
+            <Route path="/*" element={<AppRoutes />} />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </HelmetProvider>
+  );
 }
 
-export default App
+export default App;
