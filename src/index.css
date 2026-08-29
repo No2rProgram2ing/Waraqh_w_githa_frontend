@@ -1,1 +1,192 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap");
 @import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS & TYPOGRAPHY — Light Mode (Default)
+   ============================================================ */
+:root {
+  /* Typography */
+  --font-display: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Tajawal", "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+
+  /* Surfaces */
+  --color-surface:        #FAF8F5;
+  --color-surface-card:   #FFFFFF;
+  --color-surface-subtle: #F5F2EE;
+
+  /* Brand Palette / Olive Options */
+  --color-brand-cream:    #fdfcfa;
+  --color-brand-surface:  #f6f5f0;
+  --color-brand-border:   #e6e4db;
+  --color-brand-ink:      #23261f;
+  --color-brand-muted:    #8b8d80;
+  --color-brand-olive-50: #eef0e7;
+  --color-brand-olive-400:#6b7c52;
+  --color-brand-olive-600:#4a5a37;
+  --color-brand-olive-700:#3c4a2c;
+  --color-brand-olive-900:#262f1a;
+
+  /* Borders */
+  --color-border:         #EBE1D7;
+  --color-border-muted:   #DCCFC1;
+
+  /* Text */
+  --color-text-primary:   #1F1B15;
+  --color-text-secondary: #44483E;
+  --color-text-muted:     #75786D;
+  --color-text-faint:     #A5A096;
+
+  /* Accent (brand green) */
+  --color-accent:         #45592D;
+  --color-accent-hover:   #5D7243;
+  --color-accent-subtle:  #EEF4E8;
+  --color-accent-subtle-hover: #D5E6C9;
+
+  /* Danger & Warning */
+  --color-danger:         #A04A3A;
+  --color-danger-subtle:  #FBEDEA;
+  --color-danger-subtle-hover: #F3D7D3;
+  --color-warning:        #E8B92A;
+  --color-warning-subtle: #FEF9EC;
+}
+
+/* ============================================================
+   DESIGN TOKENS — Dark Mode
+   ============================================================ */
+html.dark {
+  --color-surface:        #1A1612;
+  --color-surface-card:   #231E19;
+  --color-surface-subtle: #2C2620;
+
+  --color-border:         #3D342C;
+  --color-border-muted:   #493E35;
+
+  --color-text-primary:   #EDE6DC;
+  --color-text-secondary: #C4BCB0;
+  --color-text-muted:     #A69F94;
+  --color-text-faint:     #827C72;
+
+  --color-accent:         #6B8A43;
+  --color-accent-hover:   #7EA050;
+  --color-accent-subtle:  #262F1C;
+  --color-accent-subtle-hover: #323E24;
+
+  --color-danger:         #C0614F;
+  --color-danger-subtle:  #2A1714;
+  --color-danger-subtle-hover: #3A201C;
+  --color-warning:        #E8B92A;
+  --color-warning-subtle: #2A2510;
+}
+
+/* ============================================================
+   GLOBAL BASE STYLES
+   ============================================================ */
+@layer base {
+  html {
+    font-family: var(--font-body);
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-olive-600);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   INPUT / TEXTAREA / SELECT BASE STYLES
+   ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])::placeholder,
+textarea::placeholder {
+  color: var(--color-text-faint);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-subtle) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: var(--color-accent-hover) !important;
+}
+
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-in-out;
+}
+
+/* ============================================================
+   MOTION & UTILITIES
+   ============================================================ */
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .motion-base { transition: all 200ms ease-in-out; }
+  .motion-slow { transition: all 300ms ease-in-out; }
+  .motion-fade { transition: opacity 200ms ease-in-out, visibility 200ms ease-in-out; }
+  .motion-scale { transition: transform 200ms ease-in-out, opacity 200ms ease-in-out; }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgb(0 0 0 / 0.5);
+    animation: fadeIn 0.18s ease-in-out;
+  }
+
+  .modal-panel {
+    animation: scaleIn 0.18s ease-in-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; }
+}
