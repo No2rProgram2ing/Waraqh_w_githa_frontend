@@ -1,32 +1,83 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { AuthHeroPanel } from "@/features/auth-customer/components/AuthHeroPanel";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
-import logo from '@/assets/images/Warqah & Jitha Logo.png'
+import { useLogin } from "@/features/auth-customer/hooks/useLogin";
+import { loginSchema, type LoginSchema } from "@/features/auth-customer/schema";
+import { ROUTES } from "@/routes/paths";
+import logo from "@/assets/images/Warqah & Jitha Logo.png";
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const login = useLogin();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const setAuth = useCustomerAuthStore((state) => state.setAuth);
+  // Where to redirect after a successful login (set by CustomerProtectedRoute)
+  const from = (location.state as { from?: Location })?.from;
+  const redirectTo = (from as unknown as { pathname?: string })?.pathname || ROUTES.home;
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { phone: "", password: "" },
+    mode: "onBlur",
+  });
+
+  // ── Submit handler ────────────────────────────────────────────────────────
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      const result = await login.mutateAsync({
+        phone: values.phone,
+        password: values.password,
+      });
+
+      // Hydrate the auth store so the header & guards reflect the new session immediately
+      setAuth({ user: result.user, token: result.token });
+      navigate(redirectTo, { replace: true });
+    } catch (err: any) {
+      const validationErrors = err?.fieldErrors ?? err?.response?.data?.errors;
+
+      if (validationErrors && typeof validationErrors === "object") {
+        Object.entries(validationErrors).forEach(([field, message]) => {
+          const fieldName = field as keyof LoginSchema;
+          setError(fieldName, {
+            type: "server",
+            message: Array.isArray(message) ? message[0] : String(message),
+          });
+        });
+        return;
+      }
+    }
+  });
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
       <AuthLayout panel={<AuthHeroPanel />}>
         <div className="mx-auto w-full max-w-md flex flex-col items-center">
-          
+
           {/* Logo / الشعار */}
           <div className="mb-6 flex justify-center">
-            <img 
+            <img
               src={logo}
-              alt="ورقة وجذع" 
-              className="h-20 w-auto object-contain" 
+              alt="ورقة وجذع"
+              className="h-20 w-auto object-contain"
             />
           </div>
 
@@ -39,24 +90,33 @@ export function LoginPage() {
           </p>
 
           {/* Form / النموذج */}
-          <form className="mt-8 w-full flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
-            
-            {/* Email or Phone Input */}
-            <Input 
-              label="البريد الإلكتروني أو رقم الهاتف" 
-              type="text" 
-              placeholder="example@email.com" 
+          <form
+            id="login-form"
+            className="mt-8 w-full flex flex-col gap-5"
+            onSubmit={onSubmit}
+            noValidate
+          >
+
+            {/* Phone Input */}
+            <Input
+              label="رقم الهاتف"
+              type="tel"
+              placeholder="+967 7xx xxx xxx"
               autoComplete="username"
+              dir="ltr"
+              error={errors.phone?.message}
+              {...register("phone")}
             />
-            
+
             {/* Password Input */}
             <div className="flex flex-col gap-1.5">
-              <Input 
-                label="كلمة المرور" 
-                type={showPassword ? "text" : "password"} 
-                placeholder="••••••••" 
+              <Input
+                label="كلمة المرور"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
                 autoComplete="current-password"
                 iconPosition="left"
+                error={errors.password?.message}
                 icon={
                   <button
                     type="button"
@@ -67,12 +127,13 @@ export function LoginPage() {
                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                   </button>
                 }
+                {...register("password")}
               />
-              
+
               {/* Forgot Password Link */}
               <div className="flex justify-start">
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-xs text-brand-olive-700 underline underline-offset-2 hover:text-brand-olive-900 transition-colors"
                 >
                   نسيت كلمة المرور؟
@@ -80,8 +141,25 @@ export function LoginPage() {
               </div>
             </div>
 
+            {/* API-level error banner */}
+            {login.isError && !Object.keys((login.error as { fieldErrors?: Record<string, string> } | null)?.fieldErrors ?? {}).length && (
+              <motion.p
+                role="alert"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-red-500 text-center"
+              >
+                {login.error?.message || "تعذر تسجيل الدخول، تحقق من بياناتك وحاول مرة أخرى."}
+              </motion.p>
+            )}
+
             {/* Submit Button */}
-            <Button type="submit" fullWidth className="mt-2">
+            <Button
+              type="submit"
+              fullWidth
+              className="mt-2"
+              isLoading={isSubmitting || login.isPending}
+            >
               تسجيل الدخول
             </Button>
           </form>

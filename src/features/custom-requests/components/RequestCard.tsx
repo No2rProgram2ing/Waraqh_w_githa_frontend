@@ -35,7 +35,7 @@ export function RequestCard({ request, onSelect }: RequestCardProps) {
         <div className="flex items-center justify-between gap-4 mb-4">
           <span className="text-xs text-brand-muted font-medium">{request.date}</span>
           <Badge variant={getBadgeVariant(request.status)}>
-            {request.statusText}
+            {request.stageText ?? request.statusText}
           </Badge>
         </div>
 
@@ -47,6 +47,9 @@ export function RequestCard({ request, onSelect }: RequestCardProps) {
             </h3>
             <p className="text-sm text-brand-ink/75 mt-2 line-clamp-2 leading-relaxed">
               {request.description}
+            </p>
+            <p className="mt-3 text-xs font-bold text-brand-olive-700">
+              المرحلة الحالية: {request.stageText ?? request.statusText}
             </p>
           </div>
 
@@ -89,7 +92,14 @@ export function RequestCard({ request, onSelect }: RequestCardProps) {
           )}
         </div>
 
-        <button className="flex items-center gap-1 text-brand-olive-700 group-hover:translate-x-[-2px] transition-transform font-bold">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(request);
+          }}
+          className="flex items-center gap-1 text-brand-olive-700 group-hover:translate-x-[-2px] transition-transform font-bold"
+        >
           <span>عرض التفاصيل</span>
           <ArrowLeftIcon />
         </button>

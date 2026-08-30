@@ -3,6 +3,7 @@ import {QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { AdminRoutes } from "@/routes/AdminRoutes";
 import { HelmetProvider } from "react-helmet-async";
+import { useAuthSessionBootstrap } from "@/features/auth-customer/hooks/useAuthSessionBootstrap";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,6 +13,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function AuthBootstrap() {
+ useAuthSessionBootstrap();
+ return null;
+}
 
 function App() {
   return (
@@ -26,6 +32,17 @@ function App() {
       </QueryClientProvider>
     </HelmetProvider>
   );
+ return (
+   <QueryClientProvider client={queryClient}>
+     <BrowserRouter>
+       <AuthBootstrap />
+       <Routes>
+         <Route path="/admin/*" element={<AdminRoutes />} />
+         <Route path="/*" element={<AppRoutes />} />
+       </Routes>
+     </BrowserRouter>
+   </QueryClientProvider>
+ );
 }
 
 export default App;

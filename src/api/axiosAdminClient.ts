@@ -1,9 +1,9 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 import { adminAuthStorage } from '@/features/auth/services/adminAuthStorage'
 import { useAdminAuthStore } from '@/features/auth/stores/adminAuthStore'
 import { sanitizeErrorMessage, showErrorToast } from '@/lib/toast'
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 const SAFE_SERVER_ERROR_MESSAGE =
   'حدث خطأ غير متوقع، يرجى المحاولة لاحقًا.'
@@ -23,11 +23,21 @@ axiosAdminClient.interceptors.request.use((config) => {
   const token = adminAuthStorage.getToken()
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    // Ensure headers object exists and set Authorization as Bearer token
+    config.headers = config.headers || {}
+    ;(config.headers as any).Authorization = 'Bearer ' + token
   }
 
   if (config.data instanceof FormData) {
-    config.headers.delete('Content-Type')
+    // Axios headers can be a plain object or an AxiosHeaders instance.
+    // Remove the Content-Type so the browser sets the correct multipart boundary.
+    if (config.headers && typeof (config.headers as any).delete === 'function') {
+      // AxiosHeaders (supported in newer axios versions)
+      ;(config.headers as any).delete('Content-Type')
+    } else if (config.headers) {
+      // Plain object
+      delete (config.headers as any)['Content-Type']
+    }
   }
 
   return config

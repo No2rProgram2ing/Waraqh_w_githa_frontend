@@ -6,10 +6,16 @@ import type { AddressItem } from "@/features/addresses/types";
 
 interface AddressCardProps {
   address: AddressItem;
+  onEdit?: (address: AddressItem) => void;
+  onDelete?: (id: number | string) => void;
+  onSetDefault?: (id: number | string) => void;
 }
 
-export function AddressCard({ address }: AddressCardProps) {
-  const isPrimary = address.isPrimary;
+export function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardProps) {
+  const isPrimary = Boolean(address.is_default);
+  const safeAddress = [address.country, address.city, address.district, address.street]
+    .filter((part): part is string => Boolean(part && part.trim()))
+    .join("، ") || "لا توجد تفاصيل العنوان";
 
   return (
     <motion.article
@@ -23,7 +29,7 @@ export function AddressCard({ address }: AddressCardProps) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-[#edf2e6] px-2.5 py-1 text-[11px] font-semibold text-[#4b5d39]">
-              {address.type === "work" ? "عنوان العمل" : address.type === "home" ? "العنوان الأساسي" : "عنوان آخر"}
+              {isPrimary ? "العنوان الافتراضي" : "العنوان"}
             </span>
             {isPrimary && (
               <span className="inline-flex items-center gap-1 rounded-full bg-[#dfe9d5] px-2 py-1 text-[10px] font-bold text-[#587040]">
@@ -33,12 +39,26 @@ export function AddressCard({ address }: AddressCardProps) {
             )}
           </div>
 
-          <Button
-            variant="ghost"
-            className="h-9 rounded-full px-3 text-[12px] font-medium text-[#4b5d39] hover:bg-white"
-          >
-            تعديل
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isPrimary && onSetDefault && (
+              <Button
+                variant="ghost"
+                className="h-9 rounded-full px-3 text-[12px] font-medium text-[#4b5d39] hover:bg-white"
+                onClick={() => onSetDefault(address.id)}
+              >
+                تعيين افتراضي
+              </Button>
+            )}
+            {onEdit && (
+              <Button
+                variant="ghost"
+                className="h-9 rounded-full px-3 text-[12px] font-medium text-[#4b5d39] hover:bg-white"
+                onClick={() => onEdit(address)}
+              >
+                تعديل
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -47,21 +67,33 @@ export function AddressCard({ address }: AddressCardProps) {
               <MapPin className="h-4 w-4" aria-hidden="true"/>
             </div>
             <div>
-              <p className="text-[15px] font-bold text-[#21261d]">{address.title}</p>
-              <p className="text-[12px] text-[#6d7267]">{address.city}</p>
+              <p className="text-[15px] font-bold text-[#21261d]">{address.recipient_name || "عنوان"}</p>
+              <p className="text-[12px] text-[#6d7267]">{address.city || "-"}</p>
             </div>
           </div>
 
-          <p className="text-[13px] leading-7 text-[#51574d]">{address.address}</p>
+          <p className="text-[13px] leading-7 text-[#51574d]">{safeAddress}</p>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-[#e5e1d9] bg-white/70 px-3 py-2 text-[13px] text-[#3d423a]">
-            <Phone className="h-4 w-4 text-[#4b5d39]" aria-hidden="true"/>
-            <span dir="ltr">{address.phone}</span>
-          </div>
+{address.phone && (
+            <div className="flex items-center gap-3 rounded-2xl border border-[#e5e1d9] bg-white/70 px-3 py-2 text-[13px] text-[#3d423a]">
+              <Phone className="h-4 w-4 text-[#4b5d39]" aria-hidden="true" />
+              <span dir="ltr">{address.phone}</span>
+            </div>
+          )}
+
+          {address.postal_code && (
+            <div className="text-[12px] text-[#5e655d]">الرمز البريدي: {address.postal_code}</div>
+          )}
         </div>
 
-        {address.note && (
-          <p className="rounded-xl bg-[#f0f2ea] px-3 py-2 text-[12px] text-[#4d5644]">{address.note}</p>
+        {onDelete && (
+          <Button
+            variant="outline"
+            className="h-10 rounded-xl border-[#d8d0c4] px-4 text-[12px] font-semibold text-[#7a2d2d] hover:bg-[#fff6f5]"
+            onClick={() => onDelete(address.id)}
+          >
+            حذف العنوان
+          </Button>
         )}
       </Card>
     </motion.article>

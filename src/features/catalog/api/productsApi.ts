@@ -74,14 +74,30 @@ export const productsApi = {
     params: ProductsQueryParams = {},
   ): Promise<ProductsResponse> {
     const response =
-      await axiosAdminClient.get<ProductsResponse>(
+      await axiosAdminClient.get(
         '/admin/products',
         {
           params,
         },
       )
 
-    return response.data
+    const payload = response.data as any
+
+    // Some API responses are double-enveloped like: { data: { data: [...], meta: {...} } }
+    // Normalize to a single envelope: { data: [...], meta: {...} }
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'data' in payload &&
+      payload.data &&
+      typeof payload.data === 'object' &&
+      'data' in payload.data &&
+      Array.isArray(payload.data.data)
+    ) {
+      return payload.data as ProductsResponse
+    }
+
+    return payload as ProductsResponse
   },
 
   async getById(id: number): Promise<Product> {

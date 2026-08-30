@@ -1,45 +1,141 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { PersonalInfoForm } from "../components/PersonalInfoForm";
 import { ChangePasswordForm } from "../components/ChangePasswordForm";
 import { useProfile } from "../hooks/useProfile";
-import { Toast } from "@/components/ui/Toast";
 import { Loader } from "@/components/ui/Loader";
 import { TrashIcon } from "@/components/ui/icons";
+import { showErrorToast, showSuccessToast } from "@/lib/toast";
+import { extractMessage } from "@/utils/apiErrors";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("فشل قراءة الصورة."));
+    reader.readAsDataURL(file);
+  });
 
 export function PersonalInfoPage() {
-  const { profile, isLoading, updateProfile, isUpdatingProfile, updatePassword, isUpdatingPassword } = useProfile();
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const {
+    profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    updateProfile,
+    isUpdatingProfile,
+    updateAvatar,
+    isUpdatingAvatar,
+    updatePassword,
+    isUpdatingPassword,
+  } = useProfile();
+  const currentUserAvatar = useCustomerAuthStore((state) => state.user?.avatarUrl ?? state.user?.avatar ?? null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(currentUserAvatar ?? profile?.avatarUrl ?? null);
+
+  useEffect(() => {
+    setAvatarPreviewUrl((previous) => {
+      if (previous && (previous.startsWith("blob:") || previous.startsWith("data:image/"))) {
+        return previous;
+      }
+
+      return currentUserAvatar ?? profile?.avatarUrl ?? null;
+    });
+  }, [currentUserAvatar, profile?.avatarUrl]);
+
+  useEffect(() => {
+    if (isError && error) {
+      const message = extractMessage(error, "حدث خطأ أثناء جلب بيانات الملف الشخصي.");
+      showErrorToast(message);
+    }
+  }, [isError, error]);
 
   const handleUpdateProfile = async (data: { fullName: string; email: string; phone: string }) => {
+    await updateProfile(data);
+    showSuccessToast("تم حفظ التغييرات بنجاح");
+  };
+
+  const handleAvatarChange = async (file: File) => {
+    const currentUser = useCustomerAuthStore.getState().user;
+
     try {
-      await updateProfile(data);
-      setToastMessage("تم حفظ التغييرات بنجاح");
-    } catch {
-      setToastMessage("حدث خطأ أثناء حفظ التغييرات");
+      const permanentUrl = await fileToDataUrl(file);
+
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          avatar: permanentUrl,
+          avatarUrl: permanentUrl,
+        });
+      }
+
+      setAvatarPreviewUrl(permanentUrl);
+
+      const updatedProfile = await updateAvatar(file);
+      const nextAvatarUrl = updatedProfile.avatarUrl ?? permanentUrl;
+
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          fullName: updatedProfile.fullName || currentUser.fullName,
+          email: updatedProfile.email || currentUser.email,
+          phone: updatedProfile.phone || currentUser.phone || null,
+          avatar: nextAvatarUrl,
+          avatarUrl: nextAvatarUrl,
+        });
+      }
+
+      setAvatarPreviewUrl(nextAvatarUrl);
+      showSuccessToast("تم تحديث صورة الملف الشخصي بنجاح");
+    } catch (error: any) {
+      if (currentUser) {
+        useCustomerAuthStore.getState().setUser({
+          ...currentUser,
+          avatar: currentUser.avatar ?? currentUser.avatarUrl ?? null,
+          avatarUrl: currentUser.avatar ?? currentUser.avatarUrl ?? null,
+        });
+      }
+      setAvatarPreviewUrl(profile?.avatarUrl ?? null);
+      const message = extractMessage(error, "حدث خطأ أثناء تحديث الصورة الشخصية.");
+      showErrorToast(message);
     }
   };
 
-  const handleUpdatePassword = async (data: { currentPassword: string; newPassword: string }) => {
-    try {
-      const res = await updatePassword(data);
-      setToastMessage(res.message);
-    } catch {
-      setToastMessage("حدث خطأ أثناء تحديث كلمة المرور");
-    }
+  const handleUpdatePassword = async (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    const result = await updatePassword(data);
+    showSuccessToast(result.message);
   };
+
+  if (isError && !profile) {
+    return (
+      <AccountLayout>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="flex flex-col gap-8"
+        >
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+            <p className="text-sm font-medium">حدث خطأ أثناء جلب بيانات الملف الشخصي.</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded-xl bg-[#45592D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5D7243]"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </motion.div>
+      </AccountLayout>
+    );
+  }
 
   return (
     <AccountLayout>
-      <Toast
-        isVisible={Boolean(toastMessage)}
-        message={toastMessage || ""}
-        onClose={() => setToastMessage(null)}
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,34 +150,32 @@ export function PersonalInfoPage() {
           </div>
         ) : (
           <>
-            {/* Header with Avatar */}
             <ProfileHeader
               fullName={profile?.fullName}
-              avatarUrl={profile?.avatarUrl}
+              avatarUrl={avatarPreviewUrl ?? profile?.avatarUrl}
               isOnline={profile?.isOnline}
+              isUploadingAvatar={isUpdatingAvatar}
+              onAvatarChange={handleAvatarChange}
             />
 
-            {/* Form 1: Personal Info */}
             <PersonalInfoForm
               profile={profile}
               onSubmit={handleUpdateProfile}
               isLoading={isUpdatingProfile}
             />
 
-            {/* Form 2: Security Change Password */}
             <ChangePasswordForm
               onSubmit={handleUpdatePassword}
               isLoading={isUpdatingPassword}
             />
 
-            {/* Account Actions & Subtext */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-brand-border/60">
               <button
                 type="button"
-                onClick={() => setToastMessage("تأكيد: هل أنت أثر برغبتك في حذف الحساب؟")}
+                onClick={() => showSuccessToast("تأكيد: هل أنت متأكد من رغبتك في حذف الحساب؟")}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
               >
-                <TrashIcon />
+                <TrashIcon className="w-4 h-4 shrink-0" />
                 <span>حذف الحساب نهائياً</span>
               </button>
 
