@@ -11,6 +11,8 @@ export interface CustomRequestItem {
   date: string;
   status: RequestStatus;
   statusText: string;
+  stageText: string;
+  stageIndex: number;
   imageUrl?: string;
   referenceImageUrl?: string;
   artisanName?: string;
@@ -86,10 +88,12 @@ const statusMap: Record<string, RequestStatus> = {
   completed: "completed",
 };
 
-const statusTextMap: Record<RequestStatus, string> = {
-  completed: "ظ…ظƒطھظ…ظ„",
-  in_progress: "ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°",
-  pending_review: "ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ…ط±ط§ط¬ط¹ط©",
+const stageMap: Record<string, { text: string; index: number }> = {
+  pending_review: { text: "قيد المراجعة", index: 1 },
+  pending_approval: { text: "بانتظار الموافقة", index: 2 },
+  in_progress: { text: "قيد التنفيذ", index: 3 },
+  in_production: { text: "قيد التنفيذ", index: 3 },
+  completed: { text: "تم التسليم", index: 4 },
 };
 
 function formatCustomRequestDate(value?: string | null): string {
@@ -129,7 +133,9 @@ function unwrapRequestList(payload: unknown): ProductCustomizationApiItem[] {
 }
 
 function mapCustomizationToCustomRequest(item: ProductCustomizationApiItem): CustomRequestItem {
-  const requestStatus = statusMap[String(item.status ?? "")] ?? "pending_review";
+  const rawStatus = String(item.status ?? "");
+  const requestStatus = statusMap[rawStatus] ?? "pending_review";
+  const stage = stageMap[rawStatus] ?? stageMap[requestStatus];
   const title = item.product?.name ?? item.request_code ?? `ط·ظ„ط¨ طھط®طµظٹطµ #${item.id}`;
   const description = item.customer_notes || item.product?.name || "ظ„ط§ طھظˆط¬ط¯ طھظپط§طµظٹظ„ ط¥ط¶ط§ظپظٹط©.";
 
@@ -139,8 +145,10 @@ function mapCustomizationToCustomRequest(item: ProductCustomizationApiItem): Cus
     description,
     date: formatCustomRequestDate(item.created_at),
     status: requestStatus,
-    statusText: statusTextMap[requestStatus],
-    detailsStatusText: statusTextMap[requestStatus],
+    statusText: stage.text,
+    stageText: stage.text,
+    stageIndex: stage.index,
+    detailsStatusText: stage.text,
     requestCode: item.request_code ?? undefined,
     productId: item.product?.id == null ? undefined : String(item.product.id),
     productName: item.product?.name ?? undefined,
@@ -218,6 +226,17 @@ export function seedMockCustomRequestsForCustomer(customerId: string | number = 
 
 export const customRequestsApi = {
   getCustomRequests: async (): Promise<CustomRequestItem[]> => {
+    const currentCustomerId = getCurrentCustomerId();
+
+    // Keep the seeded demo customer consistent between the list and details views.
+    if (currentCustomerId === "233") {
+      const localMock = localStorage.getItem(`mock_custom_requests_customer_${currentCustomerId}`);
+      const seeded = localMock
+        ? (JSON.parse(localMock) as ProductCustomizationApiItem[])
+        : seedMockCustomRequestsForCustomer(233);
+      return seeded.map(mapCustomizationToCustomRequest);
+    }
+
     const { data } = await customerApi.get("/customer/customizations", { headers: getAuthHeaders() });
     return unwrapRequestList(data).map(mapCustomizationToCustomRequest);
   },
@@ -322,9 +341,4 @@ export const customRequestsApi = {
     throw lastError ?? new Error("Failed to create custom request");
   },
 };
-
-
-
-
-
 

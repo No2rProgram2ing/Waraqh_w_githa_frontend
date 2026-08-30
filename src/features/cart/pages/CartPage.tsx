@@ -34,6 +34,7 @@ function mapCartItems(response: ApiCartResponse): CartItem[] {
 
   return apiItems.map((item) => ({
     id: String(item.id),
+    productId: String(item.product.id),
     name: item.product.name,
     subtitle: item.product.description ?? "",
     price: Number(item.product.price),

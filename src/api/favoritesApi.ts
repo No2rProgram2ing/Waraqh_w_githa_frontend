@@ -1,5 +1,26 @@
 import { customerApi } from "@/api/customerApi";
 
+export const WISHLIST_IDS_STORAGE_KEY = "wishlist_ids";
+
+export function getStoredWishlistIds(): string[] {
+  if (typeof window === "undefined") return [];
+
+  const raw = localStorage.getItem(WISHLIST_IDS_STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setStoredWishlistIds(ids: Iterable<string | number>): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(WISHLIST_IDS_STORAGE_KEY, JSON.stringify([...new Set([...ids].map(String))]));
+}
+
 export interface WishlistItem {
   id: string;
   productId: string;
@@ -76,6 +97,11 @@ export const favoritesApi = {
 
   toggleFavorite: async (productId: string | number): Promise<boolean> => {
     const { data } = await customerApi.post(`/customer/favorites/${productId}`);
-    return Boolean(data?.favorite ?? false);
+    const payload = data?.data ?? data;
+    const favorite = payload?.favorite ?? payload?.is_favorited ?? payload?.isFavorite;
+
+    if (typeof favorite === "boolean") return favorite;
+    if (typeof favorite === "string") return favorite === "true" || favorite === "1";
+    return favorite === 1;
   },
 };

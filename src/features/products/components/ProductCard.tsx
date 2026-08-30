@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import type { Product } from "@/features/products/types";
 import { useCartStore } from "@/features/cart/stores/cartStore";
-import { HeartIcon, ShoppingBagIcon } from "@/components/ui/icons";
-import { favoritesApi } from "@/api/favoritesApi";
+import { CheckCircleIcon, HeartIcon, ShoppingBagIcon } from "@/components/ui/icons";
+import { favoritesApi, getStoredWishlistIds, setStoredWishlistIds } from "@/api/favoritesApi";
+import { WISHLIST_QUERY_KEY } from "@/features/wishlists/hooks/useWishlist";
 import { cartApi } from "@/api/cartApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { formatCurrency } from "@/lib/currency";
@@ -17,12 +19,27 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index, featured = false }: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const queryClient = useQueryClient();
+  const isInCart = useCartStore((state) =>
+    state.items.some((item) => item.id === String(product.id) || item.productId === String(product.id)),
+  );
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const storedIds = getStoredWishlistIds();
+    return product.is_favorited || storedIds.includes(String(product.id));
+  });
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
+  useEffect(() => {
+    const storedIds = getStoredWishlistIds();
+    setIsFavorite(product.is_favorited || storedIds.includes(String(product.id)));
+  }, [product.id, product.is_favorited]);
+
   const handleAddToCart = async () => {
-    if (isCartLoading) return;
+    if (isCartLoading || isInCart) {
+      if (isInCart) showSuccessToast("المنتج موجود مسبقاً في السلة");
+      return;
+    }
 
     try {
       setIsCartLoading(true);
@@ -31,6 +48,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
       const addItem = useCartStore.getState().addItem;
       addItem({
         id: String(product.id),
+        productId: String(product.id),
         name: product.name ?? "",
         subtitle: product.subtitle ?? product.description ?? "",
         price: Number(product.price ?? 0),
@@ -48,14 +66,40 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
   const handleToggleFavorite = async () => {
     if (isFavoriteLoading) return;
 
+    const previousState = isFavorite;
+    const optimisticState = !previousState;
+    setIsFavorite(optimisticState);
+    const storedIds = getStoredWishlistIds();
+    setStoredWishlistIds(
+      optimisticState
+        ? [...storedIds, product.id]
+        : storedIds.filter((id) => id !== String(product.id)),
+    );
+
     try {
       setIsFavoriteLoading(true);
       const favoriteState = await favoritesApi.toggleFavorite(product.id);
       setIsFavorite(favoriteState);
+      const latestIds = getStoredWishlistIds();
+      setStoredWishlistIds(
+        favoriteState
+          ? [...latestIds, product.id]
+          : latestIds.filter((id) => id !== String(product.id)),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["products-catalog"] }),
+        queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY }),
+      ]);
       showSuccessToast(
         favoriteState ? "تمت إضافة المنتج إلى المفضلة" : "تمت إزالة المنتج من المفضلة",
       );
     } catch {
+      setIsFavorite(previousState);
+      setStoredWishlistIds(
+        previousState
+          ? [...getStoredWishlistIds(), product.id]
+          : getStoredWishlistIds().filter((id) => id !== String(product.id)),
+      );
       showErrorToast("تعذر تحديث قائمة المفضلة، يرجى المحاولة مرة أخرى.");
     } finally {
       setIsFavoriteLoading(false);
@@ -101,12 +145,22 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
 
           <button
             type="button"
-            aria-label={`إضافة ${product.name} إلى السلة`}
+            aria-label={isInCart ? `${product.name} موجود في السلة` : `إضافة ${product.name} إلى السلة`}
             onClick={handleAddToCart}
             disabled={isCartLoading}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dfe7d6] bg-[#edf2e8] text-[#3d4b2f] shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              isInCart
+                ? "border-[#b8c8a9] bg-[#dfead8] text-[#52663c]"
+                : "border-[#dfe7d6] bg-[#edf2e8] text-[#3d4b2f] hover:scale-105"
+            }`}
           >
-            {isCartLoading ? <span className="text-xs font-bold">...</span> : <ShoppingBagIcon className="h-4 w-4" />}
+            {isCartLoading ? (
+              <span className="text-xs font-bold">...</span>
+            ) : isInCart ? (
+              <CheckCircleIcon className="h-4 w-4" />
+            ) : (
+              <ShoppingBagIcon className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

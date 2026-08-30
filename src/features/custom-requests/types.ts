@@ -7,6 +7,8 @@ export interface CustomRequest {
   date: string;
   status: RequestStatus;
   statusText: string;
+  stageText?: string;
+  stageIndex?: number;
   imageUrl?: string;
   artisanName?: string;
   artisanInitials?: string;

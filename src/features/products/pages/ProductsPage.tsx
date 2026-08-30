@@ -6,8 +6,44 @@ import { ProductCard } from "@/features/products/components/ProductCard";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { useGetCategories, useGetProducts } from "@/features/products/hooks/useProductCatalog";
 import type { ProductCategory } from "@/features/products/types";
+import { cartApi } from "@/api/cartApi";
+import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
+import { useCartStore, type CartItem } from "@/features/cart/stores/cartStore";
 
 const productPageSize = 9;
+
+interface ApiCartItem {
+  id: string | number;
+  quantity: number;
+  product: {
+    id: string | number;
+    name: string;
+    price: number | string;
+    description?: string | null;
+    image?: string | null;
+  };
+}
+
+interface ApiCartResponse {
+  data?: {
+    items?: ApiCartItem[] | { data?: ApiCartItem[] };
+  };
+}
+
+function mapCartItems(response: ApiCartResponse): CartItem[] {
+  const items = response.data?.items;
+  const apiItems = Array.isArray(items) ? items : items?.data ?? [];
+
+  return apiItems.map((item) => ({
+    id: String(item.id),
+    productId: String(item.product.id),
+    name: item.product.name,
+    subtitle: item.product.description ?? "",
+    price: Number(item.product.price),
+    quantity: item.quantity,
+    image: item.product.image ?? "",
+  }));
+}
 
 export function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,6 +97,15 @@ export function ProductsPage() {
   const products = productsResponse?.data ?? [];
   const total = productsResponse?.meta?.total ?? products.length;
   const lastPage = productsResponse?.meta?.last_page ?? 1;
+  const setCartItems = useCartStore((state) => state.setItems);
+
+  useEffect(() => {
+    if (!customerAuthStorage.getToken()) return;
+
+    cartApi.getCart()
+      .then((response) => setCartItems(mapCartItems(response as ApiCartResponse)))
+      .catch((cartError) => console.error("Failed to load customer cart", cartError));
+  }, [setCartItems]);
 
   const categoryOptions: Array<{ id: string; name: string }> = [
     { id: "all", name: "كل المنتجات" },
@@ -130,13 +175,13 @@ export function ProductsPage() {
         dir="rtl"
         className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8"
       >
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-8">
           <div>
             <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#7a7d71]">المتجر</p>
             <h1 className="mt-2 text-[34px] font-extrabold text-[#1d2119]">منتجات ورقة وجذع</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {categoryOptions.map((category) => (
               <button
                 key={category.id}

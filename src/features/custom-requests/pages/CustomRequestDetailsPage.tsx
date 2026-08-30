@@ -49,15 +49,13 @@ export function CustomRequestDetailsPage() {
     return <CatalogLayout><main dir="rtl" className="min-h-[50vh] px-5 py-16 text-center text-sm text-[#a04a3a]">تعذر تحميل الطلب. يرجى المحاولة مرة أخرى.</main></CatalogLayout>;
   }
 
-  const statusIndex = request.status === "completed" ? 4 : request.status === "in_progress" ? 3 : 1;
-
   return (
     <CatalogLayout>
       <motion.main initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} dir="rtl" className="bg-[#f4f2ee] px-5 py-12 text-[#211f1b] sm:py-16">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold tracking-[0.14em] text-[#9b6a3d]">تفاصيل طلب التصميم الخاص</p><h1 className="mt-2 text-3xl font-extrabold text-[#3e522c]">مراجعة الطلب</h1><p className="mt-2 text-xs text-[#504b44]">رقم الطلب: <strong className="text-[#795238]">#{request.requestCode ?? request.id}</strong></p></div><span className="rounded-full bg-[#f7ecda] px-4 py-2 text-xs font-bold text-[#9b6a3d]">{request.statusText}</span></div>
 
-          <section className="mb-8 flex items-center gap-1 overflow-x-auto pb-2">{stages.map((stage, index) => <div key={stage} className="flex min-w-[125px] flex-1 items-center"><div className="flex flex-1 flex-col items-center gap-2"><span className={`flex size-9 items-center justify-center rounded-full border-2 ${index <= statusIndex ? "border-[#52663c] bg-[#52663c] text-white" : "border-[#d7d2c8] bg-[#f8f6f1] text-[#99958b]"}`}>{index <= statusIndex ? <Check className="size-4" /> : index + 1}</span><span className={`text-center text-[10px] font-bold ${index <= statusIndex ? "text-[#3e522c]" : "text-[#77736b]"}`}>{stage}</span></div>{index < stages.length - 1 && <span className="h-px flex-1 bg-[#d0cbc1]" />}</div>)}</section>
+          <section className="mb-8 flex items-center gap-1 overflow-x-auto pb-2">{stages.map((stage, index) => <div key={stage} className="flex min-w-[125px] flex-1 items-center"><div className="flex flex-1 flex-col items-center gap-2"><span className={`flex size-9 items-center justify-center rounded-full border-2 ${index <= request.stageIndex ? "border-[#52663c] bg-[#52663c] text-white" : "border-[#d7d2c8] bg-[#f8f6f1] text-[#99958b]"}`}>{index <= request.stageIndex ? <Check className="size-4" /> : index + 1}</span><span className={`text-center text-[10px] font-bold ${index <= request.stageIndex ? "text-[#3e522c]" : "text-[#77736b]"}`}>{stage}</span></div>{index < stages.length - 1 && <span className="h-px flex-1 bg-[#d0cbc1]" />}</div>)}</section>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_270px]">
             <div className="space-y-5">

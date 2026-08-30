@@ -6,6 +6,12 @@ function toNumber(value: unknown, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function toBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true' || value === '1';
+  return value === 1;
+}
+
 function extractArray<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) {
     return payload as T[];
@@ -54,6 +60,7 @@ function normalizeProductRecord(item: Record<string, unknown>): Product {
     badge: typeof item.badge === 'string' && item.badge.trim() ? item.badge : undefined,
     categoryName,
     inStock: item.in_stock !== undefined ? Boolean(item.in_stock) : Number(item.stock_quantity ?? 0) > 0,
+    is_favorited: toBoolean(item.is_favorited ?? item.isFavorite ?? false),
   };
 }
 

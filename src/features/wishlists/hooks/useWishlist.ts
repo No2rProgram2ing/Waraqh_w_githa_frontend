@@ -19,10 +19,12 @@ export function useWishlist(enabled = true) {
         queryClient.setQueryData<WishlistItem[]>(WISHLIST_QUERY_KEY, (current) =>
           (current ?? []).filter((item) => item.productId !== String(productId)),
         );
-        return;
       }
 
-      await queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: ["products-catalog"] }),
+      ]);
     },
   });
 

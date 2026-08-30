@@ -1,14 +1,42 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { WishlistCard } from "@/features/wishlists/components/WishlistCard";
 import { useWishlist } from "@/features/wishlists/hooks/useWishlist";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { ROUTES } from "@/routes/paths";
 import { Link } from "react-router-dom";
+import { cartApi } from "@/api/cartApi";
+import { useCartStore, type CartItem } from "@/features/cart/stores/cartStore";
+import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
+
+interface ApiCartItem {
+  id: string | number;
+  quantity: number;
+  product: { id: string | number; name: string; price: number | string; description?: string | null; image?: string | null };
+}
+
+function mapCartItems(response: { data?: { items?: ApiCartItem[] | { data?: ApiCartItem[] } } }): CartItem[] {
+  const items = response.data?.items;
+  const apiItems = Array.isArray(items) ? items : items?.data ?? [];
+  return apiItems.map((item) => ({
+    id: String(item.id), productId: String(item.product.id), name: item.product.name,
+    subtitle: item.product.description ?? "", price: Number(item.product.price),
+    quantity: item.quantity, image: item.product.image ?? "",
+  }));
+}
 
 export function WishlistsPage() {
   const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
   const { items = [], isLoading, isError, error, refetch, toggleFavorite, isToggling } = useWishlist(isAuthenticated);
+  const setCartItems = useCartStore((state) => state.setItems);
+
+  useEffect(() => {
+    if (!isAuthenticated || !customerAuthStorage.getToken()) return;
+    cartApi.getCart()
+      .then((response) => setCartItems(mapCartItems(response)))
+      .catch((cartError) => console.error("Failed to load customer cart", cartError));
+  }, [isAuthenticated, setCartItems]);
 
   const handleRemove = async (productId: string) => {
     await toggleFavorite(productId);

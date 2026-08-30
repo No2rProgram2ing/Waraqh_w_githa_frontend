@@ -10,6 +10,7 @@ export interface Product {
   badge?: string;
   categoryName?: string;
   inStock?: boolean;
+  is_favorited: boolean;
 }
 
 export interface ProductCategory {
