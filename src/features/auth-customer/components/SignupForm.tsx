@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { PhoneIcon, EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 import { PasswordStrengthMeter } from "@/features/auth-customer/components/PasswordStrengthMeter";
 import { useSignup } from "@/features/auth-customer/hooks/useSignup";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { signupSchema, type SignupSchema } from "@/features/auth-customer/schema";
 
 const fieldStagger = {
@@ -25,6 +26,7 @@ export function SignupForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const signup = useSignup();
   const navigate = useNavigate();
+  const setUser = useCustomerAuthStore((state) => state.setUser);
 
   const {
     register,
@@ -50,7 +52,7 @@ export function SignupForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await signup.mutateAsync({
+      const result = await signup.mutateAsync({
         fullName: values.fullName,
         email: values.email,
         phoneCountryCode: values.phoneCountryCode,
@@ -59,7 +61,17 @@ export function SignupForm() {
         confirmPassword: values.confirmPassword,
       });
 
-      navigate("/login");
+      if (result.token) {
+        setUser({
+          id: result.id,
+          fullName: result.fullName,
+          email: result.email,
+          phone: null,
+        });
+        navigate("/");
+      } else {
+        navigate("/login");
+      }
     } catch (err: any) {
       const validationErrors = err?.fieldErrors ?? err?.response?.data?.errors;
 
@@ -228,4 +240,3 @@ export function SignupForm() {
     </div>
   );
 }
-

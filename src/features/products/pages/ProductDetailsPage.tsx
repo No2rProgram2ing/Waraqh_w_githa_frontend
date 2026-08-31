@@ -7,9 +7,11 @@ import { useCartStore } from "@/features/cart/stores/cartStore";
 import { useEffect, useState } from "react";
 import { customerApi } from "@/api/customerApi";
 import { cartApi } from "@/api/cartApi";
-import { favoritesApi } from "@/api/favoritesApi";
+import { getStoredWishlistIds, toggleWishlist } from "@/api/favoritesApi";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { catalogProducts } from "@/features/products/data/products";
+import { getProductImage } from "@/features/products/data/productImages";
 
 interface ProductDetailsData {
   id: string | number;
@@ -33,7 +35,7 @@ function normalizeProductDetails(product: ProductDetailsData): ProductDetailsDat
 
   return {
     ...product,
-    image: product.image ?? product.image_url ?? primaryMedia?.url ?? undefined,
+    image: getProductImage(product.id ?? "") ?? product.image ?? product.image_url ?? primaryMedia?.url ?? undefined,
     imageAlt: product.imageAlt ?? product.name,
   };
 }
@@ -42,12 +44,13 @@ export function ProductDetailsPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
+  const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
 
   const [product, setProduct] = useState<ProductDetailsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(() => Boolean(productId && getStoredWishlistIds().includes(productId)));
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export function ProductDetailsPage() {
         const resp = await customerApi.get(`/products/${id}`);
         // Accept both { data: Product } and raw product objects
         const payload = resp.data?.data ?? resp.data;
-        if (mounted) setProduct(payload ?? null);
+        if (mounted) setProduct(payload ? normalizeProductDetails(payload) : null);
       } catch {
         if (mounted) setIsError(true);
       } finally {
@@ -106,7 +109,7 @@ export function ProductDetailsPage() {
       setIsTogglingFavorite(true);
       // Optimistically toggle UI
       setIsFavorite((prev) => !prev);
-      const favoriteState = await favoritesApi.toggleFavorite(product.id ?? product.product_id ?? productId);
+      const favoriteState = await toggleWishlist(product.id ?? product.product_id ?? productId, isAuthenticated);
       setIsFavorite(Boolean(favoriteState));
       showSuccessToast(favoriteState ? 'تمت إضافة المنتج إلى المفضلة' : 'تمت إزالة المنتج من المفضلة');
     } catch {

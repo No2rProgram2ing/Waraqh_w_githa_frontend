@@ -5,8 +5,9 @@ import { Link } from "react-router-dom";
 import type { Product } from "@/features/products/types";
 import { useCartStore } from "@/features/cart/stores/cartStore";
 import { CheckCircleIcon, HeartIcon, ShoppingBagIcon } from "@/components/ui/icons";
-import { favoritesApi, getStoredWishlistIds, setStoredWishlistIds } from "@/api/favoritesApi";
+import { getStoredWishlistIds, toggleWishlist } from "@/api/favoritesApi";
 import { WISHLIST_QUERY_KEY } from "@/features/wishlists/hooks/useWishlist";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { cartApi } from "@/api/cartApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { formatCurrency } from "@/lib/currency";
@@ -20,6 +21,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index, featured = false }: ProductCardProps) {
   const queryClient = useQueryClient();
+  const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
   const isInCart = useCartStore((state) =>
     state.items.some((item) => item.id === String(product.id) || item.productId === String(product.id)),
   );
@@ -69,37 +71,21 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
     const previousState = isFavorite;
     const optimisticState = !previousState;
     setIsFavorite(optimisticState);
-    const storedIds = getStoredWishlistIds();
-    setStoredWishlistIds(
-      optimisticState
-        ? [...storedIds, product.id]
-        : storedIds.filter((id) => id !== String(product.id)),
-    );
-
     try {
       setIsFavoriteLoading(true);
-      const favoriteState = await favoritesApi.toggleFavorite(product.id);
+      const favoriteState = await toggleWishlist(product.id, isAuthenticated);
       setIsFavorite(favoriteState);
-      const latestIds = getStoredWishlistIds();
-      setStoredWishlistIds(
-        favoriteState
-          ? [...latestIds, product.id]
-          : latestIds.filter((id) => id !== String(product.id)),
-      );
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["products-catalog"] }),
-        queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY }),
-      ]);
+      if (isAuthenticated) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["products-catalog"] }),
+          queryClient.invalidateQueries({ queryKey: WISHLIST_QUERY_KEY }),
+        ]);
+      }
       showSuccessToast(
         favoriteState ? "تمت إضافة المنتج إلى المفضلة" : "تمت إزالة المنتج من المفضلة",
       );
     } catch {
       setIsFavorite(previousState);
-      setStoredWishlistIds(
-        previousState
-          ? [...getStoredWishlistIds(), product.id]
-          : getStoredWishlistIds().filter((id) => id !== String(product.id)),
-      );
       showErrorToast("تعذر تحديث قائمة المفضلة، يرجى المحاولة مرة أخرى.");
     } finally {
       setIsFavoriteLoading(false);

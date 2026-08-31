@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi } from '@/api/auth';
+import { migrateGuestWishlist } from '@/api/favoritesApi';
 import { customerAuthStorage } from '@/features/auth-customer/services/customerAuthStorage';
 import type { LoginResponse } from '@/api/auth';
 
@@ -53,6 +54,12 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
         customerAuthStorage.setUser(normalizedUser);
         customerAuthStorage.setAvatar(normalizedUser.id, normalizedUser.avatarUrl ?? normalizedUser.avatar);
         set({ user: normalizedUser, isAuthenticated: true, token: get().token ?? customerAuthStorage.getToken() });
+        void migrateGuestWishlist().catch((error) => {
+          console.error("Failed to migrate guest wishlist", error);
+        });
+        void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+          void useCartStore.getState().syncGuestCart();
+        });
       },
 
       setToken: (token: string | null): void => {
@@ -83,6 +90,12 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
           customerAuthStorage.setAvatar(mergedUser.id, mergedUser.avatarUrl ?? mergedUser.avatar);
         }
         set({ user: mergedUser, token, isAuthenticated: Boolean(token && mergedUser), isHydrated: true });
+        void migrateGuestWishlist().catch((error) => {
+          console.error("Failed to migrate guest wishlist", error);
+        });
+        void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+          void useCartStore.getState().syncGuestCart();
+        });
       },
 
       hydrateFromStorage: (): void => {
@@ -94,6 +107,14 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
           isAuthenticated: Boolean(token && user),
           isHydrated: true,
         });
+        if (token && user) {
+          void migrateGuestWishlist().catch((error) => {
+            console.error("Failed to migrate guest wishlist", error);
+          });
+          void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+            void useCartStore.getState().syncGuestCart();
+          });
+        }
       },
 
       logout: async (): Promise<void> => {

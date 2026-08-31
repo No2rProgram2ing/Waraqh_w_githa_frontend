@@ -1,5 +1,6 @@
 import { customerApi } from '@/api/customerApi';
 import type { PaginatedResponse, Product, ProductCategory, ProductFiltersDTO, ProductPriceRange } from '@/features/products/types';
+import { getProductImage } from '@/features/products/data/productImages';
 
 function toNumber(value: unknown, fallback: number): number {
   const parsed = Number(value);
@@ -54,7 +55,7 @@ function normalizeProductRecord(item: Record<string, unknown>): Product {
     subtitle: String(rawSubtitle),
     description: typeof item.description === 'string' ? item.description : String(rawSubtitle),
     price: priceValue,
-    image: imageValue || 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80',
+    image: getProductImage(id) || imageValue,
     imageAlt: typeof item.image_alt === 'string' ? item.image_alt : String(rawName),
     rating: ratingValue,
     badge: typeof item.badge === 'string' && item.badge.trim() ? item.badge : undefined,

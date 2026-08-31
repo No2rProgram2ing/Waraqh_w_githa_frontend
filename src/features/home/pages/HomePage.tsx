@@ -6,9 +6,11 @@ import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { ROUTES } from "@/routes/paths";
 import { customerApi } from "@/api/customerApi";
 import { cartApi } from "@/api/cartApi";
-import { favoritesApi } from "@/api/favoritesApi";
+import { getStoredWishlistIds, toggleWishlist } from "@/api/favoritesApi";
+import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { useCartStore } from "@/features/cart/stores/cartStore";
+import { getProductImageByIndex } from "@/features/products/data/productImages";
 
 const images = {
   hero: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=88",
@@ -56,14 +58,14 @@ interface HomeProduct {
 
 const fallbackProductImage = images.basket;
 
-function normalizeHomeProduct(product: FeaturedProductRecord): HomeProduct {
+function normalizeHomeProduct(product: FeaturedProductRecord, index: number): HomeProduct {
   const primaryMedia = product.media?.find((media) => media?.is_primary) ?? product.media?.[0];
 
   return {
     id: String(product.id),
     name: product.name,
     type: product.category?.name ?? "منتج حرفي",
-    image: primaryMedia?.url ?? fallbackProductImage,
+    image: getProductImageByIndex(index) ?? primaryMedia?.url ?? fallbackProductImage,
     description: product.description ?? "",
     price: Number(product.price ?? 0),
   };
@@ -148,7 +150,8 @@ function SectionHeading({ eyebrow, title, link }: { eyebrow: string; title: stri
 }
 
 function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
+  const [isFavorite, setIsFavorite] = useState(() => getStoredWishlistIds().includes(item.id));
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
@@ -174,7 +177,7 @@ function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
 
     try {
       setIsFavoriteLoading(true);
-      const favoriteState = await favoritesApi.toggleFavorite(item.id);
+      const favoriteState = await toggleWishlist(item.id, isAuthenticated);
       setIsFavorite(favoriteState);
       showSuccessToast(favoriteState ? "تمت إضافة المنتج إلى المفضلة" : "تمت إزالة المنتج من المفضلة");
     } catch (error) {

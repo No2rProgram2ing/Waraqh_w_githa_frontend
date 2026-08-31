@@ -12,6 +12,7 @@ import { addressesApi } from "@/api/addresses";
 import { ordersApi } from "@/api/ordersApi";
 import type { AddressItem } from "@/features/addresses/types";
 import { showErrorToast } from "@/lib/toast";
+import { cartApi } from "@/api/cartApi";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ar-SA")} ر.س`;
 const paymentMethods = [
@@ -77,6 +78,7 @@ export function CheckoutPage() {
       const orderNumber = order?.order_number ?? String(orderId ?? "");
       const whatsappMessage = `مرحبًا، أتممت طلبًا جديدًا من ورقة وجذع. رقم الطلب: ${orderNumber}. أرجو تأكيد الطلب.`;
       window.open(`https://wa.me/967700000000?text=${encodeURIComponent(whatsappMessage)}`, "_blank", "noopener,noreferrer");
+      await cartApi.clearCart();
       clearCart();
       navigate(orderId ? `/orders/${orderId}` : ROUTES.orders, { replace: true });
     } catch (error) {

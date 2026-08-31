@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Header } from "@/components/shared/Header";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Footer } from "@/components/shared/Footer";
+import { FloatingSocialLinks } from "@/components/shared/FloatingSocialLinks";
 
 export interface AccountLayoutProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ export function AccountLayout({ children, hideSidebar = false }: AccountLayoutPr
 
       {/* Footer */}
       <Footer />
+      <FloatingSocialLinks />
     </div>
   );
 }

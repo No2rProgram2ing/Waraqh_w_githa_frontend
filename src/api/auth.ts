@@ -62,6 +62,7 @@ export const authApi = {
       fullName: data.user?.full_name ?? payload.fullName,
       email: data.user?.email ?? payload.email,
       createdAt: data.user?.created_at ?? new Date().toISOString(),
+      token: data.token,
     };
   },
 

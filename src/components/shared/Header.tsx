@@ -14,6 +14,7 @@ import { ROUTES } from "@/routes/paths";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { useUnreadNotificationsCount } from "@/features/notifications/hooks/useNotifications";
 import { cartApi } from '@/api/cartApi';
+import { useCartStore } from "@/features/cart/stores/cartStore";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,6 @@ const navLinks = [
   { label: "منتجات", path: ROUTES.products },
   { label: "قصتنا", path: ROUTES.aboutUs },
   { label: "طلب خاص", path: ROUTES.customRequests },
-  { label: "تواصل معنا", path: ROUTES.contact },
 ];
 
 const iconButtonClass = "relative p-2.5 text-[#20251B] transition-colors hover:text-[#536A3A]";
@@ -90,6 +90,7 @@ export function Header() {
   const user = useCustomerAuthStore((state) => state.user);
   const isHydrated = useCustomerAuthStore((state) => state.isHydrated);
   const logout = useCustomerAuthStore((state) => state.logout);
+  const cartItemCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
   const unreadNotificationsQuery = useUnreadNotificationsCount(isAuthenticated);
   const unreadNotificationsCount = unreadNotificationsQuery.data ?? 0;
 
@@ -115,6 +116,9 @@ export function Header() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const visibleNavLinks = navLinks.filter(
+    (link) => link.path !== ROUTES.customRequests || isAuthenticated
+  );
 
   return (
     <header
@@ -141,7 +145,7 @@ export function Header() {
 
           {/* ── Desktop Navigation ─── */}
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               /* Switched to NavLink to be route-aware and render active state reliably */
               <NavLink
                 key={link.path}
@@ -227,7 +231,11 @@ export function Header() {
             {/* Shopping Bag */}
             <Link to={ROUTES.cart} className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="حقيبة التسوق">
               <ShoppingBagIcon className="h-5 w-5 text-brand-olive-700" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-olive-700 text-[10px] font-bold text-white shadow-sm">2</span>
+              {cartItemCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-olive-700 text-[10px] font-bold text-white shadow-sm">
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
             </Link>
 
             {/* ── Auth: Profile avatar (authenticated) OR Login/Register (unauthenticated) ── */}
@@ -269,7 +277,7 @@ export function Header() {
             aria-label="قائمة الهاتف"
           >
             <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
+              {visibleNavLinks.map((link) => (
                               /* Use NavLink here too so mobile items are route-aware; keep onClick to close the drawer */
                               <NavLink
                                 key={link.path}

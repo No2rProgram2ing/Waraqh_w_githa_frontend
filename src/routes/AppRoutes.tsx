@@ -20,6 +20,7 @@ import { SearchPage } from "@/features/search/pages/SearchPage";
 import { NotificationsPage } from "@/features/notification/pages/NotificationsPage";
 import { WishlistsPage } from "@/features/wishlists/pages/WishlistsPageFixed";
 import { ROUTES } from "@/routes/paths";
+import CustomerProtectedRoute from "@/routes/CustomerProtectedRoute";
 
 export function AppRoutes() {
   return (
@@ -30,25 +31,26 @@ export function AppRoutes() {
       <Route path={ROUTES.productDetail} element={<ProductDetailsPage />} />
       <Route path={ROUTES.aboutUs} element={<AboutPage />} />
 
-      <Route path={ROUTES.customRequests} element={<ShowCustomRequestsPage />} />
-      <Route path={ROUTES.customRequestsNew} element={<CustomRequestsPage />} />
-      <Route path={ROUTES.customRequestDetail} element={<CustomRequestDetailsPage />} />
-
       <Route path={ROUTES.cart} element={<CartPage />} />
       <Route path={ROUTES.checkout} element={<CheckoutPage />} />
       <Route path={ROUTES.checkoutSuccess} element={<CheckoutSuccessPage />} />
 
       <Route path={ROUTES.search} element={<SearchPage />} />
-      <Route path={ROUTES.notifications} element={<NotificationsPage />} />
-      <Route path={ROUTES.wishlist} element={<WishlistsPage />} />
 
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.signup} element={<SignupPage />} />
 
-      <Route path={ROUTES.profile} element={<PersonalInfoPage />} />
-      <Route path={ROUTES.addresses} element={<AddressesPage />} />
-      <Route path={ROUTES.orders} element={<OrdersPage />} />
-      <Route path={ROUTES.orderDetail} element={<OrderDetailsPage />} />
+      <Route element={<CustomerProtectedRoute />}>
+        <Route path={ROUTES.customRequests} element={<ShowCustomRequestsPage />} />
+        <Route path={ROUTES.customRequestsNew} element={<CustomRequestsPage />} />
+        <Route path={ROUTES.customRequestDetail} element={<CustomRequestDetailsPage />} />
+        <Route path={ROUTES.wishlist} element={<WishlistsPage />} />
+        <Route path={ROUTES.profile} element={<PersonalInfoPage />} />
+        <Route path={ROUTES.addresses} element={<AddressesPage />} />
+        <Route path={ROUTES.orders} element={<OrdersPage />} />
+        <Route path={ROUTES.orderDetail} element={<OrderDetailsPage />} />
+        <Route path={ROUTES.notifications} element={<NotificationsPage />} />
+      </Route>
 
       <Route path="*" element={<Navigate to={ROUTES.home} replace />} />
     </Routes>

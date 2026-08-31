@@ -25,6 +25,7 @@ export interface SignupResponse {
   fullName: string;
   email: string;
   createdAt: string;
+  token?: string;
 }
 
 /** Normalized shape for a failed signup request. */

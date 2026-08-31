@@ -5,6 +5,7 @@ import { AccountLayout } from '@/layouts/AccountLayout'
 import { useSearchProducts, useSearchCategories } from '@/features/search/hooks/useSearchProducts'
 import type { SearchFiltersDTO } from '@/api/search'
 import type { Product } from '@/features/catalog/types/product'
+import { getProductImage } from '@/features/products/data/productImages'
 
 const SKELETON_COUNT = 6
 
@@ -126,7 +127,7 @@ export function SearchPage() {
                 className="group overflow-hidden rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] shadow-[0_10px_20px_-18px_rgba(38,47,26,0.25)]"
               >
                 <img
-                  src={item.media?.[0]?.url ?? 'https://via.placeholder.com/600x400?text=No+Image'}
+                  src={getProductImage(item.id)}
                   alt={item.name}
                   className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />

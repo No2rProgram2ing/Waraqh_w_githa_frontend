@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { cartApi } from "@/api/cartApi";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { useCartStore, type CartItem } from "@/features/cart/stores/cartStore";
+import { getProductImage } from "@/features/products/data/productImages";
 
 const formatPrice = (price: number) => `${price.toLocaleString("ar-SA")} ر.س`;
 
@@ -48,6 +49,7 @@ export function CartPage() {
   const setItems = useCartStore((state) => state.setItems);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
     if (!customerAuthStorage.getToken()) return;
@@ -84,6 +86,15 @@ export function CartPage() {
     }
   };
 
+  const handleClearCart = async () => {
+    try {
+      await cartApi.clearCart();
+      clearCart();
+    } catch (error) {
+      console.error("Failed to clear cart", error);
+    }
+  };
+
   return (
     <CatalogLayout>
       <main dir="rtl" className="min-h-[calc(100vh-20rem)] bg-[#fbf9f5] px-5 py-12 text-[#26291f] sm:py-16">
@@ -106,7 +117,7 @@ export function CartPage() {
               <section className="space-y-4">
                 {items.map((item, index) => (
                   <motion.article key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.08 }} className="flex flex-col gap-5 border-b border-[#e1dbd1] bg-[#fbf9f5] px-1 py-4 sm:flex-row sm:items-center">
-                    <img src={item.image} alt={item.name} className="h-28 w-full object-cover sm:h-24 sm:w-28" />
+                    <img src={getProductImage(item.productId ?? item.id)} alt={item.name} className="h-28 w-full object-cover sm:h-24 sm:w-28" />
                     <div className="min-w-0 flex-1">
                       <h2 className="text-lg font-bold text-[#52663c]">{item.name}</h2>
                       <p className="mt-1 text-xs text-[#77766d]">{item.subtitle}</p>
@@ -118,7 +129,10 @@ export function CartPage() {
                     </div>
                   </motion.article>
                 ))}
-                <Link to={ROUTES.products} className="inline-flex items-center gap-2 pt-3 text-sm font-bold text-[#52663c] hover:text-[#3e522c]">متابعة التسوق <span>←</span></Link>
+                <div className="flex items-center justify-between pt-3">
+                  <Link to={ROUTES.products} className="inline-flex items-center gap-2 text-sm font-bold text-[#52663c] hover:text-[#3e522c]">متابعة التسوق <span>←</span></Link>
+                  <button type="button" onClick={() => void handleClearCart()} className="text-xs text-[#8b7652] hover:text-[#a04a3a]">إفراغ السلة</button>
+                </div>
               </section>
 
               <aside className="border border-[#e1dbd1] bg-[#f1ede5] p-6 shadow-sm">
