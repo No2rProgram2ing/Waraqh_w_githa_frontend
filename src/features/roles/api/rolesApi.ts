@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type {
     Role,
     RoleWithPermissions,
@@ -17,21 +17,21 @@ export interface RoleResponse {
 
 export const rolesApi = {
     async getAll(): Promise<Role[]> {
-        const response = await axiosAdminClient.get<RoleListResponse>(
+        const response = await adminClient.get<RoleListResponse>(
             '/admin/roles' // Placeholder endpoint
         )
         return response.data.data
     },
 
     async getById(id: number): Promise<RoleWithPermissions> {
-        const response = await axiosAdminClient.get<RoleResponse>(
+        const response = await adminClient.get<RoleResponse>(
             `/admin/roles/${id}` // Placeholder endpoint
         )
         return response.data.data
     },
 
     async create(data: CreateRolePayload): Promise<Role> {
-        const response = await axiosAdminClient.post<{ data: Role }>(
+        const response = await adminClient.post<{ data: Role }>(
             '/admin/roles', // Placeholder endpoint
             data
         )
@@ -39,7 +39,7 @@ export const rolesApi = {
     },
 
     async update(id: number, data: UpdateRolePayload): Promise<Role> {
-        const response = await axiosAdminClient.put<{ data: Role }>(
+        const response = await adminClient.put<{ data: Role }>(
             `/admin/roles/${id}`, // Placeholder endpoint
             data
         )
@@ -47,13 +47,13 @@ export const rolesApi = {
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(
+        await adminClient.delete(
             `/admin/roles/${id}` // Placeholder endpoint
         )
     },
 
     async syncPermissions(roleId: number, payload: SyncPermissionsPayload): Promise<void> {
-        await axiosAdminClient.put(
+        await adminClient.put(
             `/admin/roles/${roleId}/permissions`, // Placeholder endpoint
             payload
         )

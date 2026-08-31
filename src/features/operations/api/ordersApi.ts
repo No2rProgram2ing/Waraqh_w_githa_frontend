@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 
 import type {
   Order,
@@ -162,7 +162,7 @@ export const ordersApi = {
     } = {},
   ): Promise<OrdersListResponse> {
     const response =
-      await axiosAdminClient.get(
+      await adminClient.get(
         '/admin/orders',
         {
           params: {
@@ -192,7 +192,7 @@ export const ordersApi = {
     id: number,
   ): Promise<Order> {
     const response =
-      await axiosAdminClient.get(
+      await adminClient.get(
         `/admin/orders/${id}`,
       )
 
@@ -205,7 +205,7 @@ export const ordersApi = {
     payload: CreateOrderPayload,
   ): Promise<Order> {
     const response =
-      await axiosAdminClient.post(
+      await adminClient.post(
         '/admin/orders',
         payload,
       )
@@ -220,7 +220,7 @@ export const ordersApi = {
     status: OrderStatus,
     note?: string,
   ): Promise<void> {
-    await axiosAdminClient.put(
+    await adminClient.put(
       `/admin/orders/${id}/status`,
       {
         status,
@@ -232,7 +232,7 @@ export const ordersApi = {
   async delete(
     id: number,
   ): Promise<void> {
-    await axiosAdminClient.delete(
+    await adminClient.delete(
       `/admin/orders/${id}`,
     )
   },
@@ -241,7 +241,7 @@ export const ordersApi = {
     id: number,
   ) {
     const response =
-      await axiosAdminClient.get(
+      await adminClient.get(
         `/admin/orders/${id}/production-history`,
       )
 
@@ -252,7 +252,7 @@ export const ordersApi = {
     id: number,
   ) {
     const response =
-      await axiosAdminClient.get(
+      await adminClient.get(
         `/admin/orders/${id}/status-history`,
       )
 

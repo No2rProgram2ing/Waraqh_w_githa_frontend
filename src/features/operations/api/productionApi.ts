@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type {
   ProductionStage,
   ProductionStageDefinition,
@@ -6,7 +6,7 @@ import type {
 
 export const productionApi = {
   async getStages(): Promise<ProductionStageDefinition[]> {
-    const response = await axiosAdminClient.get('/admin/production-stages', {
+    const response = await adminClient.get('/admin/production-stages', {
       params: { per_page: 100 },
     })
 
@@ -42,7 +42,7 @@ export const productionApi = {
     name: string
     sort_order: number
   }): Promise<ProductionStageDefinition> {
-    const response = await axiosAdminClient.post(
+    const response = await adminClient.post(
       '/admin/production-stages',
       data,
     )
@@ -57,7 +57,7 @@ export const productionApi = {
       sort_order: number
     },
   ): Promise<ProductionStageDefinition> {
-    const response = await axiosAdminClient.put(
+    const response = await adminClient.put(
       `/admin/production-stages/${id}`,
       data,
     )
@@ -66,18 +66,18 @@ export const productionApi = {
   },
 
   async deleteStage(id: number): Promise<void> {
-    await axiosAdminClient.delete(`/admin/production-stages/${id}`)
+    await adminClient.delete(`/admin/production-stages/${id}`)
   },
 
   async reorderStages(stageIds: number[]): Promise<void> {
-    await axiosAdminClient.post('/admin/production-stages/reorder', {
+    await adminClient.post('/admin/production-stages/reorder', {
       stage_ids: stageIds,
     })
   },
   async getHistory(orderId: number): Promise<{ data: ProductionStage[] }> {
     const [historyResponse, stagesResponse] = await Promise.all([
-      axiosAdminClient.get(`/admin/orders/${orderId}/production-history`),
-      axiosAdminClient.get('/admin/production-stages', {
+      adminClient.get(`/admin/orders/${orderId}/production-history`),
+      adminClient.get('/admin/production-stages', {
         params: { per_page: 100 },
       }),
     ])
@@ -129,7 +129,7 @@ export const productionApi = {
   },
 
   async updateStage(orderId: number, stageId: number) {
-    const response = await axiosAdminClient.post(
+    const response = await adminClient.post(
       `/admin/orders/${orderId}/stage/${stageId}`,
       { stage_id: stageId },
     )
@@ -138,7 +138,7 @@ export const productionApi = {
   },
 
   async nextStage(orderId: number) {
-    const response = await axiosAdminClient.post(
+    const response = await adminClient.post(
       `/admin/orders/${orderId}/next-stage`,
     )
 

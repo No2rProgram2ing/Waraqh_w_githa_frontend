@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { FreeDesignRequest, FreeDesignStatus } from '../types/freeDesign.types'
 
 export interface FreeDesignListResponse {
@@ -26,7 +26,7 @@ export const freeDesignApi = {
       status?: string
     } = {},
   ) {
-    const response = await axiosAdminClient.get<FreeDesignListResponse>(
+    const response = await adminClient.get<FreeDesignListResponse>(
       '/admin/custom-design-requests',
       { params },
     )
@@ -35,7 +35,7 @@ export const freeDesignApi = {
   },
 
   async create(payload: FormData) {
-    const response = await axiosAdminClient.post<{
+    const response = await adminClient.post<{
       data: FreeDesignRequest
     }>('/admin/custom-design-requests', payload)
 
@@ -43,7 +43,7 @@ export const freeDesignApi = {
   },
 
   async show(id: number) {
-    const response = await axiosAdminClient.get<{
+    const response = await adminClient.get<{
       data: FreeDesignRequest
     }>(`/admin/custom-design-requests/${id}`)
 
@@ -53,7 +53,7 @@ export const freeDesignApi = {
   async update(id: number, payload: FormData) {
     payload.append('_method', 'PUT')
 
-    const response = await axiosAdminClient.post<{
+    const response = await adminClient.post<{
       data: FreeDesignRequest
     }>(`/admin/custom-design-requests/${id}`, payload)
 
@@ -61,13 +61,13 @@ export const freeDesignApi = {
   },
 
   async deleteImage(requestId: number, imageId: number) {
-    return axiosAdminClient.delete(
+    return adminClient.delete(
       `/admin/custom-design-requests/${requestId}/images/${imageId}`,
     )
   },
 
   async remove(id: number) {
-    return axiosAdminClient.delete(
+    return adminClient.delete(
       `/admin/custom-design-requests/${id}`,
     )
   },

@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { Payment, PaymentsListResponse, PaymentStatus } from '../types/payments.types'
 
 function normalize(raw: any): Payment {
@@ -22,7 +22,7 @@ function normalize(raw: any): Payment {
 
 export const paymentsApi = {
   async list(params: Record<string, unknown> = {}): Promise<PaymentsListResponse> {
-    const r = await axiosAdminClient.get('/admin/payments', { params })
+    const r = await adminClient.get('/admin/payments', { params })
     return {
       ...r.data,
       data: Array.isArray(r.data?.data) ? r.data.data.map(normalize) : [],
@@ -30,15 +30,15 @@ export const paymentsApi = {
   },
 
   async getById(id: number): Promise<Payment> {
-    const r = await axiosAdminClient.get(`/admin/payments/${id}`)
+    const r = await adminClient.get(`/admin/payments/${id}`)
     return normalize(r.data)
   },
 
   async updateStatus(id: number, status: PaymentStatus, admin_note?: string) {
-    await axiosAdminClient.put(`/admin/payments/${id}/status`, { status, admin_note })
+    await adminClient.put(`/admin/payments/${id}/status`, { status, admin_note })
   },
 
   async delete(id: number) {
-    return axiosAdminClient.delete(`/admin/payments/${id}`)
+    return adminClient.delete(`/admin/payments/${id}`)
   },
 }

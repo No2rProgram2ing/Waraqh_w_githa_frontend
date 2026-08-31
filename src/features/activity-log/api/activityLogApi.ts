@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { ActivityLogListResponse, ActivityLogFilters } from '../types/activity-log'
 
 export const activityLogApi = {
@@ -11,7 +11,7 @@ export const activityLogApi = {
         if (filters.date_to) params.date_to = filters.date_to
         if (filters.page) params.page = filters.page
 
-        const response = await axiosAdminClient.get<ActivityLogListResponse>(
+        const response = await adminClient.get<ActivityLogListResponse>(
             '/admin/activity-logs', // Placeholder endpoint
             { params }
         )

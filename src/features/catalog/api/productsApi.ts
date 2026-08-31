@@ -1,4 +1,4 @@
-﻿import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 
 import type { Product } from '../types/product'
 
@@ -74,7 +74,7 @@ export const productsApi = {
     params: ProductsQueryParams = {},
   ): Promise<ProductsResponse> {
     const response =
-      await axiosAdminClient.get(
+      await adminClient.get(
         '/admin/products',
         {
           params,
@@ -102,7 +102,7 @@ export const productsApi = {
 
   async getById(id: number): Promise<Product> {
     const response =
-      await axiosAdminClient.get<{ data: Product }>(
+      await adminClient.get<{ data: Product }>(
         `/admin/products/${id}`,
       )
 
@@ -111,7 +111,7 @@ export const productsApi = {
 
   async create(data: CreateProductPayload): Promise<Product> {
     const response =
-      await axiosAdminClient.post<{ data: Product }>(
+      await adminClient.post<{ data: Product }>(
         '/admin/products',
         data,
       )
@@ -124,7 +124,7 @@ export const productsApi = {
     data: UpdateProductPayload,
   ): Promise<Product> {
     const response =
-      await axiosAdminClient.put<{ data: Product }>(
+      await adminClient.put<{ data: Product }>(
         `/admin/products/${id}`,
         data,
       )
@@ -133,6 +133,6 @@ export const productsApi = {
   },
 
   async delete(id: number): Promise<void> {
-    await axiosAdminClient.delete(`/admin/products/${id}`)
+    await adminClient.delete(`/admin/products/${id}`)
   },
 }

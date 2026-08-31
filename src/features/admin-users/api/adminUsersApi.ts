@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { AdminUser, CreateAdminUserPayload, UpdateAdminUserPayload } from '../types/admin-user'
 
 export interface AdminUserListResponse {
@@ -11,14 +11,14 @@ export interface AdminUserResponse {
 
 export const adminUsersApi = {
     async getAll(): Promise<AdminUser[]> {
-        const response = await axiosAdminClient.get<AdminUserListResponse>(
+        const response = await adminClient.get<AdminUserListResponse>(
             '/admin/admin-users' // Placeholder endpoint
         )
         return response.data.data
     },
 
     async create(data: CreateAdminUserPayload): Promise<AdminUser> {
-        const response = await axiosAdminClient.post<AdminUserResponse>(
+        const response = await adminClient.post<AdminUserResponse>(
             '/admin/admin-users',
             data
         )
@@ -26,7 +26,7 @@ export const adminUsersApi = {
     },
 
     async update(id: number, data: UpdateAdminUserPayload): Promise<AdminUser> {
-        const response = await axiosAdminClient.put<AdminUserResponse>(
+        const response = await adminClient.put<AdminUserResponse>(
             `/admin/admin-users/${id}`,
             data
         )
@@ -34,6 +34,6 @@ export const adminUsersApi = {
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/admin-users/${id}`)
+        await adminClient.delete(`/admin/admin-users/${id}`)
     }
 }

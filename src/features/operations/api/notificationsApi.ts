@@ -1,8 +1,8 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 
 export const notificationsApi = {
   async list(params: Record<string, unknown> = {}) {
-    const r = await axiosAdminClient.get('/admin/notifications', { params })
+    const r = await adminClient.get('/admin/notifications', { params })
     return {
       ...r.data,
       data: (r.data?.data ?? []).map((n: any) => ({
@@ -15,7 +15,7 @@ export const notificationsApi = {
   },
 
   async markRead(id: number) {
-    const r = await axiosAdminClient.put(`/admin/notifications/${id}/read`)
+    const r = await adminClient.put(`/admin/notifications/${id}/read`)
     return r.data
   },
 }

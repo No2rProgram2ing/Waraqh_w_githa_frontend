@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { DesignPattern, CreatePatternPayload, UpdatePatternPayload } from '../types/pattern'
 
 export interface PatternListResponse {
@@ -11,7 +11,7 @@ export interface PatternResponse {
 
 export const patternsApi = {
     async getAll(): Promise<DesignPattern[]> {
-        const response = await axiosAdminClient.get<PatternListResponse>(
+        const response = await adminClient.get<PatternListResponse>(
             '/admin/design-patterns'
         )
         return response.data.data
@@ -25,7 +25,7 @@ export const patternsApi = {
             return form
         }, new FormData())
 
-        const response = await axiosAdminClient.post<PatternResponse>(
+        const response = await adminClient.post<PatternResponse>(
             '/admin/design-patterns',
             payload,
             { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -43,7 +43,7 @@ export const patternsApi = {
 
         payload.append('_method', 'PUT')
 
-        const response = await axiosAdminClient.post<PatternResponse>(
+        const response = await adminClient.post<PatternResponse>(
             `/admin/design-patterns/${id}`,
             payload,
             { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -52,6 +52,6 @@ export const patternsApi = {
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/design-patterns/${id}`)
+        await adminClient.delete(`/admin/design-patterns/${id}`)
     }
 }

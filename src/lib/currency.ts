@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import { useSettings } from '@/features/settings/hooks/useSettings'
 
 export interface ExchangeRateResponse {
@@ -117,7 +117,7 @@ export function useExchangeRates() {
   return useQuery({
     queryKey: exchangeRateKeys.all,
     queryFn: async () => {
-      const response = await axiosAdminClient.get<ExchangeRateResponse>('/admin/exchange-rates')
+      const response = await adminClient.get<ExchangeRateResponse>('/admin/exchange-rates')
       return response.data.data
     },
     staleTime: 5 * 60 * 1000,

@@ -12,6 +12,7 @@ import { cartApi } from "@/api/cartApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { formatCurrency } from "@/lib/currency";
 import { ROUTES } from "@/routes/paths";
+import { useCurrencyConfig } from "@/features/catalog/hooks/useCurrencyConfig";
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +26,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
   const isInCart = useCartStore((state) =>
     state.items.some((item) => item.id === String(product.id) || item.productId === String(product.id)),
   );
+  const { data: currencyConfig } = useCurrencyConfig();
   const [isFavorite, setIsFavorite] = useState(() => {
     const storedIds = getStoredWishlistIds();
     return product.is_favorited || storedIds.includes(String(product.id));
@@ -54,7 +56,7 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
         name: product.name ?? "",
         subtitle: product.subtitle ?? product.description ?? "",
         price: Number(product.price ?? 0),
-        image: product.image ?? product.imageUrl ?? "",
+        image: product.image ?? "",
       });
 
       showSuccessToast("تمت إضافة المنتج إلى السلة");
@@ -171,9 +173,16 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
         <p className="text-[12px] leading-6 text-[#5f635d]">{product.subtitle}</p>
 
         <div className="flex items-center justify-between gap-3 pt-1">
-          <span className="text-[18px] font-extrabold text-[#1e241d]">
-            {formatCurrency(product.price, 'YER')}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[18px] font-extrabold text-[#1e241d]">
+              {formatCurrency(product.price, 'YER')}
+            </span>
+            {currencyConfig && currencyConfig.exchange_rate > 0 && (
+              <span className="text-[11px] font-medium text-gray-400">
+                {(Number(product.price ?? 0) / currencyConfig.exchange_rate).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyConfig.secondary_currency === 'SAR' ? 'ر.س' : currencyConfig.secondary_currency}
+              </span>
+            )}
+          </div>
           <Link
             to={ROUTES.productDetails(product.id)}
             className="text-xs font-bold text-[#52663c] transition hover:text-[#3e522c]"

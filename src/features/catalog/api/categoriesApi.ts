@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { ProductCategory, CreateCategoryPayload, UpdateCategoryPayload } from '../types/product-category'
 
 export interface CategoryResponse {
@@ -11,12 +11,12 @@ export interface CategoryListResponse {
 
 export const categoriesApi = {
     async getAll(): Promise<CategoryListResponse> {
-        const response = await axiosAdminClient.get<CategoryListResponse>('/admin/product-categories')
+        const response = await adminClient.get<CategoryListResponse>('/admin/product-categories')
         return response.data
     },
 
     async getById(id: number): Promise<ProductCategory> {
-        const response = await axiosAdminClient.get<CategoryResponse>(`/admin/product-categories/${id}`)
+        const response = await adminClient.get<CategoryResponse>(`/admin/product-categories/${id}`)
         return response.data.data
     },
 
@@ -28,7 +28,7 @@ export const categoriesApi = {
             return form
         }, new FormData())
 
-        const response = await axiosAdminClient.post<CategoryResponse>('/admin/product-categories', payload, {
+        const response = await adminClient.post<CategoryResponse>('/admin/product-categories', payload, {
             headers: { 'Content-Type': 'multipart/form-data' },
         })
         return response.data.data
@@ -44,13 +44,13 @@ export const categoriesApi = {
 
         payload.append('_method', 'PUT')
 
-        const response = await axiosAdminClient.post<CategoryResponse>(`/admin/product-categories/${id}`, payload, {
+        const response = await adminClient.post<CategoryResponse>(`/admin/product-categories/${id}`, payload, {
             headers: { 'Content-Type': 'multipart/form-data' },
         })
         return response.data.data
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/product-categories/${id}`)
+        await adminClient.delete(`/admin/product-categories/${id}`)
     }
 }

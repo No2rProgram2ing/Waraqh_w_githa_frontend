@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { RolePermission } from '../types/role'
 
 export interface PermissionsListResponse {
@@ -7,7 +7,7 @@ export interface PermissionsListResponse {
 
 export const permissionsApi = {
     async getAll(): Promise<RolePermission[]> {
-        const response = await axiosAdminClient.get<PermissionsListResponse>(
+        const response = await adminClient.get<PermissionsListResponse>(
             '/admin/permissions' // Placeholder endpoint
         )
         return response.data.data

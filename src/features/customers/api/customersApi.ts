@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type {
     CustomerListResponse,
     CustomerDetails,
@@ -24,7 +24,7 @@ export const customersApi = {
         if (filters.per_page) params.per_page = filters.per_page
         if (filters.page) params.page = filters.page
 
-        const response = await axiosAdminClient.get<CustomerListResponse>(
+        const response = await adminClient.get<CustomerListResponse>(
             '/admin/customers',
             { params }
         )
@@ -32,28 +32,28 @@ export const customersApi = {
     },
 
     async getById(id: number): Promise<CustomerDetails> {
-        const response = await axiosAdminClient.get<CustomerResponse>(
+        const response = await adminClient.get<CustomerResponse>(
             `/admin/customers/${id}`
         )
         return response.data.data
     },
 
     async create(data: CreateCustomerPayload): Promise<CustomerDetails> {
-        const response = await axiosAdminClient.post<CustomerResponse>('/admin/customers', data)
+        const response = await adminClient.post<CustomerResponse>('/admin/customers', data)
         return response.data.data
     },
 
     async update(id: number, data: UpdateCustomerPayload): Promise<CustomerDetails> {
-        const response = await axiosAdminClient.put<CustomerResponse>(`/admin/customers/${id}`, data)
+        const response = await adminClient.put<CustomerResponse>(`/admin/customers/${id}`, data)
         return response.data.data
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/customers/${id}`)
+        await adminClient.delete(`/admin/customers/${id}`)
     },
 
     async updateStatus(id: number, status: CustomerStatus): Promise<CustomerDetails> {
-        const response = await axiosAdminClient.patch<CustomerResponse>(
+        const response = await adminClient.patch<CustomerResponse>(
             `/admin/customers/${id}/status`,
             { status }
         )

@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type {
   AdminLoginResponse,
   AdminLogoutResponse,
@@ -17,7 +17,7 @@ export const adminAuthApi = {
   async login(
     credentials: AdminLoginCredentials,
   ): Promise<AdminLoginResponse> {
-    const response = await axiosAdminClient.post<AdminLoginResponse>(
+    const response = await adminClient.post<AdminLoginResponse>(
       '/admin/auth/login',
       credentials,
     )
@@ -27,7 +27,7 @@ export const adminAuthApi = {
 
   async logout(): Promise<AdminLogoutResponse> {
     const response =
-      await axiosAdminClient.post<AdminLogoutResponse>(
+      await adminClient.post<AdminLogoutResponse>(
         '/admin/auth/logout',
       )
 
@@ -36,7 +36,7 @@ export const adminAuthApi = {
 
   async getProfile(): Promise<AdminProfileResponse> {
     const response =
-      await axiosAdminClient.get<AdminProfileResponse>(
+      await adminClient.get<AdminProfileResponse>(
         '/admin/profile',
       )
 

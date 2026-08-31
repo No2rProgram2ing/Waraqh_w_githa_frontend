@@ -1,4 +1,4 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
@@ -10,8 +10,8 @@ import { cartApi } from "@/api/cartApi";
 import { getStoredWishlistIds, toggleWishlist } from "@/api/favoritesApi";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
-import { catalogProducts } from "@/features/products/data/products";
 import { getProductImage } from "@/features/products/data/productImages";
+import { useCurrencyConfig } from "@/features/catalog/hooks/useCurrencyConfig";
 
 interface ProductDetailsData {
   id: string | number;
@@ -26,9 +26,6 @@ interface ProductDetailsData {
   media?: Array<{ url?: string | null; is_primary?: boolean } | null>;
 }
 
-interface ProductDetailsResponse {
-  data: ProductDetailsData;
-}
 
 function normalizeProductDetails(product: ProductDetailsData): ProductDetailsData {
   const primaryMedia = product.media?.find((media) => media?.is_primary) ?? product.media?.[0];
@@ -52,6 +49,9 @@ export function ProductDetailsPage() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isFavorite, setIsFavorite] = useState(() => Boolean(productId && getStoredWishlistIds().includes(productId)));
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const { data: currencyConfig } = useCurrencyConfig();
 
   useEffect(() => {
     let mounted = true;
@@ -65,7 +65,13 @@ export function ProductDetailsPage() {
         const resp = await customerApi.get(`/products/${id}`);
         // Accept both { data: Product } and raw product objects
         const payload = resp.data?.data ?? resp.data;
-        if (mounted) setProduct(payload ? normalizeProductDetails(payload) : null);
+        if (mounted) {
+          const normalizedProduct = payload ? normalizeProductDetails(payload) : null;
+          setProduct(normalizedProduct);
+          if (normalizedProduct) {
+             setSelectedImage(normalizedProduct.image ?? normalizedProduct.image_url ?? null);
+          }
+        }
       } catch {
         if (mounted) setIsError(true);
       } finally {
@@ -84,10 +90,10 @@ export function ProductDetailsPage() {
     if (isAddingToCart || !product) return;
     try {
       setIsAddingToCart(true);
-      await cartApi.addToCart(product.id ?? product.product_id ?? productId, 1);
+      await cartApi.addToCart(product.id ?? productId, 1);
       // Update local cart state for immediate UX
       addItem({
-        id: String(product.id ?? product.product_id ?? productId),
+        id: String(product.id ?? productId),
         name: product.name ?? '',
         subtitle: product.subtitle ?? product.description ?? '',
         price: Number(product.price ?? 0),
@@ -109,7 +115,7 @@ export function ProductDetailsPage() {
       setIsTogglingFavorite(true);
       // Optimistically toggle UI
       setIsFavorite((prev) => !prev);
-      const favoriteState = await toggleWishlist(product.id ?? product.product_id ?? productId, isAuthenticated);
+      const favoriteState = await toggleWishlist(product.id ?? productId, isAuthenticated);
       setIsFavorite(Boolean(favoriteState));
       showSuccessToast(favoriteState ? 'تمت إضافة المنتج إلى المفضلة' : 'تمت إزالة المنتج من المفضلة');
     } catch {
@@ -158,13 +164,62 @@ export function ProductDetailsPage() {
         <div className="mx-auto max-w-6xl">
           <Link to={ROUTES.products} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-[#52663c] hover:text-[#3e522c]"><ArrowRight className="size-4" /> العودة إلى المنتجات</Link>
           <section className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            <div className="overflow-hidden rounded-[4px] bg-[#e5ded2]"><motion.img initial={{ scale: 1.06 }} animate={{ scale: 1 }} transition={{ duration: 0.7 }} src={product.image ?? product.image_url} alt={product.name} className="aspect-[0.9] w-full object-cover" /></div>
+            <div className="flex flex-col gap-4">
+              <div className="overflow-hidden rounded-[4px] bg-[#e5ded2]">
+                <motion.img 
+                  key={selectedImage}
+                  initial={{ opacity: 0.8, scale: 1.02 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ duration: 0.4 }} 
+                  src={selectedImage ?? undefined} 
+                  alt={product.name} 
+                  className="aspect-[0.9] w-full object-cover" 
+                />
+              </div>
+              
+              {/* Image Thumbnails Gallery */}
+              {product.media && product.media.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3">
+                  {[
+                    // Include the main image if it exists and isn't already in media (or just map media directly if it contains the primary)
+                    ...(product.image && !product.media.find(m => m?.url === product.image) ? [{ url: product.image, id: 'main' }] : []),
+                    ...product.media
+                  ].filter(Boolean).map((mediaItem: any, idx: number) => {
+                    const imgUrl = mediaItem.url;
+                    if (!imgUrl) return null;
+                    const isSelected = selectedImage === imgUrl;
+                    return (
+                      <button
+                        key={mediaItem.id ?? idx}
+                        type="button"
+                        onClick={() => setSelectedImage(imgUrl)}
+                        className={`overflow-hidden rounded-[4px] border-2 transition-all ${isSelected ? 'border-[#52663c] opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                      >
+                        <img src={imgUrl} alt="Thumbnail" className="h-16 w-16 object-cover" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div>
               <p className="text-xs font-bold tracking-[0.16em] text-[#8b7652]">تفاصيل المنتج</p>
               <h1 className="mt-3 text-3xl font-bold leading-relaxed text-[#3e522c] sm:text-5xl">{product.name}</h1>
               <p className="mt-3 text-base font-bold text-[#8b7652]">{product.subtitle ?? product.short_description}</p>
               <p className="mt-6 text-sm leading-8 text-[#5e6258]">{product.description}</p>
-              <div className="mt-8 flex items-center justify-between border-y border-[#e2dbd0] py-5"><span className="text-2xl font-extrabold text-[#20251b]">{Number(product.price ?? 0).toLocaleString('ar-SA')} ر.س</span><span className="text-xs text-[#77766d]">صناعة يدوية مختارة</span></div>
+              
+              <div className="mt-8 flex items-center justify-between border-y border-[#e2dbd0] py-5">
+                <div className="flex flex-col">
+                  <span className="text-2xl font-extrabold text-[#20251b]">{Number(product.price ?? 0).toLocaleString('ar-SA')} ر.ي</span>
+                  {currencyConfig && currencyConfig.exchange_rate > 0 && (
+                     <span className="mt-1 text-sm font-medium text-gray-400">
+                       {(Number(product.price ?? 0) / currencyConfig.exchange_rate).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currencyConfig.secondary_currency === 'SAR' ? 'ر.س' : currencyConfig.secondary_currency}
+                     </span>
+                  )}
+                </div>
+                <span className="text-xs text-[#77766d]">صناعة يدوية مختارة</span>
+              </div>
 
               <div className="mt-6 flex items-center gap-3">
                 <button type="button" onClick={handleAddToCart} disabled={isAddingToCart} className="inline-flex items-center gap-3 rounded-sm bg-[#52663c] px-7 py-3 text-sm font-bold text-white transition hover:bg-[#3e522c]">

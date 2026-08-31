@@ -1,9 +1,9 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { DashboardStats, DashboardOrder, FeaturedProduct } from '../types/dashboard.types'
 
 export const dashboardApi = {
   async getStats(params?: { from?: string; to?: string }): Promise<DashboardStats> {
-    const response = await axiosAdminClient.get('/admin/orders-statistics', { params })
+    const response = await adminClient.get('/admin/orders-statistics', { params })
     const stats = response.data?.data ?? response.data ?? {}
 
     return {
@@ -18,7 +18,7 @@ export const dashboardApi = {
   },
 
   async getLatestOrders(per_page = 5): Promise<DashboardOrder[]> {
-    const response = await axiosAdminClient.get('/admin/orders', { params: { per_page } })
+    const response = await adminClient.get('/admin/orders', { params: { per_page } })
     return Array.isArray(response.data?.data)
       ? response.data.data.map((o: any) => ({
           id: Number(o.id),
@@ -36,7 +36,7 @@ export const dashboardApi = {
   },
 
   async getFeaturedProducts(per_page = 6): Promise<FeaturedProduct[]> {
-    const response = await axiosAdminClient.get('/admin/products', { params: { per_page } })
+    const response = await adminClient.get('/admin/products', { params: { per_page } })
     return Array.isArray(response.data?.data)
       ? response.data.data.map((p: any) => ({
           id: Number(p.id),

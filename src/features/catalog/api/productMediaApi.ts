@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 
 import type {
     ProductMedia,
@@ -31,7 +31,7 @@ import type {
     export const productMediaApi = {
     async getAll(): Promise<ProductMediaListResponse> {
         const response =
-        await axiosAdminClient.get<ProductMediaListResponse>(
+        await adminClient.get<ProductMediaListResponse>(
             '/admin/product-media',
         )
 
@@ -40,7 +40,7 @@ import type {
 
     async getById(id: number): Promise<ProductMedia> {
         const response =
-        await axiosAdminClient.get<ProductMediaResponse>(
+        await adminClient.get<ProductMediaResponse>(
             `/admin/product-media/${id}`,
         )
 
@@ -51,7 +51,7 @@ import type {
         data: CreateProductMediaPayload,
     ): Promise<ProductMedia> {
         const response =
-        await axiosAdminClient.post<ProductMediaResponse>(
+        await adminClient.post<ProductMediaResponse>(
             '/admin/product-media',
             data,
         )
@@ -64,7 +64,7 @@ import type {
         data: UpdateProductMediaPayload,
     ): Promise<ProductMedia> {
         const response =
-        await axiosAdminClient.put<ProductMediaResponse>(
+        await adminClient.put<ProductMediaResponse>(
             `/admin/product-media/${id}`,
             data,
         )
@@ -73,7 +73,7 @@ import type {
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(
+        await adminClient.delete(
         `/admin/product-media/${id}`,
         )
     },
@@ -85,7 +85,7 @@ import type {
             formData.append('media[]', file)
         })
 
-        const response = await axiosAdminClient.post<ProductMediaListResponse>(
+        const response = await adminClient.post<ProductMediaListResponse>(
             '/admin/product-media/upload', // Placeholder endpoint
             formData,
             { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -94,14 +94,14 @@ import type {
     },
 
     async reorder(productId: number, orderedIds: number[]): Promise<void> {
-        await axiosAdminClient.put(
+        await adminClient.put(
             '/admin/product-media/reorder', // Placeholder endpoint
             { product_id: productId, orderedIds }
         )
     },
 
     async setPrimary(productId: number, mediaId: number): Promise<void> {
-        await axiosAdminClient.put(
+        await adminClient.put(
             `/admin/product-media/${mediaId}/primary`, // Placeholder endpoint
             { product_id: productId }
         )

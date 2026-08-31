@@ -8,6 +8,7 @@ import { useAdminAuthStore } from '@/features/auth/stores/adminAuthStore'
 import { useAdminUiStore } from '@/features/admin/stores/adminUiStore'
 import { useTheme } from '@/providers/ThemeProvider'
 import { useGlobalSearch } from '@/features/search/hooks/useGlobalSearch'
+import { NotificationBell } from '@/features/admin/components/NotificationBell'
 
 function AdminTopbar() {
   const admin = useAdminAuthStore((state) => state.admin)
@@ -203,16 +204,7 @@ function AdminTopbar() {
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
 
-        <button
-          type="button"
-          onClick={() => navigate('/admin/notifications')}
-          className="relative rounded-xl p-2.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[#45592D]/10 hover:text-[#45592D]"
-          aria-label="الإشعارات"
-          title="الإشعارات"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 animate-pulse rounded-full bg-red-500" />
-        </button>
+        <NotificationBell />
 
         <button
           type="button"

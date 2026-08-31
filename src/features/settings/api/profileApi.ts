@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { AdminProfile, UpdateProfilePayload } from '../types/profile'
 
 export interface ProfileResponse {
@@ -7,7 +7,7 @@ export interface ProfileResponse {
 
 export const profileApi = {
     async getProfile(): Promise<AdminProfile> {
-        const response = await axiosAdminClient.get<ProfileResponse>('/admin/profile')
+        const response = await adminClient.get<ProfileResponse>('/admin/profile')
         return response.data.data
     },
 
@@ -27,7 +27,7 @@ export const profileApi = {
         if (data.password) formData.append('password', data.password)
         if (data.password_confirmation) formData.append('password_confirmation', data.password_confirmation)
 
-        const response = await axiosAdminClient.post<ProfileResponse>('/admin/profile', formData, {
+        const response = await adminClient.post<ProfileResponse>('/admin/profile', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         })
 

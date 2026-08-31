@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { Review, ReviewListResponse, ReviewFilters, ReplyReviewPayload, UpdateReviewStatusPayload } from '../types/review'
 
 export interface ReviewResponse {
@@ -16,7 +16,7 @@ export const reviewsApi = {
         if (filters.date_to) params.date_to = filters.date_to
         if (filters.page) params.page = filters.page
 
-        const response = await axiosAdminClient.get<ReviewListResponse>(
+        const response = await adminClient.get<ReviewListResponse>(
             '/admin/reviews',
             { params }
         )
@@ -24,7 +24,7 @@ export const reviewsApi = {
     },
 
     async updateStatus(id: number, data: UpdateReviewStatusPayload): Promise<Review> {
-        const response = await axiosAdminClient.patch<ReviewResponse>(
+        const response = await adminClient.patch<ReviewResponse>(
             `/admin/reviews/${id}/status`, // Placeholder endpoint
             data
         )
@@ -32,7 +32,7 @@ export const reviewsApi = {
     },
 
     async reply(id: number, data: ReplyReviewPayload): Promise<Review> {
-        const response = await axiosAdminClient.patch<ReviewResponse>(
+        const response = await adminClient.patch<ReviewResponse>(
             `/admin/reviews/${id}/reply`, // Placeholder endpoint
             data
         )
@@ -40,6 +40,6 @@ export const reviewsApi = {
     },
 
     async delete(id: number): Promise<void> {
-        await axiosAdminClient.delete(`/admin/reviews/${id}`) // Placeholder endpoint
+        await adminClient.delete(`/admin/reviews/${id}`) // Placeholder endpoint
     }
 }

@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { ArrowRight, Save } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { useSystemCurrency } from '@/lib/currency'
 import { showErrorToast, showSuccessToast } from '@/lib/toast'
@@ -131,10 +131,10 @@ export default function OrderCreatePage() {
 
         const [customersResponse, productsResponse] =
           await Promise.all([
-            axiosAdminClient.get('/admin/customers', {
+            adminClient.get('/admin/customers', {
               params: { per_page: 100 },
             }),
-            axiosAdminClient.get('/admin/products', {
+            adminClient.get('/admin/products', {
               params: { per_page: 100 },
             }),
           ])

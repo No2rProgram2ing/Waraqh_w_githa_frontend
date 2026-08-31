@@ -108,28 +108,7 @@
     })
     }
 
-    export function useUploadProductMedia() {
-    const queryClient = useQueryClient()
 
-    return useMutation({
-        mutationFn: ({
-        productId,
-        files,
-        }: {
-        productId: number
-        files: File[]
-        }) => productMediaApi.upload(productId, files),
-
-        onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({
-            queryKey: productMediaKeys.product(variables.productId),
-        })
-        await queryClient.invalidateQueries({
-            queryKey: productMediaKeys.list(),
-        })
-        },
-    })
-    }
 
     export function useReorderProductMedia() {
     const queryClient = useQueryClient()

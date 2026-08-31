@@ -1,4 +1,4 @@
-import { axiosAdminClient } from '@/api/axiosAdminClient'
+import { adminClient } from '@/lib/api/adminClient'
 import type { CustomizationRequest, CustomizationStatus } from '../types/customizations.types'
 
 export const customizationsApi = {
@@ -11,7 +11,7 @@ export const customizationsApi = {
       total?: number
     }
   }> {
-    const r = await axiosAdminClient.get('/admin/customizations')
+    const r = await adminClient.get('/admin/customizations')
 
     return {
       ...r.data,
@@ -21,22 +21,22 @@ export const customizationsApi = {
     }
   },
   async create(payload: Record<string, unknown>) {
-    const r = await axiosAdminClient.post('/admin/customizations', payload)
+    const r = await adminClient.post('/admin/customizations', payload)
     return (r.data?.data ?? r.data) as CustomizationRequest
   },
 
   async getById(id: number): Promise<CustomizationRequest> {
-    const r = await axiosAdminClient.get(`/admin/customizations/${id}`)
+    const r = await adminClient.get(`/admin/customizations/${id}`)
     return (r.data?.data ?? r.data) as CustomizationRequest
   },
 
   async updateStatus(id: number, status: CustomizationStatus) {
-    const r = await axiosAdminClient.put(`/admin/customizations/${id}/status`, { status })
+    const r = await adminClient.put(`/admin/customizations/${id}/status`, { status })
     return r.data
   },
 
   async delete(id: number) {
-    const r = await axiosAdminClient.delete(`/admin/customizations/${id}`)
+    const r = await adminClient.delete(`/admin/customizations/${id}`)
     return r.data
   },
 }
