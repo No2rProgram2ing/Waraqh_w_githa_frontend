@@ -9,6 +9,8 @@ export interface AddressItem {
  street?: string | null;
  postal_code?: string | null;
  is_default?: boolean;
+ latitude?: number | null;
+ longitude?: number | null;
  created_at?: string;
  updated_at?: string;
 }
@@ -23,6 +25,8 @@ export interface AddressPayload {
  street: string;
  postal_code?: string | null;
  is_default?: boolean;
+ latitude?: number | null;
+ longitude?: number | null;
 }
 
 export interface AddressListResponse {
@@ -53,4 +57,6 @@ export interface AddressFormValues {
  street: string;
  postal_code: string;
  is_default: boolean;
+ latitude: number | null;
+ longitude: number | null;
 }

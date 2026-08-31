@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { AccountLayout } from "@/layouts/AccountLayout";
@@ -93,7 +93,7 @@ export function AddressesPage() {
         )}
 
         <div className="pt-2">
-          <AddressMapCard />
+          <AddressMapCard onOpenModal={openCreateModal} />
         </div>
       </motion.section>
 

@@ -11,6 +11,25 @@ export default defineConfig({
     },
     dedupe: ["apexcharts"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor';
+            }
+            if (id.includes('leaflet')) {
+              return 'map';
+            }
+            if (id.includes('lucide-react') || id.includes('axios')) {
+              return 'ui';
+            }
+          }
+        }
+      }
+    }
+  },
   server: {
     host: "0.0.0.0",
     port: 5173,

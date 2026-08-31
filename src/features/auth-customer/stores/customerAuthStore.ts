@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { authApi } from '@/api/auth';
 import { migrateGuestWishlist } from '@/api/favoritesApi';
 import { customerAuthStorage } from '@/features/auth-customer/services/customerAuthStorage';
+import { useCartStore } from '@/features/cart/stores/cartStore';
 import type { LoginResponse } from '@/api/auth';
 
 type CustomerUser = LoginResponse['user'];
@@ -57,9 +58,7 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
         void migrateGuestWishlist().catch((error) => {
           console.error("Failed to migrate guest wishlist", error);
         });
-        void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
-          void useCartStore.getState().syncGuestCart();
-        });
+        void useCartStore.getState().syncGuestCart();
       },
 
       setToken: (token: string | null): void => {
@@ -93,9 +92,7 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
         void migrateGuestWishlist().catch((error) => {
           console.error("Failed to migrate guest wishlist", error);
         });
-        void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
-          void useCartStore.getState().syncGuestCart();
-        });
+        void useCartStore.getState().syncGuestCart();
       },
 
       hydrateFromStorage: (): void => {
@@ -111,9 +108,7 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
           void migrateGuestWishlist().catch((error) => {
             console.error("Failed to migrate guest wishlist", error);
           });
-          void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
-            void useCartStore.getState().syncGuestCart();
-          });
+          void useCartStore.getState().syncGuestCart();
         }
       },
 

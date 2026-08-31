@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { getProductImage } from "@/features/products/data/productImages";
+import { cartApi } from "@/api/cartApi";
 
 const GUEST_CART_KEY = "guest_cart";
 
@@ -103,7 +104,6 @@ export const useCartStore = create<CartState>()((set) => ({
     if (guestItems.length === 0) return;
 
     try {
-      const { cartApi } = await import("@/api/cartApi");
 
       // Try bulk sync first (preferred)
       let bulkOk = false;

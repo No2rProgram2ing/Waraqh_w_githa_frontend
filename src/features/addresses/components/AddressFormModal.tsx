@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { useCreateAddress, useUpdateAddress } from "@/features/addresses/hooks/useAddresses";
 import type { AddressFormValues, AddressItem } from "@/features/addresses/types";
+import { AddressMap } from "./AddressMap";
 
 interface AddressFormModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const emptyForm: AddressFormValues = {
   street: "",
   postal_code: "",
   is_default: false,
+  latitude: null,
+  longitude: null,
 };
 
 const normalizePhone = (value: string) => value.replace(/\s+/g, " ").trim();
@@ -60,6 +63,58 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
   const [form, setForm] = useState<AddressFormValues>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const fetchAddressFromCoordinates = async (lat: number | null, lng: number | null) => {
+    if (!lat || !lng) return;
+
+    try {
+      const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`);
+      if (!response.ok) throw new Error("Failed to fetch address from BigDataCloud");
+      const data = await response.json();
+      console.log("[TRACE 1] Raw BigDataCloud API Response:", data);
+      
+      const fetchedCountry = data.countryName || "اليمن";
+      const fetchedCity = data.city || data.principalSubdivision || "صنعاء";
+      const fetchedDistrict = data.locality || "غير محدد";
+      const fetchedStreet = "موقع محدد على الخريطة";
+
+      console.log("[TRACE 2] Extracted Fallback Values:", { country: fetchedCountry, city: fetchedCity, district: fetchedDistrict, street: fetchedStreet });
+
+      setForm((prev) => ({
+        ...prev,
+        country: fetchedCountry,
+        city: fetchedCity,
+        district: fetchedDistrict,
+        street: fetchedStreet,
+      }));
+
+      // Clear any pending validation errors for these auto-filled fields
+      setFieldErrors((prev) => ({
+        ...prev,
+        country: "",
+        city: "",
+        district: "",
+        street: "",
+      }));
+    } catch (error) {
+      console.error("Geocoding Error:", error);
+      // Hardcoded fallback if the network fails completely
+      setForm((prev) => ({
+        ...prev,
+        country: "اليمن",
+        city: "صنعاء",
+        district: "غير محدد",
+        street: "موقع محدد على الخريطة",
+      }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        country: "",
+        city: "",
+        district: "",
+        street: "",
+      }));
+    }
+  };
+
   useEffect(() => {
     if (addressToEdit) {
       setForm({
@@ -72,9 +127,15 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
         street: addressToEdit.street ?? "",
         postal_code: addressToEdit.postal_code ?? "",
         is_default: Boolean(addressToEdit.is_default),
+        latitude: addressToEdit.latitude ?? null,
+        longitude: addressToEdit.longitude ?? null,
       });
     } else {
       setForm(emptyForm);
+      if (isOpen) {
+        console.log("[TRACE 0] Modal Mounted. Triggering initial fetch for Sana'a...");
+        void fetchAddressFromCoordinates(15.3694, 44.2066);
+      }
     }
 
     setFieldErrors({});
@@ -88,6 +149,8 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
     setForm((prev) => ({ ...prev, [field]: value }));
     setFieldErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -108,6 +171,8 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
       street: form.street.trim(),
       postal_code: form.postal_code.trim(),
       is_default: Boolean(form.is_default),
+      latitude: form.latitude,
+      longitude: form.longitude,
     };
 
     if (addressToEdit) {
@@ -146,13 +211,29 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
               {fieldErrors.recipient_name && <p className="mt-1 text-xs text-[#a23a3a]">{fieldErrors.recipient_name}</p>}
             </div>
 
+            <div className="md:col-span-2 space-y-2 mt-2">
+              <label className="block text-sm font-medium text-[#465142]">تحديد الموقع على الخريطة</label>
+              {isOpen && (
+                <AddressMap 
+                  key={isOpen ? 'open' : 'closed'}
+                  latitude={form.latitude}
+                  longitude={form.longitude}
+                  onChange={(lat, lng) => {
+                    updateField("latitude", lat);
+                    updateField("longitude", lng);
+                    void fetchAddressFromCoordinates(lat, lng);
+                  }}
+                />
+              )}
+              <p className="text-xs text-[var(--color-text-faint)]">يمكنك سحب الدبوس أو الضغط على زر تحديد موقعي للوصول السريع لموقعك الحالي.</p>
+            </div>
+
             <div>
               <label className="mb-1 block text-sm font-medium text-[#465142]">الدولة</label>
               <input
                 value={form.country}
                 onChange={(e) => updateField("country", e.target.value)}
                 className="w-full rounded-xl border border-[#dfe5d8] bg-white px-3 py-2.5 text-sm text-[#1d241a] outline-none transition focus:border-[#4a5c39]"
-                placeholder="السعودية"
               />
               {fieldErrors.country && <p className="mt-1 text-xs text-[#a23a3a]">{fieldErrors.country}</p>}
             </div>
@@ -163,7 +244,6 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
                 value={form.city}
                 onChange={(e) => updateField("city", e.target.value)}
                 className="w-full rounded-xl border border-[#dfe5d8] bg-white px-3 py-2.5 text-sm text-[#1d241a] outline-none transition focus:border-[#4a5c39]"
-                placeholder="الرياض"
               />
               {fieldErrors.city && <p className="mt-1 text-xs text-[#a23a3a]">{fieldErrors.city}</p>}
             </div>
@@ -174,7 +254,6 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
                 value={form.district}
                 onChange={(e) => updateField("district", e.target.value)}
                 className="w-full rounded-xl border border-[#dfe5d8] bg-white px-3 py-2.5 text-sm text-[#1d241a] outline-none transition focus:border-[#4a5c39]"
-                placeholder="حي النخيل"
               />
             </div>
 
@@ -195,7 +274,6 @@ export function AddressFormModal({ isOpen, onClose, addressToEdit }: AddressForm
                 onChange={(e) => updateField("street", e.target.value)}
                 rows={3}
                 className="w-full rounded-xl border border-[#dfe5d8] bg-white px-3 py-2.5 text-sm text-[#1d241a] outline-none transition focus:border-[#4a5c39]"
-                placeholder="شوارع، مبنى، رقم، تفاصيل أخرى"
               />
               {fieldErrors.street && <p className="mt-1 text-xs text-[#a23a3a]">{fieldErrors.street}</p>}
             </div>
