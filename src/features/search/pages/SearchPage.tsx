@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingBagIcon } from '@/components/ui/icons'
 import { AccountLayout } from '@/layouts/AccountLayout'
 import { useSearchProducts, useSearchCategories } from '@/features/search/hooks/useSearchProducts'
 import type { SearchFiltersDTO } from '@/api/search'
 import type { Product } from '@/features/catalog/types/product'
+import { ProductCard } from '@/features/products/components/ProductCard'
 import { getProductImage } from '@/features/products/data/productImages'
 
 const SKELETON_COUNT = 6
@@ -15,24 +15,95 @@ function formatPrice(price: string | number) {
   return num.toLocaleString('ar-SA')
 }
 
+function normalizeImageUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+
+  const imageUrl = value.trim()
+  if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl
+
+  const configuredApiBase = String(import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '')
+  const apiOrigin = configuredApiBase.replace(/\/api(?:\/v\d+)?$/i, '')
+  const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
+
+  return apiOrigin ? `${apiOrigin}${normalizedPath}` : normalizedPath
+}
+
+function getSearchProductImage(item: Record<string, unknown>, productId: string): string {
+  const directImage = [
+    item.image_url,
+    item.image,
+    item.imageUrl,
+    item.thumbnail,
+    item.cover,
+  ]
+    .map(normalizeImageUrl)
+    .find(Boolean)
+
+  if (directImage) return directImage
+
+  const media = Array.isArray(item.media) ? item.media : []
+  const images = Array.isArray(item.images) ? item.images : []
+  const mediaCandidates = [...media, ...images]
+
+  for (const candidate of mediaCandidates) {
+    const imageUrl = normalizeImageUrl(
+      typeof candidate === 'string'
+        ? candidate
+        : candidate && typeof candidate === 'object'
+          ? (candidate as Record<string, unknown>).url ??
+            (candidate as Record<string, unknown>).image_url ??
+            (candidate as Record<string, unknown>).image ??
+            (candidate as Record<string, unknown>).path
+          : null,
+    )
+    if (imageUrl) return imageUrl
+  }
+
+  return getProductImage(productId)
+}
+
 export function SearchPage() {
   const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState(query)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [filters, setFilters] = useState<SearchFiltersDTO>({ page: 1, per_page: 12 })
 
-  // Debounce input (300ms)
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300)
-    return () => clearTimeout(t)
-  }, [query])
-
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, q: debouncedQuery, page: 1 }))
-  }, [debouncedQuery])
-
-  // Use the existing hooks
   const productsQuery = useSearchProducts(filters)
   const categoriesQuery = useSearchCategories()
+
+  const applySearch = (nextValue: string) => {
+    const normalized = nextValue.trim()
+    setQuery(normalized)
+    setDebouncedQuery(normalized)
+    
+    const categories = categoriesQuery.data?.data ?? []
+    const matchedCategory = categories.find((c: any) => c.name === normalized)
+
+    setFilters((prev) => ({ 
+      ...prev, 
+      q: matchedCategory ? undefined : (normalized || undefined),
+      category_id: matchedCategory ? matchedCategory.id : undefined,
+      page: 1 
+    }))
+  }
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const normalized = query.trim()
+      setDebouncedQuery(normalized)
+      
+      const categories = categoriesQuery.data?.data ?? []
+      const matchedCategory = categories.find((c: any) => c.name === normalized)
+
+      setFilters((prev) => ({ 
+        ...prev, 
+        q: matchedCategory ? undefined : (normalized || undefined),
+        category_id: matchedCategory ? matchedCategory.id : undefined,
+        page: 1 
+      }))
+    }, 300)
+
+    return () => clearTimeout(t)
+  }, [query, categoriesQuery.data])
 
   const products: Product[] = useMemo(() => productsQuery.data?.data ?? [], [productsQuery.data])
   const total = productsQuery.data?.meta?.total ?? products.length
@@ -60,6 +131,11 @@ export function SearchPage() {
                 aria-label="ابحث في المنتجات"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    applySearch(query)
+                  }
+                }}
                 placeholder="ابحث عن منتج أو فئة..."
                 className="w-full border-0 bg-transparent text-right text-[15px] text-[#20251f] placeholder:text-[#7f827b] focus:outline-none"
               />
@@ -67,7 +143,7 @@ export function SearchPage() {
 
             <button
               type="button"
-              onClick={() => setDebouncedQuery(query)}
+              onClick={() => applySearch(query)}
               className="rounded-xl bg-[#4f5f3d] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] hover:bg-[#45593a]"
             >
               بحث
@@ -79,7 +155,7 @@ export function SearchPage() {
               <button
                 key={term}
                 type="button"
-                onClick={() => setQuery(term)}
+                onClick={() => applySearch(term)}
                 className="rounded-full border border-[#d9d1c6] bg-white px-3 py-1.5 text-[12px] text-[#4a5149] transition-colors hover:bg-[#f0e9e1]"
               >
                 {term}
@@ -118,45 +194,34 @@ export function SearchPage() {
           )}
 
           {!productsQuery.isLoading &&
-            products.map((item, index) => (
-              <motion.article
-                key={item.id}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.06, ease: 'easeOut' }}
-                className="group overflow-hidden rounded-[20px] border border-[#e9e0d5] bg-[#f6f1ea] shadow-[0_10px_20px_-18px_rgba(38,47,26,0.25)]"
-              >
-                <img
-                  src={getProductImage(item.id)}
-                  alt={item.name}
-                  className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            products.map((item, index) => {
+              const productId = String(item.id)
+              const normalizedProduct = {
+                id: productId,
+                name: item.name,
+                subtitle: item.description ?? item.category?.name ?? 'منتج',
+                description: item.description ?? '',
+                price: Number(item.price ?? 0),
+                image: getSearchProductImage(item as unknown as Record<string, unknown>, productId),
+                imageAlt: item.name,
+                rating: 4.8,
+                badge: item.status === 'active' ? 'متوفر' : 'غير متوفر',
+                categoryName: item.category?.name ?? '',
+                inStock: item.status === 'active',
+                stock_quantity: item.stock_quantity,
+                available_stock: item.available_stock ?? item.stock_quantity,
+                is_favorited: false,
+              };
+
+              return (
+                <ProductCard
+                  key={item.id}
+                  product={normalizedProduct as any}
+                  index={index}
+                  featured={index < 3}
                 />
-
-                <div className="space-y-3 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-[#eef2e8] px-2 py-1 text-[9px] font-medium text-[#4d6340]">
-                      {item.status === 'active' ? 'متوفر' : 'غير متوفر'}
-                    </span>
-                    <span className="text-[11px] text-[#7a7b75]">{item.category?.name ?? ''}</span>
-                  </div>
-
-                  <p className="text-[16px] font-bold text-[#1c211b]">{item.name}</p>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[17px] font-extrabold text-[#1d2218]">
-                      {formatPrice(item.price)} ر.س
-                    </span>
-                    <button
-                      type="button"
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4f5f3d] text-white shadow-[0_12px_18px_-12px_rgba(79,95,61,0.8)] transition-transform duration-200 hover:scale-105"
-                      aria-label={`إضافة ${item.name} إلى السلة`}
-                    >
-                      <ShoppingBagIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </motion.article>
-            ))}
+              );
+            })}
         </div>
       </motion.section>
     </AccountLayout>

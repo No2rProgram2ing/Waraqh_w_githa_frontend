@@ -4,7 +4,7 @@ export function FloatingSocialLinks() {
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-3 sm:bottom-6 sm:right-6">
       <a
-        href="https://wa.me/967700000000"
+        href="https://wa.me/967778695735"
         target="_blank"
         rel="noreferrer"
         aria-label="واتساب"

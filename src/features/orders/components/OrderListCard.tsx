@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { PackageIcon } from "@/components/ui/icons";
+import { ROUTES } from "@/routes/paths";
 import type { OrderItem } from "@/features/orders/types";
 
 interface OrderListCardProps {
@@ -58,7 +59,7 @@ export function OrderListCard({ order }: OrderListCardProps) {
           </Link>
 
           <Link
-            to={`/orders/${orderPath}/track`}
+            to={ROUTES.orderTrackingPath(orderPath)}
             className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[12px] font-bold border border-[#d7d2c8] bg-white text-[#454a42] hover:bg-[#f1f0ed]"
           >
             <span>تتبع الطلب</span>

@@ -1,4 +1,5 @@
-﻿import { customerApi } from "@/api/customerApi";
+﻿import axios from "axios";
+import { customerApi } from "@/api/customerApi";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 
@@ -35,6 +36,15 @@ export interface ProductOption {
   name: string;
   description?: string | null;
   price?: number | string | null;
+  attributes?: ProductAttributeOption[];
+}
+
+export interface ProductAttributeOption {
+  id: number;
+  display_name: string;
+  input_type: "text" | "number" | "select" | "color" | "boolean";
+  is_required: boolean;
+  options?: string[] | string | null;
 }
 
 export interface CreateCustomRequestInput {
@@ -54,6 +64,7 @@ export interface CreateCustomRequestInput {
   height_cm?: number | string;
   customer_notes?: string;
   reference_image_url?: string;
+  attribute_values?: Array<{ attribute_id: number; value: string }>;
 }
 
 interface ProductCustomizationApiItem {
@@ -63,6 +74,7 @@ interface ProductCustomizationApiItem {
     id?: number | string | null;
     name?: string | null;
   } | null;
+  attributes?: ProductAttributeOption[];
   color?: string | null;
   design_pattern?: string | null;
   quantity?: number | null;
@@ -297,17 +309,18 @@ export const customRequestsApi = {
       name: item.name,
       description: item.description,
       price: item.price,
+      attributes: (item as ProductCustomizationApiItem & { attributes?: ProductAttributeOption[] }).attributes,
     }));
   },
 
   createCustomRequest: async (input: CreateCustomRequestInput): Promise<CustomRequestItem> => {
-    const customerId = Number(input.customer_id ?? useCustomerAuthStore.getState().user?.id ?? 0);
+    const customerId = Number(input.customer_id ?? (getCurrentCustomerId() || 0));
     const productId = Number(input.product_id ?? input.base_product_id ?? 0);
-    const notes = input.customer_notes || input.description || input.title || "";
+    const notes = (input.customer_notes || input.description || input.title || "").slice(0, 1000);
 
     const payload: Record<string, unknown> = {
       ...(customerId > 0 ? { customer_id: customerId } : {}),
-      ...(productId > 0 ? { product_id: productId, base_product_id: productId } : {}),
+      ...(productId > 0 ? { base_product_id: productId } : {}),
       quantity: Number(input.quantity ?? 1),
       ...(input.color_id ? { color_id: Number(input.color_id) } : {}),
       ...(input.design_pattern_id ? { design_pattern_id: Number(input.design_pattern_id) } : {}),
@@ -315,6 +328,9 @@ export const customRequestsApi = {
       ...(input.width_cm === undefined || input.width_cm === "" ? {} : { width_cm: Number(input.width_cm) }),
       ...(input.height_cm === undefined || input.height_cm === "" ? {} : { height_cm: Number(input.height_cm) }),
       customer_notes: notes,
+      ...(input.attribute_values?.length
+        ? { attribute_values: input.attribute_values }
+        : {}),
     };
 
     const endpoints = ["/customer/customizations", "/customer/custom-design-requests"];
@@ -335,10 +351,13 @@ export const customRequestsApi = {
       } catch (error) {
         lastError = error;
         console.error(`[customRequestsApi] Failed createCustomRequest at ${endpoint}:`, error);
+
+        if (axios.isAxiosError(error) && error.response?.status !== 404) {
+          break;
+        }
       }
     }
 
     throw lastError ?? new Error("Failed to create custom request");
   },
 };
-

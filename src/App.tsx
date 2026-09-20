@@ -24,24 +24,14 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <AuthBootstrap />
           <Routes>
             <Route path="/admin/*" element={<AdminRoutes />} />
             <Route path="/*" element={<AppRoutes />} />
           </Routes>
         </BrowserRouter>
-      </QueryClientProvider>
-    </HelmetProvider>
-  );
- return (
-   <QueryClientProvider client={queryClient}>
-     <BrowserRouter>
-       <AuthBootstrap />
-       <Routes>
-         <Route path="/admin/*" element={<AdminRoutes />} />
-         <Route path="/*" element={<AppRoutes />} />
-       </Routes>
-     </BrowserRouter>
-   </QueryClientProvider>
+     </QueryClientProvider>
+   </HelmetProvider>
  );
 }
 

@@ -46,22 +46,57 @@ function extractArray(payload: unknown): unknown[] {
 
 export const searchApi = {
   async getProducts(params: SearchFiltersDTO = {}): Promise<SearchResponsePayload> {
-    const response = await customerApi.get<unknown>('/products', { params })
-    const payload = response.data
-    const data = extractArray(payload) as Product[]
+    const cleanParams = { ...params }
+    const searchTerm = String(cleanParams.q ?? '').trim()
 
-    const metaSource = payload && typeof payload === 'object' ? (payload as Record<string, unknown>).meta : undefined
-    const meta = metaSource && typeof metaSource === 'object'
-      ? (metaSource as Record<string, unknown>)
-      : {}
+    if (!searchTerm) {
+      delete cleanParams.q
+    }
+
+    const queryParams: Record<string, string | number | boolean | undefined> = {
+      ...cleanParams,
+      ...(searchTerm ? { q: searchTerm, search: searchTerm, keyword: searchTerm } : {}),
+      page: Number(cleanParams.page ?? 1) || 1,
+      per_page: Number(cleanParams.per_page ?? 12) || 12,
+    }
+
+    const endpoints = ['/products', '/products/search', '/search/products']
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await customerApi.get<unknown>(endpoint, { params: queryParams })
+        const payload = response.data
+        const data = extractArray(payload) as Product[]
+
+        const metaSource = payload && typeof payload === 'object' ? (payload as Record<string, unknown>).meta : undefined
+        const meta = metaSource && typeof metaSource === 'object'
+          ? (metaSource as Record<string, unknown>)
+          : {}
+
+        return {
+          data,
+          meta: {
+            current_page: Number(meta.current_page ?? 1),
+            last_page: Number(meta.last_page ?? 1),
+            per_page: Number(meta.per_page ?? queryParams.per_page ?? (data.length > 0 ? data.length : 12)),
+            total: Number(meta.total ?? data.length),
+          },
+        }
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          continue
+        }
+        throw error
+      }
+    }
 
     return {
-      data,
+      data: [],
       meta: {
-        current_page: Number(meta.current_page ?? 1),
-        last_page: Number(meta.last_page ?? 1),
-        per_page: Number(meta.per_page ?? params.per_page ?? (data.length > 0 ? data.length : 12)),
-        total: Number(meta.total ?? data.length),
+        current_page: 1,
+        last_page: 1,
+        per_page: Number(cleanParams.per_page ?? 12),
+        total: 0,
       },
     }
   },

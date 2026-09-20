@@ -7,6 +7,7 @@ import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { useGetCategories, useGetProducts } from "@/features/products/hooks/useProductCatalog";
 import type { ProductCategory } from "@/features/products/types";
 import { cartApi } from "@/api/cartApi";
+import { favoritesApi, setStoredWishlistIds } from "@/api/favoritesApi";
 import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import { useCartStore, type CartItem } from "@/features/cart/stores/cartStore";
 
@@ -105,6 +106,10 @@ export function ProductsPage() {
     cartApi.getCart()
       .then((response) => setCartItems(mapCartItems(response as ApiCartResponse)))
       .catch((cartError) => console.error("Failed to load customer cart", cartError));
+
+    favoritesApi.getFavorites()
+      .then((favorites) => setStoredWishlistIds(favorites.map((favorite) => favorite.productId)))
+      .catch((favoritesError) => console.error("Failed to load customer favorites", favoritesError));
   }, [setCartItems]);
 
   const categoryOptions: Array<{ id: string; name: string }> = [

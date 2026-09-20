@@ -70,6 +70,21 @@ export default function ProductFormModal({
     }))
   }
 
+  // دالة تحويل الخيارات إلى مصفوفة دائماً آمنة
+  const parseOptions = (options: any): string[] => {
+    if (!options) return []
+    if (Array.isArray(options)) return options
+    if (typeof options === 'string') {
+      try {
+        const parsed = JSON.parse(options)
+        return Array.isArray(parsed) ? parsed : []
+      } catch {
+        return options.split(',').map((o) => o.trim()).filter(Boolean)
+      }
+    }
+    return []
+  }
+
   const getAttributeInput = (attribute: ProductAttribute) => {
     const value = attributeValues[attribute.id] ?? ''
 
@@ -77,7 +92,9 @@ export default function ProductFormModal({
       'w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-accent)]'
 
     switch (attribute.input_type) {
-      case 'select':
+      case 'select': {
+        const optionsList = parseOptions(attribute.options)
+
         return (
           <select
             value={value}
@@ -91,7 +108,7 @@ export default function ProductFormModal({
           >
             <option value="">اختر قيمة</option>
 
-            {(attribute.options ?? []).map((option) => (
+            {optionsList.map((option) => (
               <option
                 key={option}
                 value={option}
@@ -101,6 +118,7 @@ export default function ProductFormModal({
             ))}
           </select>
         )
+      }
 
       case 'number':
         return (
@@ -427,27 +445,31 @@ export default function ProductFormModal({
               </div>
             ) : (
               <div className="space-y-4">
-                {attributes.map((attribute) => (
-                  <div key={attribute.id}>
-                    <label className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]">
-                      {attribute.display_name}
-                      {attribute.is_required ? (
-                        <span className="mr-1 text-[var(--color-danger)]">
-                          *
-                        </span>
+                {attributes.map((attribute) => {
+                  const optionsList = parseOptions(attribute.options)
+
+                  return (
+                    <div key={attribute.id}>
+                      <label className="mb-1.5 block text-sm font-medium text-[var(--color-text-secondary)]">
+                        {attribute.display_name}
+                        {attribute.is_required ? (
+                          <span className="mr-1 text-[var(--color-danger)]">
+                            *
+                          </span>
+                        ) : null}
+                      </label>
+
+                      {getAttributeInput(attribute)}
+
+                      {attribute.input_type === 'select' &&
+                      !optionsList.length ? (
+                        <p className="mt-1 text-xs text-[var(--color-danger)]">
+                          لا توجد خيارات معرفة لهذه الخاصية.
+                        </p>
                       ) : null}
-                    </label>
-
-                    {getAttributeInput(attribute)}
-
-                    {attribute.input_type === 'select' &&
-                    !attribute.options?.length ? (
-                      <p className="mt-1 text-xs text-[var(--color-danger)]">
-                        لا توجد خيارات معرفة لهذه الخاصية.
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

@@ -13,17 +13,31 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { customRequestsApi, type CreateCustomRequestInput } from "@/api/customRequestsApi";
+import {
+  customRequestsApi,
+  type CreateCustomRequestInput,
+  type ProductAttributeOption,
+} from "@/api/customRequestsApi";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { useCustomRequests } from "@/features/custom-requests/hooks/useCustomRequests";
 import { ROUTES } from "@/routes/paths";
 import { profileApi } from "@/api/profileApi";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
+import { extractMessage } from "@/utils/apiErrors";
 
 type Step = 1 | 2 | 3 | 4;
 type DimensionKey = "length" | "width" | "height";
 type Dimensions = Record<DimensionKey, string>;
+const MAX_DIMENSION_CM = 100000;
+
+function getTodayDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 interface ProductOption {
   id: string | number;
@@ -60,6 +74,36 @@ const materialOptions = [
       "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=500&q=85",
   },
 ];
+
+function normalizeAttributeOptions(options: ProductAttributeOption["options"]): string[] {
+  if (Array.isArray(options)) {
+    return options.map((option) => option.trim()).filter(Boolean);
+  }
+
+  if (typeof options !== "string") {
+    return [];
+  }
+
+  const trimmedOptions = options.trim();
+  if (trimmedOptions.startsWith("[") && trimmedOptions.endsWith("]")) {
+    try {
+      const parsedOptions: unknown = JSON.parse(trimmedOptions);
+      if (Array.isArray(parsedOptions)) {
+        return parsedOptions
+          .filter((option): option is string => typeof option === "string")
+          .map((option) => option.trim())
+          .filter(Boolean);
+      }
+    } catch {
+      // Fall back to comma-separated options when the value is not valid JSON.
+    }
+  }
+
+  return trimmedOptions
+    .split(",")
+    .map((option) => option.replace(/^["']|["']$/g, "").trim())
+    .filter(Boolean);
+}
 
 function Stepper({ currentStep }: { currentStep: Step }) {
   const labels = [
@@ -113,22 +157,38 @@ function Stepper({ currentStep }: { currentStep: Step }) {
 function TypeStep({
   selectedType,
   setSelectedType,
+  otherType,
+  setOtherType,
   products,
   selectedProductId,
   setSelectedProductId,
+  quantity,
+  setQuantity,
+  attributeValues,
+  setAttributeValues,
   description,
   setDescription,
   onNext,
 }: {
   selectedType: string;
   setSelectedType: (value: string) => void;
+  otherType: string;
+  setOtherType: (value: string) => void;
   products: ProductOption[];
   selectedProductId: string;
   setSelectedProductId: (value: string) => void;
+  quantity: string;
+  setQuantity: (value: string) => void;
+  attributeValues: Record<number, string>;
+  setAttributeValues: (value: Record<number, string>) => void;
   description: string;
   setDescription: (value: string) => void;
   onNext: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const selectedProduct = products.find((product) => String(product.id) === selectedProductId);
+  const attributes = selectedProduct?.attributes ?? [];
+  const today = getTodayDate();
+
   return (
     <form onSubmit={onNext}>
       <div className="text-center">
@@ -150,7 +210,12 @@ function TypeStep({
           <button
             key={label}
             type="button"
-            onClick={() => setSelectedType(label)}
+            onClick={() => {
+              setSelectedType(label);
+              if (label !== "أخرى") {
+                setOtherType("");
+              }
+            }}
             className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-[5px] border text-xs font-bold transition ${
               selectedType === label
                 ? "border-[#3e522c] bg-[#e5eddc] text-[#26351e] shadow-sm"
@@ -163,14 +228,115 @@ function TypeStep({
         ))}
       </div>
 
+      {selectedType === "أخرى" && (
+        <div className="mt-6">
+          <label
+            htmlFor="other-request-type"
+            className="mb-3 block text-lg font-extrabold text-[#3e522c]"
+          >
+            ما نوع القطعة التي ترغب بتصميمها؟
+          </label>
+          <input
+            id="other-request-type"
+            type="text"
+            value={otherType}
+            onChange={(event) => setOtherType(event.target.value)}
+            placeholder="اكتب نوع القطعة التي ترغب بتصميمها"
+            required
+            className="w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm text-[#211f1b] outline-none placeholder:text-[#615b53] focus:border-[#3e522c] focus:bg-white"
+          />
+        </div>
+      )}
+
       <div className="mt-7 border-t border-[#ded8cf] pt-6">
         <label htmlFor="base-product" className="mb-3 block text-lg font-extrabold text-[#3e522c]">
           المنتج الأساسي للتخصيص
         </label>
-        <select id="base-product" value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)} required className="mb-6 w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm outline-none focus:border-[#3e522c]">
-          <option value="">اختر منتجًا</option>
-          {products.map((product) => <option key={product.id} value={String(product.id)}>{product.name}</option>)}
+        <select
+          id="base-product"
+          value={selectedProductId}
+          onChange={(event) => setSelectedProductId(event.target.value)}
+          required
+          className="mb-6 h-[60px] w-full rounded-[12px] border border-[#2b2724] bg-[#1d1a18] px-4 py-3 text-right text-[15px] font-medium text-white outline-none transition focus:border-[#7d8d64] focus:ring-2 focus:ring-[#b5bf9e]"
+        >
+          <option value="" className="bg-white text-[#211f1b]">اختر منتجًا</option>
+          {products.map((product) => (
+            <option key={product.id} value={String(product.id)} className="bg-white text-[#211f1b]">
+              {product.name}
+            </option>
+          ))}
         </select>
+
+        {attributes.length > 0 && (
+          <div className="mb-6 space-y-4">
+            {attributes.map((attribute: ProductAttributeOption) => {
+              const fieldClassName =
+                "mt-2 h-[60px] w-full rounded-[12px] border border-[#2b2724] bg-[#1d1a18] px-4 py-3 text-right text-[15px] font-medium text-white outline-none transition placeholder:text-[#cdc7be] focus:border-[#7d8d64] focus:ring-2 focus:ring-[#b5bf9e]";
+
+              return (
+                <label
+                  key={attribute.id}
+                  className="block text-[15px] font-extrabold text-[#3e522c]"
+                >
+                  <span className="mb-2 block">{attribute.display_name}</span>
+                  {attribute.is_required && <span className="text-red-600"> *</span>}
+                  {attribute.input_type === "select" &&
+                  normalizeAttributeOptions(attribute.options).length > 0 ? (
+                    <select
+                      value={attributeValues[attribute.id] ?? ""}
+                      onChange={(event) =>
+                        setAttributeValues({
+                          ...attributeValues,
+                          [attribute.id]: event.target.value,
+                        })
+                      }
+                      required={attribute.is_required}
+                      className={fieldClassName}
+                    >
+                      <option value="" className="bg-white text-[#211f1b]">اختر قيمة</option>
+                      {normalizeAttributeOptions(attribute.options).map((option) => (
+                        <option key={option} value={option} className="bg-white text-[#211f1b]">
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={attribute.input_type === "number" ? "number" : "text"}
+                      value={attributeValues[attribute.id] ?? ""}
+                      onChange={(event) =>
+                        setAttributeValues({
+                          ...attributeValues,
+                          [attribute.id]: event.target.value,
+                        })
+                      }
+                      required={attribute.is_required}
+                      placeholder="اختر قيمة"
+                      className={fieldClassName}
+                    />
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        )}
+
+        <label
+          htmlFor="request-quantity"
+          className="mb-6 block text-[15px] font-extrabold text-[#3e522c]"
+        >
+          <span className="mb-2 block">الكمية</span>
+          <input
+            id="request-quantity"
+            type="number"
+            min="1"
+            step="1"
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
+            required
+            className="h-[60px] w-full rounded-[12px] border border-[#2b2724] bg-[#1d1a18] px-4 py-3 text-right text-[15px] font-medium text-white outline-none transition focus:border-[#7d8d64] focus:ring-2 focus:ring-[#b5bf9e]"
+          />
+        </label>
 
         <label
           htmlFor="request-description"
@@ -199,7 +365,14 @@ function TypeStep({
 
         <button
           type="submit"
-          disabled={!selectedType || !selectedProductId || !description.trim()}
+          disabled={
+            !selectedType ||
+            (selectedType === "أخرى" && !otherType.trim()) ||
+            !selectedProductId ||
+            !quantity ||
+            Number(quantity) < 1 ||
+            !description.trim()
+          }
           className="inline-flex min-w-40 items-center justify-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#3e522c] disabled:cursor-not-allowed disabled:bg-[#aeb6a2]"
         >
           التالي
@@ -231,6 +404,12 @@ function DetailsStep({
   onBack: () => void;
   onNext: () => void;
 }) {
+  const [dimensionErrors, setDimensionErrors] = useState<Record<DimensionKey, boolean>>({
+    length: false,
+    width: false,
+    height: false,
+  });
+
   return (
     <div>
       <div className="text-center">
@@ -255,28 +434,50 @@ function DetailsStep({
               className="text-sm font-bold text-[#302c27]"
             >
               {field === "length"
-                ? "الطول"
+                ? "الطول (سم)"
                 : field === "width"
-                  ? "العرض"
-                  : "الارتفاع"}
+                  ? "العرض (سم)"
+                  : "الارتفاع (سم)"}
 
               <div className="mt-2 flex items-center rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-3">
                 <input
                   value={dimensions[field]}
-                  onChange={(event) =>
-                    setDimensions({
-                      ...dimensions,
-                      [field]: event.target.value,
-                    })
-                  }
+                  onChange={(event) => {
+                    const value = event.target.value;
+
+                    if (value === "") {
+                      setDimensionErrors({ ...dimensionErrors, [field]: false });
+                      setDimensions({ ...dimensions, [field]: "" });
+                      return;
+                    }
+
+                    const numericValue = Number(value);
+                    if (!Number.isFinite(numericValue) || numericValue < 0) {
+                      return;
+                    }
+
+                    if (numericValue > MAX_DIMENSION_CM) {
+                      setDimensionErrors({ ...dimensionErrors, [field]: true });
+                      return;
+                    }
+
+                    setDimensionErrors({ ...dimensionErrors, [field]: false });
+                    setDimensions({ ...dimensions, [field]: value });
+                  }}
                   type="number"
                   min="0"
+                  max={MAX_DIMENSION_CM}
                   placeholder="00"
                   className="w-full bg-transparent py-3 text-sm text-[#211f1b] outline-none placeholder:text-[#615b53]"
                 />
 
                 <span className="text-xs text-[#403c36]">سم</span>
               </div>
+              {dimensionErrors[field] && (
+                <p className="mt-2 text-xs font-medium text-red-600">
+                  لا يمكن أن تكون القيمة أكبر من {MAX_DIMENSION_CM}.
+                </p>
+              )}
             </label>
           ))}
         </div>
@@ -369,7 +570,22 @@ function DetailsStep({
 
         <button
           type="button"
-          onClick={onNext}
+          onClick={() => {
+            const hasInvalidDimension = Object.values(dimensions).some(
+              (value) => value !== "" && (
+                !Number.isFinite(Number(value)) ||
+                Number(value) < 0 ||
+                Number(value) > MAX_DIMENSION_CM
+              ),
+            ) || Object.values(dimensionErrors).some(Boolean);
+
+            if (hasInvalidDimension) {
+              showErrorToast(`لا يمكن أن تتجاوز الأبعاد ${MAX_DIMENSION_CM} سم.`);
+              return;
+            }
+
+            onNext();
+          }}
           className="inline-flex items-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#3e522c]"
         >
           الخطوة التالية
@@ -419,6 +635,8 @@ function BudgetStep({
   onBack: () => void;
   onNext: () => void;
 }) {
+  const today = getTodayDate();
+
   return (
     <div>
       <div className="text-center">
@@ -443,7 +661,17 @@ function BudgetStep({
           id="delivery-date"
           type="date"
           value={deliveryDate}
-          onChange={(event) => setDeliveryDate(event.target.value)}
+          min={today}
+          onChange={(event) => {
+            const value = event.target.value;
+
+            if (value && value < today) {
+              showErrorToast("لا يمكن اختيار تاريخ سابق لتاريخ اليوم.");
+              return;
+            }
+
+            setDeliveryDate(value);
+          }}
           className="mt-4 w-full rounded-[7px] border border-[#b9a88e] bg-[#f8f5ef] px-4 py-3 text-sm text-[#211f1b] outline-none focus:border-[#3e522c]"
         />
       </div>
@@ -460,8 +688,15 @@ function BudgetStep({
 
         <button
           type="button"
-          onClick={onNext}
-          disabled={!deliveryDate}
+          onClick={() => {
+            if (!deliveryDate || deliveryDate < today) {
+              showErrorToast("يرجى اختيار تاريخ اليوم أو تاريخًا لاحقًا.");
+              return;
+            }
+
+            onNext();
+          }}
+          disabled={!deliveryDate || deliveryDate < today}
           className="inline-flex items-center gap-2 rounded-sm bg-[#52663c] px-6 py-3 text-sm font-extrabold text-white disabled:bg-[#aeb6a2]"
         >
           الخطوة التالية
@@ -584,6 +819,7 @@ function ContactStep({
 export function CustomRequestsPage() {
   const [step, setStep] = useState<Step>(1);
   const [selectedType, setSelectedType] = useState("");
+  const [otherType, setOtherType] = useState("");
   const [description, setDescription] = useState("");
   const [dimensions, setDimensions] = useState<Dimensions>({
     length: "",
@@ -599,6 +835,8 @@ export function CustomRequestsPage() {
   const [phone, setPhone] = useState("");
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [attributeValues, setAttributeValues] = useState<Record<number, string>>({});
 
   const { createRequest, isCreating } = useCustomRequests();
   const navigate = useNavigate();
@@ -618,8 +856,43 @@ export function CustomRequestsPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!selectedProductId) {
+      setAttributeValues({});
+      return;
+    }
+
+    const currentProduct = products.find((product) => String(product.id) === selectedProductId);
+    const allowedAttributeIds = new Set((currentProduct?.attributes ?? []).map((attribute) => attribute.id));
+
+    setAttributeValues((previous) => {
+      const nextValues: Record<number, string> = {};
+
+      Object.entries(previous).forEach(([attributeId, value]) => {
+        const numericId = Number(attributeId);
+        if (allowedAttributeIds.has(numericId)) {
+          nextValues[numericId] = value;
+        }
+      });
+
+      return nextValues;
+    });
+  }, [products, selectedProductId]);
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!deliveryDate || deliveryDate < getTodayDate()) {
+      showErrorToast("يرجى اختيار تاريخ اليوم أو تاريخًا لاحقًا.");
+      setStep(3);
+      return;
+    }
+
+    if (!quantity || !Number.isInteger(Number(quantity)) || Number(quantity) < 1) {
+      showErrorToast("يرجى إدخال كمية صحيحة تبدأ من 1.");
+      setStep(1);
+      return;
+    }
 
     let uploadedImage = "";
     try {
@@ -628,17 +901,25 @@ export function CustomRequestsPage() {
       console.error("Failed to read reference image", error);
     }
 
-    const notes = `${selectedType}
+    const requestType = selectedType === "أخرى" ? otherType.trim() : selectedType;
+    const notes = `${requestType}
 ${description}
+الكمية: ${quantity}
 الخامة: ${material || "غير محددة"}
 التسليم: ${deliveryDate}
 التواصل: ${name}، ${email}، ${phone}
 الصور: ${files.map((file) => file.name).join(", ") || "لا توجد"}`;
 
     const input: CreateCustomRequestInput = {
-      title: selectedType,
+      title: requestType,
       base_product_id: selectedProductId,
-      quantity: 1,
+      attribute_values: Object.entries(attributeValues)
+        .filter(([, value]) => value.trim() !== "")
+        .map(([attributeId, value]) => ({
+          attribute_id: Number(attributeId),
+          value: value.trim(),
+        })),
+      quantity: Number(quantity),
       length_cm: dimensions.length || undefined,
       width_cm: dimensions.width || undefined,
       height_cm: dimensions.height || undefined,
@@ -663,6 +944,7 @@ ${description}
       navigate(ROUTES.customRequestDetails(createdRequest.id));
     } catch (error) {
       console.error("Failed to submit custom request", error);
+      showErrorToast(extractMessage(error, "تعذر إرسال الطلب، يرجى التحقق من البيانات والمحاولة مرة أخرى."));
     }
   };
 
@@ -683,9 +965,15 @@ ${description}
               <TypeStep
                 selectedType={selectedType}
                 setSelectedType={setSelectedType}
+                otherType={otherType}
+                setOtherType={setOtherType}
                 products={products}
                 selectedProductId={selectedProductId}
                 setSelectedProductId={setSelectedProductId}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                attributeValues={attributeValues}
+                setAttributeValues={setAttributeValues}
                 description={description}
                 setDescription={setDescription}
                 onNext={(event) => {

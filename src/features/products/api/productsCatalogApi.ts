@@ -1,6 +1,6 @@
 import { customerApi } from '@/api/customerApi';
 import type { PaginatedResponse, Product, ProductCategory, ProductFiltersDTO, ProductPriceRange } from '@/features/products/types';
-import { getProductImage } from '@/features/products/data/productImages';
+import { resolveProductImage } from '@/features/products/data/productImages';
 
 function toNumber(value: unknown, fallback: number): number {
   const parsed = Number(value);
@@ -49,27 +49,48 @@ function normalizeProductRecord(item: Record<string, unknown>): Product {
         ? String((item.category as { name?: string }).name ?? '')
         : undefined;
 
+  const rawStock = item.available_stock ?? item.stock_quantity ?? item.stock ?? item.inventory_quantity;
+  const stockQuantity = rawStock !== undefined && rawStock !== null ? toNumber(rawStock, 0) : undefined;
+  const rawAvailable = item.available_stock !== undefined ? toNumber(item.available_stock, 0) : stockQuantity;
+
   return {
     id,
     name: String(rawName),
     subtitle: String(rawSubtitle),
     description: typeof item.description === 'string' ? item.description : String(rawSubtitle),
     price: priceValue,
-    image: getProductImage(id) || imageValue,
+    image: resolveProductImage(imageValue, id),
     imageAlt: typeof item.image_alt === 'string' ? item.image_alt : String(rawName),
     rating: ratingValue,
     badge: typeof item.badge === 'string' && item.badge.trim() ? item.badge : undefined,
     categoryName,
-    inStock: item.in_stock !== undefined ? Boolean(item.in_stock) : Number(item.stock_quantity ?? 0) > 0,
+    inStock: item.in_stock !== undefined ? Boolean(item.in_stock) : (rawAvailable !== undefined ? rawAvailable > 0 : true),
+    stock_quantity: stockQuantity,
+    reserved_quantity: item.reserved_quantity !== undefined ? toNumber(item.reserved_quantity, 0) : 0,
+    available_stock: rawAvailable,
     is_favorited: toBoolean(item.is_favorited ?? item.isFavorite ?? false),
   };
 }
 
 function normalizeCategoryRecord(item: Record<string, unknown>): ProductCategory {
+  const media = Array.isArray(item.media) ? item.media : Array.isArray(item.images) ? item.images : [];
+  const firstMedia = media.find((entry) => entry && typeof entry === 'object') as Record<string, unknown> | undefined;
+  const imageValue =
+    item.image_url ??
+    item.image ??
+    item.imageUrl ??
+    item.thumbnail ??
+    item.cover ??
+    firstMedia?.url ??
+    firstMedia?.image_url ??
+    firstMedia?.image ??
+    firstMedia?.path;
+
   return {
     id: String(item.id ?? item.category_id ?? item.slug ?? ''),
     name: String(item.name ?? item.title ?? 'فئة'),
     slug: typeof item.slug === 'string' ? item.slug : undefined,
+    image_url: typeof imageValue === 'string' ? imageValue : null,
     parent_id: item.parent_id ?? null,
   };
 }

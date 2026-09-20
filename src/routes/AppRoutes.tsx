@@ -16,11 +16,14 @@ import { PersonalInfoPage } from "@/features/profile/pages/PersonalInfoPage";
 import { AddressesPage } from "@/features/addresses/pages/AddressesPage";
 import { OrdersPage } from "@/features/orders/pages/OrdersPage";
 import { OrderDetailsPage } from "@/features/orders/pages/OrderDetailsPage";
+import { OrderTrackingPage } from "@/features/orders/pages/OrderTrackingPage";
 import { SearchPage } from "@/features/search/pages/SearchPage";
 import { NotificationsPage } from "@/features/notification/pages/NotificationsPage";
 import { WishlistsPage } from "@/features/wishlists/pages/WishlistsPageFixed";
 import { ROUTES } from "@/routes/paths";
 import CustomerProtectedRoute from "@/routes/CustomerProtectedRoute";
+import { GoogleCallbackPage } from "@/features/auth-customer/pages/GoogleCallbackPage";
+import { CustomerReviewsPage } from "@/features/reviews/pages/CustomerReviewsPage";
 
 export function AppRoutes() {
   return (
@@ -39,6 +42,7 @@ export function AppRoutes() {
 
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.signup} element={<SignupPage />} />
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
       <Route element={<CustomerProtectedRoute />}>
         <Route path={ROUTES.customRequests} element={<ShowCustomRequestsPage />} />
@@ -47,7 +51,10 @@ export function AppRoutes() {
         <Route path={ROUTES.wishlist} element={<WishlistsPage />} />
         <Route path={ROUTES.profile} element={<PersonalInfoPage />} />
         <Route path={ROUTES.addresses} element={<AddressesPage />} />
+        <Route path={ROUTES.reviews} element={<CustomerReviewsPage />} />
+        <Route path={ROUTES.customerReviews} element={<CustomerReviewsPage />} />
         <Route path={ROUTES.orders} element={<OrdersPage />} />
+        <Route path={ROUTES.orderTracking} element={<OrderTrackingPage />} />
         <Route path={ROUTES.orderDetail} element={<OrderDetailsPage />} />
         <Route path={ROUTES.notifications} element={<NotificationsPage />} />
       </Route>

@@ -26,6 +26,18 @@ const containsTechnicalDetails = (message: string): boolean => {
   )
 }
 
+const repairUtf8Mojibake = (message: string): string => {
+  // Avoid corrupting legitimate Arabic text. This logic previously matched
+  // valid Arabic characters and converted them into mojibake.
+  if (!/[ÃÂÐØÙ]/.test(message)) {
+    return message
+  }
+
+  // Leave already-correct Arabic strings untouched. We do not attempt to
+  // decode arbitrary Unicode text here because it can produce false positives.
+  return message
+}
+
 export const sanitizeErrorMessage = (
   message: unknown,
   fallback = SAFE_GENERIC_ERROR_MESSAGE,
@@ -34,7 +46,7 @@ export const sanitizeErrorMessage = (
     return fallback
   }
 
-  const trimmed = message.trim()
+  const trimmed = repairUtf8Mojibake(message.trim())
 
   if (!trimmed) {
     return fallback
@@ -49,6 +61,16 @@ export const sanitizeErrorMessage = (
 
 export const showSuccessToast = (message: string): void => {
   toast.success(message)
+}
+
+export const showInfoToast = (message: string): void => {
+  toast.error(message, {
+    style: {
+      background: '#fef2f2',
+      border: '1px solid #f0b4b4',
+      color: '#7f1d1d',
+    },
+  })
 }
 
 export const showErrorToast = (message: string): void => {

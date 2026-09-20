@@ -25,7 +25,7 @@ const normalizeUser = (payload: any): CustomerUser => ({
 export function useAuthSessionBootstrap() {
   const token = useCustomerAuthStore((state) => state.token);
   const isHydrated = useCustomerAuthStore((state) => state.isHydrated);
-  const setUser = useCustomerAuthStore((state) => state.setUser);
+  const setAuth = useCustomerAuthStore((state) => state.setAuth);
   const clearAuth = useCustomerAuthStore((state) => state.clearAuth);
 
   const sessionQuery = useQuery({
@@ -51,17 +51,18 @@ export function useAuthSessionBootstrap() {
         avatarUrl: fallbackAvatar ?? apiUser.avatarUrl ?? null,
       };
 
-      setUser(mergedUser);
+      setAuth({ user: mergedUser, token });
       return mergedUser;
     },
     throwOnError: false,
   });
 
   useEffect(() => {
-    if (sessionQuery.isError && token) {
+    const status = (sessionQuery.error as { response?: { status?: number } } | null)?.response?.status;
+    if (status === 401 && token) {
       clearAuth();
     }
-  }, [sessionQuery.isError, token, clearAuth]);
+  }, [sessionQuery.error, token, clearAuth]);
 
   return {
     isCheckingAuth: !isHydrated || sessionQuery.isPending,

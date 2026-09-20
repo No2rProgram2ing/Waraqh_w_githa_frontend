@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 import { useLogin } from "@/features/auth-customer/hooks/useLogin";
+import { GoogleLoginButton } from "@/features/auth-customer/components/GoogleLoginButton";
 import { loginSchema, type LoginSchema } from "@/features/auth-customer/schema";
 import { ROUTES } from "@/routes/paths";
 import logo from "@/assets/images/Warqah & Jitha Logo.png";
@@ -97,7 +98,7 @@ export function LoginPage() {
             noValidate
           >
 
-            {/* Phone Input */}
+            {/* Phone input */}
             <Input
               label="رقم الهاتف"
               type="tel"
@@ -163,6 +164,19 @@ export function LoginPage() {
               تسجيل الدخول
             </Button>
           </form>
+
+          <div className="mt-6 flex w-full items-center gap-3">
+            <div className="h-px flex-1 bg-[#e6dfd7]" />
+            <span className="text-xs font-medium text-[#7a7d76]">أو</span>
+            <div className="h-px flex-1 bg-[#e6dfd7]" />
+          </div>
+
+          <div className="mt-6 w-full">
+            <GoogleLoginButton isLoading={isSubmitting || login.isPending} />
+          </div>
+          <p className="mt-3 text-center text-xs leading-6 text-brand-muted">
+            إذا أنشأت حسابك عبر Google، استخدم زر Google مرة أخرى للدخول بدون رقم هاتف أو كلمة مرور.
+          </p>
 
           {/* Footer Link */}
           <p className="mt-8 text-center text-sm text-brand-muted">

@@ -13,6 +13,8 @@ import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { formatCurrency } from "@/lib/currency";
 import { ROUTES } from "@/routes/paths";
 import { useCurrencyConfig } from "@/features/catalog/hooks/useCurrencyConfig";
+import { AlertCircle } from "lucide-react";
+import { getProductImage } from "@/features/products/data/productImages";
 
 interface ProductCardProps {
   product: Product;
@@ -27,6 +29,14 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
     state.items.some((item) => item.id === String(product.id) || item.productId === String(product.id)),
   );
   const { data: currencyConfig } = useCurrencyConfig();
+
+  const availableStock =
+    product.available_stock !== undefined
+      ? Number(product.available_stock)
+      : product.stock_quantity !== undefined
+        ? Number(product.stock_quantity)
+        : 0;
+
   const [isFavorite, setIsFavorite] = useState(() => {
     const storedIds = getStoredWishlistIds();
     return product.is_favorited || storedIds.includes(String(product.id));
@@ -45,23 +55,44 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
       return;
     }
 
+    if (product.inStock === false && availableStock > 0) {
+      showErrorToast("عذراً، هذا المنتج نفد من المخزون حالياً أو محجوز بالكامل.");
+      return;
+    }
+
     try {
       setIsCartLoading(true);
-      await cartApi.addToCart(product.id);
+      const response = await cartApi.addToCart(product.id);
+      const createdItem = response?.data?.item ?? response?.item ?? response?.data ?? response;
+      const cartItemId = String(createdItem?.id ?? createdItem?.cart_item_id ?? product.id ?? "");
 
-      const addItem = useCartStore.getState().addItem;
-      addItem({
-        id: String(product.id),
+      const upsertItem = useCartStore.getState().upsertItem;
+      upsertItem({
+        id: cartItemId || String(product.id),
         productId: String(product.id),
         name: product.name ?? "",
         subtitle: product.subtitle ?? product.description ?? "",
         price: Number(product.price ?? 0),
         image: product.image ?? "",
+        stock: availableStock,
+        quantity: Number(createdItem?.quantity ?? 1),
+        reservedQuantity: Number(createdItem?.quantity ?? 1),
+        isLimitedStock: availableStock > 0 && availableStock <= 5,
+        reservedFromStock: Math.min(
+          Number(createdItem?.reserved_from_stock ?? createdItem?.reserved_quantity ?? 0),
+          availableStock,
+        ),
+        isReserved: Boolean(
+          createdItem?.is_reserved ?? createdItem?.reserved_quantity ?? availableStock > 0,
+        ),
+        isBackordered: availableStock <= 0,
       });
 
-      showSuccessToast("تمت إضافة المنتج إلى السلة");
-    } catch {
-      showErrorToast("تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.");
+      showSuccessToast("تمت إضافة المنتج وحجز الكمية لسلتك بنجاح");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || "تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.";
+      showErrorToast(msg);
     } finally {
       setIsCartLoading(false);
     }
@@ -106,6 +137,12 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
         <motion.img
           src={product.image}
           alt={product.imageAlt}
+          onError={(event) => {
+            const fallbackImage = getProductImage(product.id);
+            if (event.currentTarget.src !== fallbackImage) {
+              event.currentTarget.src = fallbackImage;
+            }
+          }}
           initial={{ scale: 1.08, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
@@ -159,11 +196,19 @@ export function ProductCard({ product, index, featured = false }: ProductCardPro
             <span className="text-xs">★</span>
             <span className="text-[11px] font-bold text-[#8a6e45]">{Number.isFinite(Number(product?.rating ?? NaN)) ? Number(product.rating).toFixed(1) : '—'}</span>
           </div>
-          {product.badge ? (
-            <span className="rounded-full border border-[#d9cfbf] bg-[#f3efe8] px-2 py-1 text-[10px] font-medium text-[#546143]">
-              {product.badge}
-            </span>
-          ) : null}
+          <div className="flex items-center gap-1.5">
+            {availableStock > 0 && availableStock <= 5 && (
+              <span className="flex items-center gap-1 rounded-md bg-[#fef2f2] px-2 py-0.5 text-[10px] font-bold text-[#b91c1c] border border-[#f0b4b4]">
+                <AlertCircle className="size-3" />
+                <span>متبقي {availableStock} فقط</span>
+              </span>
+            )}
+            {product.badge ? (
+              <span className="rounded-full border border-[#d9cfbf] bg-[#f3efe8] px-2 py-1 text-[10px] font-medium text-[#546143]">
+                {product.badge}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div className="min-h-[52px]">

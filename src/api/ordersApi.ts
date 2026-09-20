@@ -4,6 +4,7 @@ export const ordersApi = {
   createOrder: (payload: {
     address_id: string | number;
     order_type: "ready_made" | "custom" | "mixed";
+    shipping_fee?: number;
     items: Array<{ product_id: string | number; quantity: number }>;
   }) => customerApi.post("/customer/orders", payload),
   getMyOrders: (page = 1) => customerApi.get(`/customer/orders`, { params: { page } }),

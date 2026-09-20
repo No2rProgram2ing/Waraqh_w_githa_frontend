@@ -112,7 +112,13 @@ interface FavoriteApiProduct {
   category?: {
     name?: string | null;
   } | null;
+  image?: string | null;
+  image_url?: string | null;
+  imageUrl?: string | null;
+  thumbnail?: string | null;
+  cover?: string | null;
   media?: FavoriteApiMedia[] | null;
+  images?: Array<FavoriteApiMedia | string | null> | null;
   is_new?: boolean | null;
   is_bestseller?: boolean | null;
   is_limited_edition?: boolean | null;
@@ -122,14 +128,76 @@ interface FavoriteApiItem {
   id?: string | number | null;
   product_id?: string | number | null;
   product?: FavoriteApiProduct | null;
+  image?: string | null;
+  image_url?: string | null;
+  imageUrl?: string | null;
 }
 
-const defaultImage = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80";
+export const defaultImage = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80";
+
+function normalizeImageSource(value?: string | null): string | null {
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith("//")) {
+    return trimmed.startsWith("//") ? `https:${trimmed}` : trimmed;
+  }
+
+  return trimmed;
+}
+
+function extractImageFromCandidate(candidate: unknown): string | null {
+  if (typeof candidate === "string") return normalizeImageSource(candidate);
+
+  if (!candidate || typeof candidate !== "object") return null;
+
+  const record = candidate as Record<string, unknown>;
+  const url = normalizeImageSource(
+    typeof record.url === "string" ? record.url :
+      typeof record.src === "string" ? record.src :
+      typeof record.path === "string" ? record.path :
+      typeof record.image === "string" ? record.image :
+      typeof record.image_url === "string" ? record.image_url :
+      typeof record.imageUrl === "string" ? record.imageUrl :
+      typeof record.thumbnail === "string" ? record.thumbnail :
+      typeof record.cover === "string" ? record.cover : null,
+  );
+
+  if (url) return url;
+
+  if (Array.isArray(record.media)) {
+    const media = record.media as unknown[];
+    const primary = media.find((item) => {
+      if (!item || typeof item !== "object") return false;
+      return Boolean((item as Record<string, unknown>).is_primary);
+    });
+    return extractImageFromCandidate(primary ?? media[0]);
+  }
+
+  if (Array.isArray(record.images)) {
+    const images = record.images as unknown[];
+    const primary = images.find((item) => {
+      if (!item || typeof item !== "object") return false;
+      return Boolean((item as Record<string, unknown>).is_primary);
+    });
+    return extractImageFromCandidate(primary ?? images[0]);
+  }
+
+  return null;
+}
 
 function resolveImage(product: FavoriteApiProduct | null | undefined): string {
-  const media = Array.isArray(product?.media) ? product.media : [];
-  const primaryMedia = media.find((item) => item.is_primary) ?? media[0];
-  return primaryMedia?.url || defaultImage;
+  if (!product) return defaultImage;
+
+  const media = Array.isArray(product.media) ? product.media : [];
+  const primaryMedia = media.find((item) => item?.is_primary) ?? media[0];
+  const directImage = extractImageFromCandidate(product)
+    ?? extractImageFromCandidate(primaryMedia)
+    ?? extractImageFromCandidate(product.images)
+    ?? extractImageFromCandidate(product.media);
+
+  return directImage || defaultImage;
 }
 
 function resolveTag(product: FavoriteApiProduct | null | undefined): string {
@@ -143,12 +211,14 @@ function mapFavoriteToWishlistItem(favorite: FavoriteApiItem): WishlistItem {
   const product = favorite.product ?? {};
   const productId = String(product.id ?? favorite.product_id ?? favorite.id ?? "");
 
+  const fallbackImage = extractImageFromCandidate(favorite) ?? resolveImage(product);
+
   return {
     id: String(favorite.id ?? productId),
     productId,
     name: product.name ?? "منتج",
     price: Number(product.price ?? 0),
-    image: resolveImage(product),
+    image: fallbackImage || defaultImage,
     imageAlt: product.name ?? "منتج",
     category: product.category?.name ?? "منتجات",
     tag: resolveTag(product),
@@ -185,7 +255,14 @@ export async function toggleWishlist(
 ): Promise<boolean> {
   const normalizedId = String(productId);
   if (isAuthenticated) {
-    return favoritesApi.toggleFavorite(normalizedId);
+    const favoriteState = await favoritesApi.toggleFavorite(normalizedId);
+    const storedIds = getStoredWishlistIds();
+    const nextIds = favoriteState
+      ? [...storedIds, normalizedId]
+      : storedIds.filter((id) => id !== normalizedId);
+
+    setStoredWishlistIds(nextIds);
+    return favoriteState;
   }
 
   const storedIds = getStoredWishlistIds();

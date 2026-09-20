@@ -55,11 +55,12 @@ customerApi.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401) {
       const hasStoredToken = Boolean(customerAuthStorage.getToken());
+      const isAlreadyOnLoginPage = window.location.pathname === "/login";
 
-      if (hasStoredToken) {
-        // Clear local auth state without calling the API (token is already invalid)
+      if (hasStoredToken && !isAlreadyOnLoginPage) {
+        // Clear local auth state only for confirmed session expiry.
         useCustomerAuthStore.getState().clearAuth();
-        // Hard redirect flushes React Query cache and any in-memory auth state
+        // Hard redirect flushes React Query cache and any in-memory auth state.
         window.location.replace("/login");
       }
     }

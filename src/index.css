@@ -20,6 +20,8 @@
   --color-brand-border: #e6e4db;
   --color-brand-ink: #23261f;
   --color-brand-muted: #8b8d80;
+  --color-catalog-background: #f4f0ea;
+  --color-cart-background: #fbf9f5;
 
   --color-brand-olive-50: #eef0e7;
   --color-brand-olive-400: #6b7c52;
@@ -82,6 +84,19 @@ html.dark {
   --color-surface-card: #231E19;
   --color-surface-subtle: #2C2620;
 
+  --color-brand-cream: #1A1612;
+  --color-brand-surface: #2C2620;
+  --color-brand-border: #3D342C;
+  --color-brand-ink: #EDE6DC;
+  --color-brand-muted: #A69F94;
+  --color-catalog-background: #1A1612;
+  --color-cart-background: #1A1612;
+  --color-brand-olive-50: #303A25;
+  --color-brand-olive-400: #8AA568;
+  --color-brand-olive-600: #6B8A43;
+  --color-brand-olive-700: #7EA050;
+  --color-brand-olive-900: #B5C994;
+
   --color-border: #3D342C;
   --color-border-muted: #493E35;
 
@@ -118,6 +133,17 @@ html.dark {
       background-color 0.2s ease-in-out,
       color 0.2s ease-in-out;
     -webkit-font-smoothing: antialiased;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  #root {
+    background-color: var(--color-surface);
+    transition: background-color 0.2s ease-in-out;
   }
 
   h1,

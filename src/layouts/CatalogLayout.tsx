@@ -9,7 +9,11 @@ interface CatalogLayoutProps {
 
 export function CatalogLayout({ children }: CatalogLayoutProps) {
   return (
-    <div dir="rtl" className="min-h-screen bg-[#f4f0ea] text-brand-ink antialiased font-body">
+    <div
+      dir="rtl"
+      className="min-h-screen text-brand-ink antialiased font-body"
+      style={{ backgroundColor: "var(--color-catalog-background)" }}
+    >
       <Header />
       <main className="min-h-[calc(100vh-20rem)]">{children}</main>
       <Footer />

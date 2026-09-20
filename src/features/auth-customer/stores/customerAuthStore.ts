@@ -1,12 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi } from '@/api/auth';
-import { migrateGuestWishlist } from '@/api/favoritesApi';
 import { customerAuthStorage } from '@/features/auth-customer/services/customerAuthStorage';
-import { useCartStore } from '@/features/cart/stores/cartStore';
 import type { LoginResponse } from '@/api/auth';
 
 type CustomerUser = LoginResponse['user'];
+
+function migrateWishlistAfterAuth(): void {
+  void import("@/api/favoritesApi")
+    .then(({ migrateGuestWishlist }) => migrateGuestWishlist())
+    .catch((error) => {
+      console.error("Failed to migrate guest wishlist", error);
+    });
+}
 
 const normalizeStoredUser = (user: CustomerUser | null | undefined): CustomerUser | null => {
   if (!user) return null;
@@ -52,13 +58,16 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
         const normalizedUser = normalizeStoredUser(user);
         if (!normalizedUser) return;
 
+        const previousUser = normalizeStoredUser(customerAuthStorage.getUser<CustomerUser>());
+        if (previousUser?.id && previousUser.id !== normalizedUser.id) {
+          void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+            useCartStore.getState().clearCart();
+          });
+        }
         customerAuthStorage.setUser(normalizedUser);
         customerAuthStorage.setAvatar(normalizedUser.id, normalizedUser.avatarUrl ?? normalizedUser.avatar);
         set({ user: normalizedUser, isAuthenticated: true, token: get().token ?? customerAuthStorage.getToken() });
-        void migrateGuestWishlist().catch((error) => {
-          console.error("Failed to migrate guest wishlist", error);
-        });
-        void useCartStore.getState().syncGuestCart();
+        migrateWishlistAfterAuth();
       },
 
       setToken: (token: string | null): void => {
@@ -73,6 +82,7 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
 
       setAuth: ({ user, token }: { user: CustomerUser; token: string }): void => {
         const normalizedUser = normalizeStoredUser(user);
+        const previousUser = normalizeStoredUser(customerAuthStorage.getUser<CustomerUser>());
         const cachedAvatar = normalizedUser ? customerAuthStorage.getAvatar(normalizedUser.id) : null;
         const existing = normalizeStoredUser(customerAuthStorage.getUser<CustomerUser>());
         const mergedUser = normalizedUser
@@ -83,16 +93,18 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
             }
           : existing ?? null;
 
+        if (previousUser?.id && mergedUser?.id && previousUser.id !== mergedUser.id) {
+          void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+            useCartStore.getState().clearCart();
+          });
+        }
         customerAuthStorage.setToken(token);
         if (mergedUser) {
           customerAuthStorage.setUser(mergedUser);
           customerAuthStorage.setAvatar(mergedUser.id, mergedUser.avatarUrl ?? mergedUser.avatar);
         }
         set({ user: mergedUser, token, isAuthenticated: Boolean(token && mergedUser), isHydrated: true });
-        void migrateGuestWishlist().catch((error) => {
-          console.error("Failed to migrate guest wishlist", error);
-        });
-        void useCartStore.getState().syncGuestCart();
+        migrateWishlistAfterAuth();
       },
 
       hydrateFromStorage: (): void => {
@@ -105,11 +117,9 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
           isHydrated: true,
         });
         if (token && user) {
-          void migrateGuestWishlist().catch((error) => {
-            console.error("Failed to migrate guest wishlist", error);
-          });
-          void useCartStore.getState().syncGuestCart();
+          migrateWishlistAfterAuth();
         }
+
       },
 
       logout: async (): Promise<void> => {
@@ -120,12 +130,18 @@ export const useCustomerAuthStore = create<CustomerAuthState>()(
         } catch {
           // Ignore backend logout failures so the client-side session is always cleared.
         } finally {
+          void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+            useCartStore.getState().clearCart();
+          });
           customerAuthStorage.clearAll();
           set({ user: null, token: null, isAuthenticated: false, isLoading: false, isHydrated: true });
         }
       },
 
       clearAuth: (): void => {
+        void import("@/features/cart/stores/cartStore").then(({ useCartStore }) => {
+          useCartStore.getState().clearCart();
+        });
         customerAuthStorage.clearAll();
         set({ user: null, token: null, isAuthenticated: false, isLoading: false, isHydrated: true });
       },

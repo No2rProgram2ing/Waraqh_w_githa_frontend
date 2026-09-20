@@ -98,7 +98,20 @@ function ProductTable({
                 </td>
 
                 <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">
-                  {product.stock_quantity}
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-[var(--color-text-primary)]">
+                      {product.available_stock ?? Math.max(0, product.stock_quantity - (product.reserved_quantity ?? 0))} متاح
+                    </span>
+                    {(product.reserved_quantity ?? 0) > 0 ? (
+                      <span className="text-[11px] text-amber-700">
+                        ({product.reserved_quantity} محجوز بالسلات)
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-[var(--color-text-muted)]">
+                        (الكلي: {product.stock_quantity})
+                      </span>
+                    )}
+                  </div>
                 </td>
 
                 <td className="px-5 py-4">

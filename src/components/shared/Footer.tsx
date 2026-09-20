@@ -105,8 +105,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <WhatsAppIcon className="h-5 w-5 shrink-0 text-[#218B54]" />
-                <a href="https://wa.me/967700000000" target="_blank" rel="noreferrer" className="hover:text-[#218B54] transition-colors">
-                  واتساب: +967 700 000 000
+                <a href="https://wa.me/967778695735" target="_blank" rel="noreferrer" className="hover:text-[#218B54] transition-colors">
+                  واتساب: +967 778 695 735
                 </a>
               </li>
               <li className="flex items-center gap-3">

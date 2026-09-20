@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { Star } from "lucide-react";
 import {
   UserIcon,
   MapPinIcon,
@@ -22,6 +23,7 @@ export function Sidebar() {
     { label: "طلباتي", path: ROUTES.orders, icon: ShoppingBagIcon },
     { label: "قائمة الأمنيات", path: ROUTES.wishlist, icon: HeartIcon },
     { label: "طلبات التصميم الخاص", path: ROUTES.customRequests, icon: CustomCraftIcon },
+    { label: "تقييماتي وتعليقاتي", path: ROUTES.customerReviews, icon: Star },
   ];
 
   const secondaryMenuItems = [
@@ -119,5 +121,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
-

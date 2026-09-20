@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Heart, ShoppingBag, Star } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Heart, ShoppingBag, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { ROUTES } from "@/routes/paths";
@@ -11,6 +11,8 @@ import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAu
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { useCartStore } from "@/features/cart/stores/cartStore";
 import { getProductImageByIndex } from "@/features/products/data/productImages";
+import { productsCatalogApi } from "@/features/products/api/productsCatalogApi";
+import { useGetCategories } from "@/features/products/hooks/useProductCatalog";
 
 const images = {
   hero: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=88",
@@ -23,27 +25,14 @@ const images = {
   home: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1800&q=88",
 };
 
-const categories = [
-  { name: "إضاءة وأجواء", image: images.lamp },
-  { name: "أثاث ريفي", image: images.chair },
-  { name: "سلال ومنسوجات", image: images.basket },
-];
-
-interface FeaturedProductRecord {
-  id: string | number;
-  name: string;
-  description?: string | null;
-  price?: number | string;
-  is_bestseller?: boolean;
-  is_new?: boolean;
-  media?: Array<{ url?: string | null; is_primary?: boolean } | null>;
-  category?: { name?: string } | null;
-}
+type HomeProductRecord = Record<string, any>;
 
 interface FeaturedProductsResponse {
-  data: {
-    bestsellers?: FeaturedProductRecord[];
-    new_arrivals?: FeaturedProductRecord[];
+  data?: {
+    bestsellers?: HomeProductRecord[];
+    new_arrivals?: HomeProductRecord[];
+    best_sellers?: HomeProductRecord[];
+    new_products?: HomeProductRecord[];
   };
 }
 
@@ -58,41 +47,160 @@ interface HomeProduct {
 
 const fallbackProductImage = images.basket;
 
-function normalizeHomeProduct(product: FeaturedProductRecord, index: number): HomeProduct {
-  const primaryMedia = product.media?.find((media) => media?.is_primary) ?? product.media?.[0];
+function extractProductList(payload: unknown, keys: string[]): HomeProductRecord[] {
+  if (!payload || typeof payload !== "object") return [];
+
+  const record = payload as Record<string, unknown>;
+
+  for (const key of keys) {
+    const maybe = record[key];
+    if (Array.isArray(maybe)) return maybe as HomeProductRecord[];
+  }
+
+  const nested = record.data ?? record.result ?? record.products ?? record.items ?? record.records;
+  if (nested && typeof nested === "object") {
+    const nestedRecord = nested as Record<string, unknown>;
+    for (const key of keys) {
+      const maybe = nestedRecord[key];
+      if (Array.isArray(maybe)) return maybe as HomeProductRecord[];
+    }
+  }
+
+  return [];
+}
+
+function normalizeHomeProduct(product: HomeProductRecord, index: number): HomeProduct {
+  const media = Array.isArray(product.media) ? product.media : Array.isArray(product.images) ? product.images : [];
+  const primaryMedia = media.find((mediaItem: any) => mediaItem?.is_primary) ?? media[0];
+
+  const productId = product.id ?? product.product_id ?? product.slug ?? `${index}`;
+  const productName = product.name ?? product.title ?? "منتج";
+  const productCategory =
+    product.category_name ??
+    product.category?.name ??
+    product.category ??
+    "منتج حرفي";
 
   return {
-    id: String(product.id),
-    name: product.name,
-    type: product.category?.name ?? "منتج حرفي",
-    image: getProductImageByIndex(index) ?? primaryMedia?.url ?? fallbackProductImage,
-    description: product.description ?? "",
-    price: Number(product.price ?? 0),
+    id: String(productId),
+    name: String(productName),
+    type: String(productCategory),
+    image:
+      product.image_url ??
+      product.image ??
+      product.imageUrl ??
+      product.thumbnail ??
+      product.cover ??
+      primaryMedia?.url ??
+      getProductImageByIndex(index) ??
+      fallbackProductImage,
+    description: String(product.description ?? product.short_description ?? product.subtitle ?? ""),
+    price: Number(product.price ?? product.amount ?? product.sale_price ?? 0),
   };
 }
 
+function getCategoryFallbackImage(categoryName: string, index: number): string {
+  const normalizedName = categoryName.toLowerCase();
+
+  if (/إضاءة|مصابيح|لمبات|lamp|light/.test(normalizedName)) return images.lamp;
+  if (/أثاث|كرسي|طاولة|خشب|furniture|chair|table/.test(normalizedName)) return images.chair;
+  if (/سلال|منسوج|نسيج|basket|textile|woven/.test(normalizedName)) return images.basket;
+  if (/نبات|زراعة|plant|garden/.test(normalizedName)) return images.planting;
+
+  return [images.basket, images.chair, images.lamp, images.planting][index % 4];
+}
+
+function resolveCategoryImage(value: string | null | undefined, fallback: string): string {
+  if (!value?.trim()) return fallback;
+
+  const imagePath = value.trim();
+  if (/^(https?:|data:|blob:)/i.test(imagePath)) return imagePath;
+
+  const configuredApiBase = String(import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+  const apiOrigin = configuredApiBase.replace(/\/api(?:\/v\d+)?$/i, "");
+  const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+
+  return apiOrigin ? `${apiOrigin}${normalizedPath}` : normalizedPath;
+}
+
 function HomePage() {
+  const { data: categories = [], isLoading: isCategoriesLoading, isError: hasCategoriesError } = useGetCategories();
+  const [categoryStart, setCategoryStart] = useState(0);
   const [bestsellers, setBestsellers] = useState<HomeProduct[]>([]);
   const [newArrivals, setNewArrivals] = useState<HomeProduct[]>([]);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
   const [featuredError, setFeaturedError] = useState(false);
 
   useEffect(() => {
+    setCategoryStart(0);
+  }, [categories.length]);
+
+  const visibleCategories = categories.length <= 3
+    ? categories
+    : Array.from({ length: 3 }, (_, index) => categories[(categoryStart + index) % categories.length]);
+
+  const showCategoryNavigation = categories.length > 3;
+  const showPreviousCategories = () => {
+    setCategoryStart((current) => (current - 3 + categories.length) % categories.length);
+  };
+  const showNextCategories = () => {
+    setCategoryStart((current) => (current + 3) % categories.length);
+  };
+
+  useEffect(() => {
     let isMounted = true;
 
-    customerApi.get<FeaturedProductsResponse>("/products/featured")
-      .then(({ data }) => {
-        if (!isMounted) return;
-        setBestsellers((data.data.bestsellers ?? []).map(normalizeHomeProduct));
-        setNewArrivals((data.data.new_arrivals ?? []).map(normalizeHomeProduct));
-      })
-      .catch((error) => {
-        console.error("Failed to load featured products", error);
-        if (isMounted) setFeaturedError(true);
-      })
-      .finally(() => {
+    const loadFeaturedProducts = async () => {
+      try {
+        const featuredResponse = await customerApi.get<FeaturedProductsResponse>("/products/featured");
+        const payload = featuredResponse?.data ?? {};
+        const bestsellersList = extractProductList(payload, ["bestsellers", "best_sellers", "bestSellers", "most_sold", "top_selling"]);
+        const newArrivalsList = extractProductList(payload, ["new_arrivals", "newArrivals", "new_products", "latest", "recent"]);
+
+        if (isMounted) {
+          setBestsellers(bestsellersList.length ? bestsellersList.map(normalizeHomeProduct) : []);
+          setNewArrivals(newArrivalsList.length ? newArrivalsList.map(normalizeHomeProduct) : []);
+          setFeaturedError(false);
+        }
+
+        if (isMounted && (!bestsellersList.length && !newArrivalsList.length)) {
+          throw new Error("Featured products endpoint returned empty payload");
+        }
+      } catch (error) {
+        console.warn("Featured products endpoint failed, falling back to catalog products", error);
+
+        try {
+          const fallbackResponse = await productsCatalogApi.getProducts({ page: 1, per_page: 6 });
+          const catalogItems = fallbackResponse?.data ?? [];
+
+          if (isMounted) {
+            const sortedByNewest = [...catalogItems].sort((a: any, b: any) => {
+              const aDate = new Date(a.created_at ?? a.createdAt ?? 0).getTime();
+              const bDate = new Date(b.created_at ?? b.createdAt ?? 0).getTime();
+              return bDate - aDate;
+            });
+
+            const fallbackBestsellers = catalogItems.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index));
+            const fallbackNewArrivals = sortedByNewest.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index));
+
+            setBestsellers(fallbackBestsellers);
+            setNewArrivals(fallbackNewArrivals);
+            setFeaturedError(false);
+          }
+        } catch (fallbackError) {
+          console.error("Failed to load fallback catalog products", fallbackError);
+          if (isMounted) {
+            setBestsellers([]);
+            setNewArrivals([]);
+            setFeaturedError(true);
+          }
+        }
+      } finally {
         if (isMounted) setIsFeaturedLoading(false);
-      });
+      }
+    };
+
+    void loadFeaturedProducts();
 
     return () => {
       isMounted = false;
@@ -118,7 +226,73 @@ function HomePage() {
 
       <section className="bg-[#f2f0e9] px-5 py-16 sm:px-8"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow="من الطبيعة" title="وصلنا جديدًا" link="اكتشف الجديد" /><FeaturedProductsGrid products={newArrivals} isLoading={isFeaturedLoading} hasError={featuredError} /></div></section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8"><SectionHeading eyebrow="تشكيلة الموسم" title="تسوق حسب الفئة" /><div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">{categories.map((category) => <Link to={ROUTES.products} key={category.name} className="group relative aspect-[.86] overflow-hidden"><img src={category.image} alt={category.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /><div className="absolute inset-x-5 bottom-5 text-white"><h3 className="text-xl font-bold">{category.name}</h3><span className="mt-2 inline-flex items-center gap-1 text-xs text-white/80">استكشف المجموعة <ArrowLeft className="size-3" /></span></div></Link>)}</div></section>
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+        <div className="flex items-end justify-between border-b border-[#e5e0d7] pb-4">
+          <div>
+            <p className="text-xs font-bold text-[#8b7652]">تشكيلة الموسم</p>
+            <h2 className="mt-2 text-2xl font-bold text-[#39432d] sm:text-3xl">تسوق حسب الفئة</h2>
+          </div>
+          {showCategoryNavigation && (
+            <div className="flex items-center gap-2" dir="ltr">
+              <button
+                type="button"
+                onClick={showPreviousCategories}
+                aria-label="الفئات السابقة"
+                className="flex size-10 items-center justify-center rounded-full border border-[#d8d2c7] bg-white text-[#52663c] transition hover:bg-[#f2eee7]"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                type="button"
+                onClick={showNextCategories}
+                aria-label="الفئات التالية"
+                className="flex size-10 items-center justify-center rounded-full border border-[#d8d2c7] bg-white text-[#52663c] transition hover:bg-[#f2eee7]"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </div>
+          )}
+        </div>
+        {isCategoriesLoading ? (
+          <div className="mt-8 flex min-h-60 items-center justify-center text-sm text-[#77766d]">
+            جارٍ تحميل الفئات...
+          </div>
+        ) : hasCategoriesError || categories.length === 0 ? (
+          <div className="mt-8 flex min-h-60 items-center justify-center text-sm text-[#77766d]">
+            لا توجد فئات متاحة حاليًا.
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {visibleCategories.map((category, index) => (
+              <Link
+                to={`${ROUTES.products}?category=${encodeURIComponent(String(category.id))}`}
+                key={category.id}
+                className="group relative aspect-[.86] overflow-hidden"
+              >
+                <img
+                  src={resolveCategoryImage(
+                    category.image_url,
+                    getCategoryFallbackImage(category.name, categoryStart + index),
+                  )}
+                  alt={category.name}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = getCategoryFallbackImage(category.name, categoryStart + index);
+                  }}
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute inset-x-5 bottom-5 text-white">
+                  <h3 className="text-xl font-bold">{category.name}</h3>
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs text-white/80">
+                    استكشف المجموعة <ArrowLeft className="size-3" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="grid bg-[#eee9df] lg:grid-cols-2"><div className="min-h-[420px] bg-cover bg-center" style={{ backgroundImage: `url(${images.artisan})` }} /><div className="flex items-center px-8 py-14 sm:px-16"><div className="max-w-xl"><p className="text-sm font-bold text-[#8b7652]">حكاية من أيدينا</p><h2 className="mt-4 text-3xl font-bold leading-relaxed text-[#4f6236] sm:text-4xl">نمنح الحرفة حياة جديدة، ونحفظ أثرها في كل قطعة</h2><p className="mt-5 leading-8 text-[#67665c]">خلف كل منتج حكاية إنسان ومكان. نعمل مع حرفيين محليين لنقدم تصاميم تحترم الطبيعة وتحتفي بالتفاصيل التي لا تصنعها الآلات.</p><Link to={ROUTES.aboutUs} className="mt-7 inline-flex items-center gap-2 border border-[#718254] px-5 py-3 text-sm font-bold text-[#4f6236]">اقرأ قصتنا <ArrowLeft className="size-4" /></Link></div></div></section>
 
@@ -151,22 +325,40 @@ function SectionHeading({ eyebrow, title, link }: { eyebrow: string; title: stri
 
 function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
   const isAuthenticated = useCustomerAuthStore((state) => state.isAuthenticated);
+  const isInCart = useCartStore((state) =>
+    state.items.some((cartItem) => cartItem.id === item.id || cartItem.productId === item.id),
+  );
   const [isFavorite, setIsFavorite] = useState(() => getStoredWishlistIds().includes(item.id));
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = async () => {
-    if (isCartLoading) return;
+    if (isCartLoading || isInCart) {
+      if (isInCart) {
+        showSuccessToast("المنتج موجود مسبقاً في السلة");
+      }
+      return;
+    }
 
     try {
       setIsCartLoading(true);
       await cartApi.addToCart(item.id);
-      addItem({ id: item.id, name: item.name, subtitle: item.description, price: item.price, image: item.image });
-      showSuccessToast("تمت إضافة المنتج إلى السلة");
-    } catch (error) {
-      console.error(error);
-      showErrorToast("تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.");
+      addItem({
+        id: item.id,
+        productId: item.id,
+        name: item.name,
+        subtitle: item.description,
+        price: item.price,
+        image: item.image,
+        stock: (item as any).stock ?? 5,
+        isLimitedStock: true,
+        isReserved: true,
+      });
+      showSuccessToast("تمت إضافة المنتج وحجز الكمية لسلتك بنجاح");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || "تعذر إضافة المنتج إلى السلة، يرجى المحاولة مرة أخرى.";
+      showErrorToast(msg);
     } finally {
       setIsCartLoading(false);
     }
@@ -188,7 +380,84 @@ function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
     }
   };
 
-  return <motion.article initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * .08 }} className="group"><div className="relative aspect-[.8] overflow-hidden bg-[#eee9df]"><img src={item.image} alt={item.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><button type="button" aria-label={isFavorite ? `إزالة ${item.name} من المفضلة` : `إضافة ${item.name} للمفضلة`} onClick={() => void handleToggleFavorite()} disabled={isFavoriteLoading} className="absolute left-3 top-3 rounded-full bg-white/90 p-2 text-[#52683b] disabled:opacity-60"><Heart className={`size-4 ${isFavorite ? "fill-current" : ""}`} /></button><div className="absolute inset-x-4 bottom-4 flex items-center justify-between gap-2"><Link to={ROUTES.productDetails(item.id)} className="bg-white px-3 py-2 text-xs font-bold text-[#52683b] shadow-sm transition hover:bg-[#f2eee5]">تفاصيل المنتج</Link><button type="button" onClick={() => void handleAddToCart()} disabled={isCartLoading} aria-label={`إضافة ${item.name} إلى السلة`} className="flex size-9 items-center justify-center rounded-full bg-[#52683b] text-white disabled:opacity-60">{isCartLoading ? <span className="text-xs font-bold">...</span> : <ShoppingBag className="size-4" />}</button></div></div><h3 className="mt-4 text-base font-bold text-[#34392d]">{item.name}</h3><p className="mt-1 text-xs text-[#85877d]">{item.type}</p></motion.article>;
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08, duration: 0.35, ease: "easeOut" }}
+      whileHover={{ y: -4 }}
+      className="group overflow-hidden rounded-[20px] border border-[#e5dfd5] bg-[#f8f5f1] shadow-[0_14px_24px_-18px_rgba(48,54,38,0.28)]"
+    >
+      <div className="relative overflow-hidden">
+        <motion.img
+          src={item.image}
+          alt={item.name}
+          initial={{ scale: 1.08, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          whileHover={{ scale: 1.04 }}
+          className="h-[300px] w-full object-cover transition duration-500"
+        />
+
+        <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            aria-label={isFavorite ? `إزالة ${item.name} من المفضلة` : `إضافة ${item.name} إلى المفضلة`}
+            onClick={() => void handleToggleFavorite()}
+            disabled={isFavoriteLoading}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              isFavorite
+                ? "border-[#f5c4c4] bg-[#fff1f1] text-[#d64d4d]"
+                : "border-[#e7e0d9] bg-white/90 text-[#4d564a] hover:scale-105"
+            }`}
+          >
+            {isFavoriteLoading ? (
+              <span className="text-xs font-bold">...</span>
+            ) : (
+              <Heart className={`size-4 ${isFavorite ? "fill-current" : ""}`} />
+            )}
+          </button>
+
+          <button
+            type="button"
+            aria-label={isInCart ? `${item.name} موجود في السلة` : `إضافة ${item.name} إلى السلة`}
+            onClick={() => void handleAddToCart()}
+            disabled={isCartLoading || isInCart}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_12px_20px_-12px_rgba(61,79,47,0.8)] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+              isInCart
+                ? "border-[#b8c8a9] bg-[#dfead8] text-[#52663c]"
+                : "border-[#dfe7d6] bg-[#edf2e8] text-[#3d4b2f] hover:scale-105"
+            }`}
+          >
+            {isCartLoading ? (
+              <span className="text-xs font-bold">...</span>
+            ) : isInCart ? (
+              <span className="text-sm font-black">✓</span>
+            ) : (
+              <ShoppingBag className="size-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <h3 className="text-base font-bold text-[#34392d]">{item.name}</h3>
+        <p className="text-xs text-[#85877d]">{item.type}</p>
+
+        <div className="flex items-center justify-between gap-2 pt-2">
+          <Link
+            to={ROUTES.productDetails(item.id)}
+            className="inline-flex items-center justify-center rounded-full bg-white px-3 py-2 text-xs font-bold text-[#52683b] shadow-sm transition hover:bg-[#f2eee5]"
+          >
+            تفاصيل المنتج
+          </Link>
+
+          <span className="text-base font-extrabold text-[#34392d]">{item.price.toLocaleString("ar-SA")} ر.س</span>
+        </div>
+      </div>
+    </motion.article>
+  );
 }
 
 export { HomePage };

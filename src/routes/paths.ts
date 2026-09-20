@@ -56,6 +56,8 @@ export const ROUTES = {
   wishlist: "/wishlist",
   orders: "/orders",
   orderDetail: "/orders/:orderId",
+  orderTracking: "/orders/:orderId/track",
+  orderTrackingPath: (orderId: string | number) => `/orders/${orderId}/track`,
   designDetail: "/orders/:orderId/design",
   signup: "/signup",
   login: "/login",
@@ -66,5 +68,7 @@ export const ROUTES = {
   personalInfo: "/personal-info",
   profile: "/profile",
   addresses: "/addresses",
+  reviews: "/reviews",
+  customerReviews: "/my-reviews",
   help: "/help",
 } as const;

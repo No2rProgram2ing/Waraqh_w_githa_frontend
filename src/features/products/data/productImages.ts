@@ -34,6 +34,19 @@ export function getProductImage(productId: string | number): string {
   return productImages[index % productImages.length];
 }
 
+export function resolveProductImage(
+  image: string | null | undefined,
+  productId: string | number,
+): string {
+  const value = image?.trim();
+
+  if (!value || /(?:via\.placeholder\.com|placeholder\.com|placehold\.co)/i.test(value)) {
+    return getProductImage(productId);
+  }
+
+  return value;
+}
+
 export function getProductImageByIndex(index: number): string {
   return productImages[Math.abs(index) % productImages.length];
 }

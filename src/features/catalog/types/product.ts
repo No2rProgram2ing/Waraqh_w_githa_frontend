@@ -28,6 +28,8 @@ export interface Product {
   description: string | null
   price: string
   stock_quantity: number
+  reserved_quantity?: number
+  available_stock?: number
   status: ProductStatus
   is_customizable: boolean
   category?: ProductCategory

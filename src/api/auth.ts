@@ -69,7 +69,7 @@ export const authApi = {
 
   login: async (payload: LoginCredentials): Promise<LoginResponse> => {
     const { data } = await customerApi.post("/customer/login", {
-      phone: payload.phone,
+      phone: payload.phone.trim(),
       password: payload.password,
     });
 

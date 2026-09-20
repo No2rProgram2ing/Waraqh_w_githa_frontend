@@ -352,20 +352,16 @@ function ProductEditPage() {
                 htmlFor="product-name"
                 className="text-sm font-medium text-[var(--color-text-secondary)]"
               >
-                اسم المنتج
+                اسم المنتج (غير قابل للتعديل)
               </label>
 
               <input
                 id="product-name"
                 type="text"
                 value={form.name}
-                onChange={(event) =>
-                  handleChange(
-                    'name',
-                    event.target.value,
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[#45592D]"
+                readOnly
+                aria-readonly="true"
+                className="mt-2 w-full cursor-not-allowed rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-muted)] outline-none"
               />
             </div>
 

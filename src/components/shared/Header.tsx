@@ -15,6 +15,8 @@ import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAu
 import { useUnreadNotificationsCount } from "@/features/notifications/hooks/useNotifications";
 import { cartApi } from '@/api/cartApi';
 import { useCartStore } from "@/features/cart/stores/cartStore";
+import { useTheme } from "@/providers/ThemeProvider";
+import { MoonIcon, SunIcon } from "lucide-react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -77,11 +79,12 @@ const navLinks = [
   { label: "طلب خاص", path: ROUTES.customRequests },
 ];
 
-const iconButtonClass = "relative p-2.5 text-[#20251B] transition-colors hover:text-[#536A3A]";
+const iconButtonClass = "relative p-2.5 text-[var(--color-text-primary)] transition-colors hover:text-[var(--color-accent)]";
 
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -90,7 +93,9 @@ export function Header() {
   const user = useCustomerAuthStore((state) => state.user);
   const isHydrated = useCustomerAuthStore((state) => state.isHydrated);
   const logout = useCustomerAuthStore((state) => state.logout);
-  const cartItemCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
+  const cartItemCount = useCartStore((state) =>
+    state.items.reduce((total, item) => total + Math.max(0, Number(item.quantity ?? 0)), 0),
+  );
   const unreadNotificationsQuery = useUnreadNotificationsCount(isAuthenticated);
   const unreadNotificationsCount = unreadNotificationsQuery.data ?? 0;
 
@@ -123,9 +128,13 @@ export function Header() {
   return (
     <header
       className={`sticky top-0 z-40 border-b transition-all duration-300 ${
-        isScrolled
-          ? "border-[#BEB6A8] bg-[#F8F6F1]/98 shadow-sm backdrop-blur-md"
-          : "border-[#C9C1B4] bg-[#F8F6F1]"
+        theme === "dark"
+          ? isScrolled
+            ? "border-[#3D342C] bg-[#231E19]/98 shadow-sm backdrop-blur-md"
+            : "border-[#3D342C] bg-[#231E19]"
+          : isScrolled
+            ? "border-[#BEB6A8] bg-[#F8F6F1]/98 shadow-sm backdrop-blur-md"
+            : "border-[#C9C1B4] bg-[#F8F6F1]"
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -228,6 +237,21 @@ export function Header() {
               <SearchIcon className="h-5 w-5 text-brand-olive-700" />
             </button>
 
+            {/* Theme toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700"
+              title={theme === "dark" ? "الوضع الفاتح" : "الوضع الداكن"}
+              aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            >
+              {theme === "dark" ? (
+                <SunIcon className="h-5 w-5 text-brand-olive-700" />
+              ) : (
+                <MoonIcon className="h-5 w-5 text-brand-olive-700" />
+              )}
+            </button>
+
             {/* Shopping Bag */}
             <Link to={ROUTES.cart} className="relative rounded-full p-2 text-brand-ink/75 transition-colors hover:bg-brand-surface hover:text-brand-olive-700" title="حقيبة التسوق">
               <ShoppingBagIcon className="h-5 w-5 text-brand-olive-700" />
@@ -273,7 +297,7 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-[#D8D2C5] bg-[#F8F6F1] px-6 py-4 lg:hidden"
+            className="overflow-hidden border-t border-[var(--color-border)] bg-[var(--color-surface-card)] px-6 py-4 lg:hidden"
             aria-label="قائمة الهاتف"
           >
             <div className="flex flex-col gap-2">
@@ -283,14 +307,14 @@ export function Header() {
                                 key={link.path}
                                 to={link.path}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={({ isActive: navIsActive }) => `rounded-lg px-3 py-3 text-base font-bold ${navIsActive ? "bg-[#E5EBDD] text-[#3E522C]" : "text-[#25291F] hover:bg-[#F2EEE6]"}`}
+                                className={({ isActive: navIsActive }) => `rounded-lg px-3 py-3 text-base font-bold ${navIsActive ? "bg-[var(--color-accent-subtle)] text-[var(--color-accent)]" : "text-[var(--color-text-primary)] hover:bg-[var(--color-surface-subtle)]"}`}
                               >
                                 {link.label}
                               </NavLink>
                             ))}
 
               {/* Mobile auth section */}
-              <div className="mt-2 pt-3 border-t border-[#D8D2C5]/70 flex flex-col gap-2">
+              <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/70 pt-3">
                 {isAuthenticated ? (
                   <>
                     <p className="px-3 text-xs text-brand-muted">مرحباً، <span className="font-semibold text-brand-ink">{user?.fullName}</span></p>

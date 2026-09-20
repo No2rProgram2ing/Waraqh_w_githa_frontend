@@ -10,6 +10,9 @@ export interface Product {
   badge?: string;
   categoryName?: string;
   inStock?: boolean;
+  stock_quantity?: number;
+  reserved_quantity?: number;
+  available_stock?: number;
   is_favorited: boolean;
 }
 
@@ -17,6 +20,7 @@ export interface ProductCategory {
   id: string | number;
   name: string;
   slug?: string;
+  image_url?: string | null;
   parent_id?: string | number | null;
 }
 
