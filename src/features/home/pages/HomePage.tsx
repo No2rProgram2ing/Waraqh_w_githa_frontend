@@ -4,13 +4,13 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Heart, ShoppingBag, Star } from "
 import { Link } from "react-router-dom";
 import { CatalogLayout } from "@/layouts/CatalogLayout";
 import { ROUTES } from "@/routes/paths";
-import { customerApi } from "@/api/customerApi";
 import { cartApi } from "@/api/cartApi";
 import { getStoredWishlistIds, toggleWishlist } from "@/api/favoritesApi";
 import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { useCartStore } from "@/features/cart/stores/cartStore";
-import { getProductImageByIndex } from "@/features/products/data/productImages";
+import { productReviewsApi, type ProductReview } from "@/api/productReviewsApi";
+import { getProductImageByIndex, resolveProductImage } from "@/features/products/data/productImages";
 import { productsCatalogApi } from "@/features/products/api/productsCatalogApi";
 import { useGetCategories } from "@/features/products/hooks/useProductCatalog";
 
@@ -27,15 +27,6 @@ const images = {
 
 type HomeProductRecord = Record<string, any>;
 
-interface FeaturedProductsResponse {
-  data?: {
-    bestsellers?: HomeProductRecord[];
-    new_arrivals?: HomeProductRecord[];
-    best_sellers?: HomeProductRecord[];
-    new_products?: HomeProductRecord[];
-  };
-}
-
 interface HomeProduct {
   id: string;
   name: string;
@@ -45,29 +36,11 @@ interface HomeProduct {
   price: number;
 }
 
-const fallbackProductImage = images.basket;
-
-function extractProductList(payload: unknown, keys: string[]): HomeProductRecord[] {
-  if (!payload || typeof payload !== "object") return [];
-
-  const record = payload as Record<string, unknown>;
-
-  for (const key of keys) {
-    const maybe = record[key];
-    if (Array.isArray(maybe)) return maybe as HomeProductRecord[];
-  }
-
-  const nested = record.data ?? record.result ?? record.products ?? record.items ?? record.records;
-  if (nested && typeof nested === "object") {
-    const nestedRecord = nested as Record<string, unknown>;
-    for (const key of keys) {
-      const maybe = nestedRecord[key];
-      if (Array.isArray(maybe)) return maybe as HomeProductRecord[];
-    }
-  }
-
-  return [];
+interface HomeReview extends ProductReview {
+  productLabel: string;
 }
+
+const fallbackProductImage = images.basket;
 
 function normalizeHomeProduct(product: HomeProductRecord, index: number): HomeProduct {
   const media = Array.isArray(product.media) ? product.media : Array.isArray(product.images) ? product.images : [];
@@ -85,15 +58,19 @@ function normalizeHomeProduct(product: HomeProductRecord, index: number): HomePr
     id: String(productId),
     name: String(productName),
     type: String(productCategory),
-    image:
-      product.image_url ??
-      product.image ??
-      product.imageUrl ??
-      product.thumbnail ??
-      product.cover ??
-      primaryMedia?.url ??
-      getProductImageByIndex(index) ??
-      fallbackProductImage,
+    image: resolveProductImage(
+      String(
+        product.image_url ??
+          product.image ??
+          product.imageUrl ??
+          product.thumbnail ??
+          product.cover ??
+          primaryMedia?.url ??
+          getProductImageByIndex(index) ??
+          fallbackProductImage,
+      ),
+      String(productId),
+    ),
     description: String(product.description ?? product.short_description ?? product.subtitle ?? ""),
     price: Number(product.price ?? product.amount ?? product.sale_price ?? 0),
   };
@@ -114,6 +91,10 @@ function resolveCategoryImage(value: string | null | undefined, fallback: string
   if (!value?.trim()) return fallback;
 
   const imagePath = value.trim();
+  if (/(?:via\.placeholder\.com|placeholder\.com|placehold\.co)/i.test(imagePath)) {
+    return fallback;
+  }
+
   if (/^(https?:|data:|blob:)/i.test(imagePath)) return imagePath;
 
   const configuredApiBase = String(import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
@@ -130,6 +111,8 @@ function HomePage() {
   const [newArrivals, setNewArrivals] = useState<HomeProduct[]>([]);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
   const [featuredError, setFeaturedError] = useState(false);
+  const [latestReviews, setLatestReviews] = useState<HomeReview[]>([]);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(true);
 
   useEffect(() => {
     setCategoryStart(0);
@@ -152,51 +135,48 @@ function HomePage() {
 
     const loadFeaturedProducts = async () => {
       try {
-        const featuredResponse = await customerApi.get<FeaturedProductsResponse>("/products/featured");
-        const payload = featuredResponse?.data ?? {};
-        const bestsellersList = extractProductList(payload, ["bestsellers", "best_sellers", "bestSellers", "most_sold", "top_selling"]);
-        const newArrivalsList = extractProductList(payload, ["new_arrivals", "newArrivals", "new_products", "latest", "recent"]);
+        const catalogResponse = await productsCatalogApi.getProducts({ page: 1, per_page: 6 });
+        const catalogItems = catalogResponse.data ?? [];
 
         if (isMounted) {
-          setBestsellers(bestsellersList.length ? bestsellersList.map(normalizeHomeProduct) : []);
-          setNewArrivals(newArrivalsList.length ? newArrivalsList.map(normalizeHomeProduct) : []);
+          const sortedByNewest = [...catalogItems].sort((a: any, b: any) => {
+            const aDate = new Date(a.created_at ?? a.createdAt ?? 0).getTime();
+            const bDate = new Date(b.created_at ?? b.createdAt ?? 0).getTime();
+            return bDate - aDate;
+          });
+
+          setBestsellers(catalogItems.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index)));
+          setNewArrivals(sortedByNewest.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index)));
           setFeaturedError(false);
         }
 
-        if (isMounted && (!bestsellersList.length && !newArrivalsList.length)) {
-          throw new Error("Featured products endpoint returned empty payload");
+        const reviews = await productReviewsApi.getLatestReviews(catalogItems.map((product) => product.id));
+
+        if (isMounted) {
+          setLatestReviews(
+            reviews.map((review) => ({
+              ...review,
+              productLabel:
+                review.product_name ??
+                review.product?.name ??
+                review.product?.title ??
+                catalogItems.find((product) => String(product.id) === String(review.product_id))?.name ??
+                "منتج",
+            })),
+          );
         }
       } catch (error) {
-        console.warn("Featured products endpoint failed, falling back to catalog products", error);
-
-        try {
-          const fallbackResponse = await productsCatalogApi.getProducts({ page: 1, per_page: 6 });
-          const catalogItems = fallbackResponse?.data ?? [];
-
-          if (isMounted) {
-            const sortedByNewest = [...catalogItems].sort((a: any, b: any) => {
-              const aDate = new Date(a.created_at ?? a.createdAt ?? 0).getTime();
-              const bDate = new Date(b.created_at ?? b.createdAt ?? 0).getTime();
-              return bDate - aDate;
-            });
-
-            const fallbackBestsellers = catalogItems.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index));
-            const fallbackNewArrivals = sortedByNewest.slice(0, 3).map((item, index) => normalizeHomeProduct(item as any, index));
-
-            setBestsellers(fallbackBestsellers);
-            setNewArrivals(fallbackNewArrivals);
-            setFeaturedError(false);
-          }
-        } catch (fallbackError) {
-          console.error("Failed to load fallback catalog products", fallbackError);
-          if (isMounted) {
-            setBestsellers([]);
-            setNewArrivals([]);
-            setFeaturedError(true);
-          }
+        console.error("Failed to load catalog products for home page", error);
+        if (isMounted) {
+          setBestsellers([]);
+          setNewArrivals([]);
+          setFeaturedError(true);
         }
       } finally {
-        if (isMounted) setIsFeaturedLoading(false);
+        if (isMounted) {
+          setIsFeaturedLoading(false);
+          setIsReviewsLoading(false);
+        }
       }
     };
 
@@ -300,7 +280,31 @@ function HomePage() {
 
       <section className="relative min-h-[430px] bg-cover bg-center px-5 py-20 text-center text-white" style={{ backgroundImage: `linear-gradient(rgb(28 37 24 / .42), rgb(28 37 24 / .55)), url(${images.home})` }}><div className="mx-auto max-w-xl"><p className="text-sm text-[#e1d2b5]">مجموعة تستوطن الجديدة</p><h2 className="mt-4 text-3xl font-bold sm:text-5xl">بيتك يحكي حكايتك</h2><p className="mt-5 leading-8 text-white/85">أضف لمسات دافئة تحمل روح اليمن إلى مساحتك.</p><Link to={ROUTES.products} className="mt-7 inline-flex bg-[#53683b] px-6 py-3 text-sm font-bold">شاهد المجموعة <ArrowLeft className="mr-2 size-4" /></Link></div></section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8"><SectionHeading eyebrow="صوت عملائنا" title="قالوا عنا" /><div className="mt-8 grid gap-5 md:grid-cols-3">{["قطعة جميلة جدًا والتغليف كان رائعًا. واضح الاهتمام بكل تفصيلة.", "أحببت القصة خلف المنتج، وصلتني قطعة تحمل معنى وليس مجرد ديكور.", "تجربة مميزة من أول طلب حتى التوصيل. سأعود للتسوق بالتأكيد."].map((quote) => <article key={quote} className="border border-[#ddd8cf] bg-white p-6"><div className="flex gap-1 text-[#c3954c]">{Array.from({ length: 5 }).map((_, index) => <Star key={index} className="size-3 fill-current" />)}</div><p className="mt-5 text-sm leading-8 text-[#565950]">“{quote}”</p><div className="mt-5 flex items-center gap-2 text-xs font-bold"><span className="size-7 rounded-full bg-[#d9cdbb]" /> عميلة ورقة وجذع</div></article>)}</div></section>
+      {!isReviewsLoading && latestReviews.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+          <SectionHeading eyebrow="صوت عملائنا" title="قالوا عنا" />
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {latestReviews.map((review) => (
+              <article key={review.id} className="border border-[#ddd8cf] bg-white p-6">
+                <div className="flex gap-1 text-[#c3954c]" aria-label={`التقييم ${review.rating} من 5`}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      className={`size-3 ${index < review.rating ? "fill-current" : ""}`}
+                    />
+                  ))}
+                </div>
+                <p className="mt-5 text-sm leading-8 text-[#565950]">“{review.comment}”</p>
+                <p className="mt-3 text-xs text-[#8b7652]">{review.productLabel}</p>
+                <div className="mt-5 flex items-center gap-2 text-xs font-bold">
+                  <span className="size-7 rounded-full bg-[#d9cdbb]" />
+                  {review.customer_name ?? review.customer?.name ?? review.user?.name ?? "عميل ورقة وجذع"}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
     </main>
     </CatalogLayout>
@@ -393,6 +397,10 @@ function ProductTile({ item, index }: { item: HomeProduct; index: number }) {
         <motion.img
           src={item.image}
           alt={item.name}
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = getProductImageByIndex(index);
+          }}
           initial={{ scale: 1.08, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.45, ease: "easeOut" }}

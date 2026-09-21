@@ -82,6 +82,10 @@ export function useProfile() {
     mutationFn: (params: UpdatePasswordParams) => profileApi.updatePassword(params),
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: () => profileApi.deleteAccount(),
+  });
+
   return {
     profile: profileQuery.data,
     isLoading: profileQuery.isLoading,
@@ -94,5 +98,7 @@ export function useProfile() {
     isUpdatingAvatar: updateAvatarMutation.isPending,
     updatePassword: updatePasswordMutation.mutateAsync,
     isUpdatingPassword: updatePasswordMutation.isPending,
+    deleteAccount: deleteAccountMutation.mutateAsync,
+    isDeletingAccount: deleteAccountMutation.isPending,
   };
 }

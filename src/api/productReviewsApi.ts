@@ -1,5 +1,6 @@
 import { customerApi } from "./customerApi";
 import { ordersApi } from "./ordersApi";
+import { customerAuthStorage } from "@/features/auth-customer/services/customerAuthStorage";
 import type { AxiosResponse } from "axios";
 
 const productReviewsEnabled = ["true", "1", "yes", "on"].includes(
@@ -7,6 +8,46 @@ const productReviewsEnabled = ["true", "1", "yes", "on"].includes(
 );
 const MOCK_REVIEWS_STORAGE_KEY = "warqah_mock_reviews";
 const MOCK_PURCHASED_STORAGE_KEY = "warqah_mock_purchased_products";
+
+function getCustomerStorageScope(): string {
+  const user = customerAuthStorage.getUser<{ id?: string | number }>();
+  const userId = user?.id === undefined || user.id === null ? "" : String(user.id).trim();
+  return userId ? `customer:${userId}` : "guest";
+}
+
+function getScopedStorageKey(baseKey: string): string {
+  return `${baseKey}:${getCustomerStorageScope()}`;
+}
+
+function getCurrentCustomerId(): string | undefined {
+  const user = customerAuthStorage.getUser<{ id?: string | number }>();
+  if (user?.id === undefined || user.id === null) {
+    return undefined;
+  }
+
+  const id = String(user.id).trim();
+  return id || undefined;
+}
+
+function getReviewOwnerId(review: ProductReview): string | undefined {
+  const ownerId =
+    review.customer_id ??
+    review.user_id ??
+    review.customer?.id ??
+    review.user?.id;
+
+  if (ownerId === undefined || ownerId === null || ownerId === "") {
+    return undefined;
+  }
+
+  return String(ownerId).trim() || undefined;
+}
+
+function belongsToCurrentCustomer(review: ProductReview): boolean {
+  const ownerId = getReviewOwnerId(review);
+  const currentCustomerId = getCurrentCustomerId();
+  return !ownerId || !currentCustomerId || ownerId === currentCustomerId;
+}
 
 function isMissingEndpointError(error: unknown): boolean {
   const status = (error as { response?: { status?: number } } | undefined)?.response?.status;
@@ -31,9 +72,17 @@ function normalizeProductKey(productId: string | number): string {
   return String(productId);
 }
 
+function isDemoProductId(productId: string | number): boolean {
+  return normalizeProductKey(productId).startsWith("demo-product-");
+}
+
 function isLocalMockReviewId(reviewId: string | number): boolean {
   const normalizedId = String(reviewId);
-  return normalizedId.endsWith("-seed-review") || /^\d+-\d+$/.test(normalizedId);
+  return (
+    normalizedId.endsWith("-seed-review") ||
+    /^\d+-\d+$/.test(normalizedId) ||
+    /^demo-product-.+-\d+$/.test(normalizedId)
+  );
 }
 
 function readMockReviews(): Record<string, ProductReview[]> {
@@ -42,7 +91,7 @@ function readMockReviews(): Record<string, ProductReview[]> {
   }
 
   try {
-    const raw = window.localStorage.getItem(MOCK_REVIEWS_STORAGE_KEY);
+    const raw = window.localStorage.getItem(getScopedStorageKey(MOCK_REVIEWS_STORAGE_KEY));
     return raw ? (JSON.parse(raw) as Record<string, ProductReview[]>) : {};
   } catch {
     return {};
@@ -54,7 +103,7 @@ function writeMockReviews(data: Record<string, ProductReview[]>): void {
     return;
   }
 
-  window.localStorage.setItem(MOCK_REVIEWS_STORAGE_KEY, JSON.stringify(data));
+  window.localStorage.setItem(getScopedStorageKey(MOCK_REVIEWS_STORAGE_KEY), JSON.stringify(data));
 }
 
 function persistReview(productId: string | number, review: ProductReview): void {
@@ -83,7 +132,9 @@ function mergeReviews(
   );
 
   return [...localOnlyReviews, ...serverReviews].filter(
-    (review) => !review.status || review.status === "published",
+    (review) =>
+      !isLocalMockReviewId(review.id) &&
+      (!review.status || review.status === "published"),
   );
 }
 
@@ -93,7 +144,7 @@ function readMockPurchasedProducts(): string[] {
   }
 
   try {
-    const raw = window.localStorage.getItem(MOCK_PURCHASED_STORAGE_KEY);
+    const raw = window.localStorage.getItem(getScopedStorageKey(MOCK_PURCHASED_STORAGE_KEY));
     return raw ? (JSON.parse(raw) as string[]) : [];
   } catch {
     return [];
@@ -105,7 +156,7 @@ function writeMockPurchasedProducts(ids: string[]): void {
     return;
   }
 
-  window.localStorage.setItem(MOCK_PURCHASED_STORAGE_KEY, JSON.stringify(ids));
+  window.localStorage.setItem(getScopedStorageKey(MOCK_PURCHASED_STORAGE_KEY), JSON.stringify(ids));
 }
 
 function getSeedPurchasedProducts(): PurchasedProduct[] {
@@ -123,22 +174,13 @@ function getFallbackReviews(productId: string | number): ProductReview[] {
 
   if (Array.isArray(existing) && existing.length > 0) {
     return existing.filter(
-      (review) => !review.status || review.status === "published",
+      (review) =>
+        !isLocalMockReviewId(review.id) &&
+        (!review.status || review.status === "published"),
     );
   }
 
-  const defaultReview: ProductReview = {
-    id: `${key}-seed-review`,
-    rating: 5,
-    comment: "منتج رائع جدًا، أنصح به.",
-    customer_name: "عميل ورقة وجذع",
-    created_at: new Date().toISOString(),
-    status: "published",
-  };
-
-  const next = { ...stored, [key]: [defaultReview] };
-  writeMockReviews(next);
-  return next[key];
+  return [];
 }
 
 export function areProductReviewsEnabled(): boolean {
@@ -147,6 +189,8 @@ export function areProductReviewsEnabled(): boolean {
 
 export interface ProductReview {
   id: number | string;
+  user_id?: number | string | null;
+  customer_id?: number | string | null;
   product_id?: number | string;
   product_name?: string;
   product?: {
@@ -159,8 +203,8 @@ export interface ProductReview {
   comment: string | null;
   status?: "pending" | "published" | "rejected";
   customer_name?: string;
-  customer?: { name?: string | null } | null;
-  user?: { name?: string | null } | null;
+  customer?: { id?: number | string | null; name?: string | null } | null;
+  user?: { id?: number | string | null; name?: string | null } | null;
   created_at: string;
 }
 
@@ -381,7 +425,9 @@ export const productReviewsApi = {
         : Array.isArray(payload.data)
           ? payload.data
           : (payload.data as { data?: ProductReview[] } | undefined)?.data;
-      const serverReviews = Array.isArray(reviews) ? reviews : [];
+      const serverReviews = Array.isArray(reviews)
+        ? reviews.filter(belongsToCurrentCustomer)
+        : [];
       const localReviews = Object.entries(readMockReviews()).flatMap(
         ([productId, productReviews]) =>
           productReviews.map((review) => ({
@@ -612,7 +658,11 @@ export const productReviewsApi = {
         `/products/${productId}/reviews`,
       );
       const payload = response.data;
-      const reviews = Array.isArray(payload) ? payload : payload.data;
+      const reviews = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload.data)
+          ? payload.data
+          : (payload.data as { data?: ProductReview[] } | undefined)?.data;
       return mergeReviews(productId, Array.isArray(reviews) ? reviews : []);
     } catch (error) {
       if (isFallbackSafeError(error)) {
@@ -620,6 +670,27 @@ export const productReviewsApi = {
       }
       throw error;
     }
+  },
+  getLatestReviews: async (productIds: Array<string | number> = []): Promise<ProductReview[]> => {
+    if (!productReviewsEnabled) {
+      return [];
+    }
+
+    const reviewsByProduct = await Promise.all(
+      productIds.map(async (productId) => {
+        const reviews = await productReviewsApi.getReviews(productId);
+        return reviews.map((review) => ({ ...review, product_id: review.product_id ?? productId }));
+      }),
+    );
+
+    return reviewsByProduct
+      .flat()
+      .filter((review) => review.comment?.trim())
+      .sort(
+        (first, second) =>
+          new Date(second.created_at).getTime() - new Date(first.created_at).getTime(),
+      )
+      .slice(0, 3);
   },
   addReview: async (
     productId: string | number,
@@ -629,11 +700,38 @@ export const productReviewsApi = {
       throw new Error("ميزة التقييمات غير مفعلة حاليًا.");
     }
 
-    try {
-      const sanitizedPayload = {
-        ...(payload.rating !== undefined ? { rating: payload.rating } : {}),
-        ...(payload.comment !== undefined && payload.comment.trim() ? { comment: payload.comment.trim() } : {}),
+    const sanitizedPayload = {
+      ...(payload.rating !== undefined ? { rating: payload.rating } : {}),
+      ...(payload.comment !== undefined && payload.comment.trim() ? { comment: payload.comment.trim() } : {}),
+    };
+
+    const createLocalReview = (): ProductReview => {
+      const key = normalizeProductKey(productId);
+      const stored = readMockReviews();
+      const list = Array.isArray(stored[key]) ? stored[key] : [];
+      const review: ProductReview = {
+        id: `${key}-${Date.now()}`,
+        product_id: productId,
+        rating: payload.rating ?? 5,
+        comment: payload.comment?.trim() || null,
+        customer_name: "أنت",
+        created_at: new Date().toISOString(),
+        status: "pending",
       };
+
+      writeMockReviews({ ...stored, [key]: [review, ...list] });
+      const purchased = readMockPurchasedProducts();
+      if (!purchased.includes(key)) {
+        writeMockPurchasedProducts([...purchased, key]);
+      }
+      return review;
+    };
+
+    if (isDemoProductId(productId)) {
+      return createLocalReview();
+    }
+
+    try {
 
       const response = await customerApi.post<{ data?: ProductReview } | ProductReview>(
         `/customer/products/${productId}/reviews`,
@@ -646,28 +744,7 @@ export const productReviewsApi = {
       return review;
     } catch (error) {
       if (isFallbackSafeError(error)) {
-        const key = normalizeProductKey(productId);
-        const stored = readMockReviews();
-        const list = Array.isArray(stored[key]) ? stored[key] : [];
-        const review: ProductReview = {
-          id: `${key}-${Date.now()}`,
-          product_id: productId,
-          rating: payload.rating ?? 5,
-          comment: payload.comment?.trim() || null,
-          customer_name: "أنت",
-          created_at: new Date().toISOString(),
-          status: "pending",
-        };
-
-        const next = { ...stored, [key]: [review, ...list] };
-        writeMockReviews(next);
-
-        const purchased = readMockPurchasedProducts();
-        if (!purchased.includes(key)) {
-          writeMockPurchasedProducts([...purchased, key]);
-        }
-
-        return review;
+        return createLocalReview();
       }
 
       throw error;

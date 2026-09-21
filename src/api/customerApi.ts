@@ -30,14 +30,23 @@ export const customerApiBase = configuredApiBase ? normalizeApiBaseUrl(configure
 
 export const customerApi = axios.create({
   baseURL: customerApiBase,
+  withCredentials: true,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
 
+function isGoogleExchangeRequest(url: string | undefined): boolean {
+  return url?.replace(/^\/+/, "") === "auth/google/exchange";
+}
+
 // Attach Authorization header with stored token (Bearer) when available
 customerApi.interceptors.request.use((config) => {
+  if (isGoogleExchangeRequest(config.url)) {
+    return config;
+  }
+
   const token = customerAuthStorage.getToken();
 
   if (token) {
@@ -57,7 +66,7 @@ customerApi.interceptors.response.use(
       const hasStoredToken = Boolean(customerAuthStorage.getToken());
       const isAlreadyOnLoginPage = window.location.pathname === "/login";
 
-      if (hasStoredToken && !isAlreadyOnLoginPage) {
+      if (hasStoredToken && !isAlreadyOnLoginPage && !isGoogleExchangeRequest(error.config?.url)) {
         // Clear local auth state only for confirmed session expiry.
         useCustomerAuthStore.getState().clearAuth();
         // Hard redirect flushes React Query cache and any in-memory auth state.

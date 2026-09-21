@@ -11,6 +11,8 @@ import { CartPage } from "@/features/cart/pages/CartPage";
 import { CheckoutPage } from "@/features/checkout/pages/CheckoutPage";
 import { CheckoutSuccessPage } from "@/features/checkout/pages/CheckoutSuccessPage";
 import { LoginPage } from "@/features/auth-customer/pages/LoginPage";
+import { ForgotPasswordPage } from "@/features/auth-customer/pages/ForgotPasswordPage";
+import { CheckEmailPage } from "@/features/auth-customer/pages/CheckEmailPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { PersonalInfoPage } from "@/features/profile/pages/PersonalInfoPage";
 import { AddressesPage } from "@/features/addresses/pages/AddressesPage";
@@ -41,6 +43,8 @@ export function AppRoutes() {
       <Route path={ROUTES.search} element={<SearchPage />} />
 
       <Route path={ROUTES.login} element={<LoginPage />} />
+      <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
+      <Route path={ROUTES.checkEmail} element={<CheckEmailPage />} />
       <Route path={ROUTES.signup} element={<SignupPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 

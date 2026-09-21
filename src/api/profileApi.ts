@@ -6,7 +6,7 @@ export interface UserProfileData {
   email: string;
   phone: string;
   avatarUrl: string | null;
-  joinedDate: string;
+  joinedDate: string | null;
   isOnline: boolean;
 }
 
@@ -86,6 +86,24 @@ const fileToDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
+const formatJoinedDate = (user: any): string | null => {
+  const rawDate =
+    user?.created_at ??
+    user?.createdAt ??
+    user?.registered_at ??
+    user?.registeredAt;
+
+  if (!rawDate) return null;
+
+  const date = new Date(rawDate);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleDateString("ar-EG", {
+    month: "long",
+    year: "numeric",
+  });
+};
+
 const normalizeProfile = (user: any): UserProfileData => ({
   id: String(user?.id ?? ""),
   fullName:
@@ -97,12 +115,7 @@ const normalizeProfile = (user: any): UserProfileData => ({
   email: user?.email ?? "",
   phone: user?.phone ?? user?.phone_number ?? user?.mobile ?? "",
   avatarUrl: extractAvatarUrl(user),
-  joinedDate: user?.created_at
-    ? new Date(user.created_at).toLocaleDateString("ar-EG", {
-        month: "long",
-        year: "numeric",
-      })
-    : "يناير 2023",
+  joinedDate: formatJoinedDate(user),
   isOnline: true,
 });
 
@@ -145,6 +158,11 @@ export const profileApi = {
     }
 
     return normalized;
+  },
+
+  deleteAccount: async (): Promise<{ message?: string }> => {
+    const response = await customerApi.delete(PROFILE_ENDPOINT);
+    return response.data ?? {};
   },
 
   updatePassword: async (

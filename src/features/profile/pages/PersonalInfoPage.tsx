@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
 import { AccountLayout } from "@/layouts/AccountLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { PersonalInfoForm } from "../components/PersonalInfoForm";
@@ -32,9 +33,11 @@ export function PersonalInfoPage() {
     isUpdatingAvatar,
     updatePassword,
     isUpdatingPassword,
+    deleteAccount,
   } = useProfile();
   const currentUserAvatar = useCustomerAuthStore((state) => state.user?.avatarUrl ?? state.user?.avatar ?? null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(currentUserAvatar ?? profile?.avatarUrl ?? null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
     setAvatarPreviewUrl((previous) => {
@@ -109,6 +112,58 @@ export function PersonalInfoPage() {
     showSuccessToast(result.message);
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmation = await Swal.fire({
+      title: "هل أنت متأكد من حذف الحساب؟",
+      text: "سيتم حذف حسابك وبياناتك نهائيًا، ولا يمكن التراجع عن هذا الإجراء.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "نعم، احذف الحساب",
+      cancelButtonText: "إلغاء",
+      reverseButtons: true,
+      focusCancel: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#52663c",
+      customClass: {
+        popup: "font-sans",
+      },
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      setIsDeletingAccount(true);
+      await deleteAccount();
+      useCustomerAuthStore.getState().clearAuth();
+
+      await Swal.fire({
+        title: "تم حذف الحساب",
+        text: "تم حذف حسابك بنجاح.",
+        icon: "success",
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#52663c",
+      });
+
+      window.location.replace("/login");
+    } catch (error) {
+      console.error("Failed to delete customer account", error);
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      const message =
+        status === 500
+          ? "حدث خطأ في الخادم أثناء حذف الحساب. يرجى المحاولة لاحقًا."
+          : extractMessage(error, "تعذر حذف الحساب، يرجى المحاولة مرة أخرى.");
+      await Swal.fire({
+        title: "تعذر حذف الحساب",
+        text: message,
+        icon: "error",
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#dc2626",
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   if (isError && !profile) {
     return (
       <AccountLayout>
@@ -172,15 +227,16 @@ export function PersonalInfoPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-brand-border/60">
               <button
                 type="button"
-                onClick={() => showSuccessToast("تأكيد: هل أنت متأكد من رغبتك في حذف الحساب؟")}
+                onClick={() => void handleDeleteAccount()}
+                disabled={isDeletingAccount}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
               >
                 <TrashIcon className="w-4 h-4 shrink-0" />
-                <span>حذف الحساب نهائياً</span>
+                <span>{isDeletingAccount ? "جارٍ حذف الحساب..." : "حذف الحساب نهائياً"}</span>
               </button>
 
               <span className="text-xs text-brand-muted font-medium">
-                عضو منذ {profile?.joinedDate || "يناير 2023"}
+                عضو منذ {profile?.joinedDate || "غير متوفر"}
               </span>
             </div>
           </>
