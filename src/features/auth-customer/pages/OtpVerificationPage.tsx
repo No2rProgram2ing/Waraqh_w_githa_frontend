@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { AuthHeroPanel } from "@/features/auth-customer/components/AuthHeroPanel";
 import { Button } from "@/components/ui/Button";
@@ -16,21 +16,50 @@ import {
 const otpLength = 6;
 
 export function OtpVerificationPage() {
-  const [contactValue, setContactValue] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const contactValue = (() => {
+    const state = location.state as { contactValue?: string } | null;
+    return state?.contactValue ?? "";
+  })();
   const [otp, setOtp] = useState(Array.from({ length: otpLength }, () => ""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const verifyMutation = useCustomerVerification();
   const generateMutation = useGenerateCustomerVerification();
+  const [isVerified, setIsVerified] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(() => (contactValue ? 60 : 0));
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
+  useEffect(() => {
+    if (resendSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setResendSeconds((seconds) => Math.max(seconds - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendSeconds]);
+
   const normalizeContactValue = (value: string) => value.trim();
 
-  const purpose = contactValue.includes("@")
-    ? "signup_email_verification"
-    : "signup_phone_verification";
+  const purpose = "signup_email_verification";
+
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const getApiErrorMessage = (error: unknown, fallback: string) => {
+    const responseMessage = (
+      error as { response?: { data?: { message?: unknown } } }
+    ).response?.data?.message;
+
+    return typeof responseMessage === "string"
+      ? responseMessage
+      : fallback;
+  };
 
   const handleInputChange = (value: string, index: number) => {
     if (!/^\d*$/.test(value) || value.length > 1) {
@@ -53,29 +82,51 @@ export function OtpVerificationPage() {
   };
 
   const handleGenerateCode = async () => {
-    if (!normalizeContactValue(contactValue)) {
+    const normalized = normalizeContactValue(contactValue);
+    if (!isValidEmail(normalized)) {
       return;
     }
 
-    await generateMutation.mutateAsync({
-      purpose,
-      contact_value: normalizeContactValue(contactValue),
-    });
+    generateMutation.mutate({
+        purpose,
+        contact_value: normalized,
+      }, {
+        onSuccess: () => {
+          setResendSeconds(60);
+        },
+        onError: (error) => {
+          if ((error as { response?: { status?: number } }).response?.status === 404) {
+            navigate(ROUTES.signup, {
+              replace: true,
+              state: {
+                verificationError: "تعذر العثور على الحساب. أنشئ الحساب أولاً ثم اطلب رمز التحقق.",
+              },
+            });
+          }
+        },
+      });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     const code = otp.join("");
-    if (!normalizeContactValue(contactValue) || code.length !== otpLength) {
+    const normalized = normalizeContactValue(contactValue);
+    if (!isValidEmail(normalized) || code.length !== otpLength) {
       return;
     }
 
-    await verifyMutation.mutateAsync({
-      purpose,
-      contact_value: normalizeContactValue(contactValue),
-      code_or_token: code,
-    });
+    try {
+      await verifyMutation.mutateAsync({
+        purpose,
+        contact_value: normalized,
+        code_or_token: code,
+      });
+      setIsVerified(true);
+      window.setTimeout(() => navigate(ROUTES.login, { replace: true }), 1200);
+    } catch {
+      // The mutation error is rendered below.
+    }
   };
 
   return (
@@ -93,21 +144,33 @@ export function OtpVerificationPage() {
             تأكيد هويتك
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-brand-muted max-w-sm">
-            أدخل البريد الإلكتروني أو رقم الهاتف ثم اطلب الرمز، وبعدها أدخل الرمز المكون من 6 أرقام للتحقق.
+            أدخل البريد الإلكتروني ثم اطلب الرمز، وبعدها أدخل الرمز المكون من 6 أرقام للتحقق.
           </p>
 
           <div className="mt-8">
             <Input
-              label="البريد الإلكتروني أو رقم الهاتف"
-              type="text"
+              label="البريد الإلكتروني"
+              type="email"
               dir="ltr"
               value={contactValue}
-              onChange={(event) => setContactValue(event.target.value)}
-              placeholder="example@email.com أو 7xxxxxxxx"
+              readOnly
+              disabled={!contactValue}
+              placeholder="سيظهر البريد المستخدم في التسجيل هنا"
             />
+            {!contactValue && (
+              <p role="alert" className="mt-2 text-sm text-red-500">
+                افتح صفحة التحقق من خلال التسجيل حتى نستخدم البريد المسجل في الخلفية.
+              </p>
+            )}
             <div className="mt-4 flex justify-end">
-              <Button type="button" variant="secondary" onClick={handleGenerateCode} isLoading={generateMutation.isPending}>
-                إرسال الرمز
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleGenerateCode}
+                disabled={resendSeconds > 0}
+                isLoading={generateMutation.isPending}
+              >
+                {resendSeconds > 0 ? `يمكن إعادة الإرسال بعد ${resendSeconds} ثانية` : "إرسال الرمز"}
               </Button>
             </div>
           </div>
@@ -138,17 +201,23 @@ export function OtpVerificationPage() {
 
             {generateMutation.isError && (
               <p role="alert" className="text-sm text-red-500">
-                {(generateMutation.error as { message?: string } | undefined)?.message ?? "تعذر إرسال الرمز."}
+                {getApiErrorMessage(generateMutation.error, "تعذر إرسال الرمز.")}
               </p>
             )}
 
             {verifyMutation.isError && (
               <p role="alert" className="text-sm text-red-500">
-                {(verifyMutation.error as { message?: string } | undefined)?.message ?? "تعذر التحقق من الرمز."}
+                {getApiErrorMessage(verifyMutation.error, "تعذر التحقق من الرمز.")}
               </p>
             )}
 
-            <Button type="submit" fullWidth className="gap-2.5 mt-2 bg-brand-olive-700 hover:bg-brand-olive-900" isLoading={verifyMutation.isPending}>
+            {isVerified && (
+              <p role="status" className="text-sm text-brand-olive-700">
+                تم تأكيد البريد الإلكتروني بنجاح. جارٍ تحويلك لتسجيل الدخول...
+              </p>
+            )}
+
+            <Button type="submit" fullWidth disabled={isVerified} className="gap-2.5 mt-2 bg-brand-olive-700 hover:bg-brand-olive-900" isLoading={verifyMutation.isPending}>
               <span className="text-base font-bold">تأكيد الحساب</span>
               <ShieldCheckIcon className="h-5 w-5" />
             </Button>
@@ -161,8 +230,9 @@ export function OtpVerificationPage() {
                 type="button"
                 className="font-semibold text-brand-olive-700 hover:underline cursor-pointer"
                 onClick={handleGenerateCode}
+                disabled={resendSeconds > 0 || generateMutation.isPending}
               >
-                إعادة إرسال الرمز
+                {resendSeconds > 0 ? `إعادة الإرسال بعد ${resendSeconds} ثانية` : "إعادة إرسال الرمز"}
               </button>
             </p>
           </div>

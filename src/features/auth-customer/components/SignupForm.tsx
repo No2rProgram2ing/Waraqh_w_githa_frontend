@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { PhoneIcon, EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 import { PasswordStrengthMeter } from "@/features/auth-customer/components/PasswordStrengthMeter";
 import { useSignup } from "@/features/auth-customer/hooks/useSignup";
-import { useCustomerAuthStore } from "@/features/auth-customer/stores/customerAuthStore";
 import { signupSchema, type SignupSchema } from "@/features/auth-customer/schema";
+import { ROUTES } from "@/routes/paths";
 
 const fieldStagger = {
   hidden: { opacity: 0, y: 12 },
@@ -26,7 +26,18 @@ export function SignupForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const signup = useSignup();
   const navigate = useNavigate();
-  const setUser = useCustomerAuthStore((state) => state.setUser);
+  const location = useLocation();
+  const [verificationError, setVerificationError] = useState("");
+
+  useEffect(() => {
+    const state = location.state as { verificationError?: string } | null;
+    if (!state?.verificationError) {
+      return;
+    }
+
+    setVerificationError(state.verificationError);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const {
     register,
@@ -61,17 +72,9 @@ export function SignupForm() {
         confirmPassword: values.confirmPassword,
       });
 
-      if (result.token) {
-        setUser({
-          id: result.id,
-          fullName: result.fullName,
-          email: result.email,
-          phone: null,
-        });
-        navigate("/");
-      } else {
-        navigate("/login");
-      }
+      navigate(ROUTES.otpVerification, {
+        state: { contactValue: result.email || values.email },
+      });
     } catch (err: any) {
       const validationErrors = err?.fieldErrors ?? err?.response?.data?.errors;
 
@@ -93,6 +96,11 @@ export function SignupForm() {
       <motion.div custom={0} initial="hidden" animate="visible" variants={fieldStagger}>
         <h1 className="text-2xl font-bold text-brand-ink text-center">إنشاء حساب</h1>
         <p className="mt-2 text-[15px] text-brand-muted text-center">ابدأ تجربتك في عالم المنتجات اليدوية الفاخرة.</p>
+        {verificationError && (
+          <p role="alert" className="mt-3 text-center text-sm text-red-500">
+            {verificationError}
+          </p>
+        )}
       </motion.div>
 
       <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-5">
@@ -220,7 +228,7 @@ export function SignupForm() {
 
         {signup.isSuccess && (
           <motion.p role="status" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-sm text-brand-olive-700">
-            تم إنشاء الحساب بنجاح! جارٍ تحويلك...
+            تم إنشاء الحساب وإرسال رمز التحقق إلى بريدك الإلكتروني...
           </motion.p>
         )}
 

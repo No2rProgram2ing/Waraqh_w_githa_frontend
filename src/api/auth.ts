@@ -46,13 +46,12 @@ export const authApi = {
     const { data } = await customerApi.post("/register", {
       full_name: payload.fullName,
       email: payload.email,
-      phone_country_code: payload.phoneCountryCode ?? '',
+      phone_country_code: payload.phoneCountryCode ?? "",
       phone: payload.phone,
       password: payload.password,
       password_confirmation: payload.confirmPassword,
     });
 
-    // Backend returns a plain text token under `token` key
     if (data?.token) {
       customerAuthStorage.setToken(data.token);
     }
@@ -103,17 +102,19 @@ export const authApi = {
     }),
 
   // Generate verification code (OTP) for email/phone
-  generateVerification: async (payload: { purpose: string; contact_value: string }) =>
-    customerApi.post("/customer/verifications/generate", {
+  generateVerification: async (payload: { purpose: string; contact_value: string }) => {
+    return customerApi.post("/customer/verifications/generate", {
       purpose: payload.purpose,
-      contact_value: payload.contact_value,
-    }),
+      contact_value: payload.contact_value.trim(),
+    });
+  },
 
   // Verify code/token
-  verifyVerification: async (payload: { purpose: string; contact_value: string; code_or_token: string }) =>
-    customerApi.post("/customer/verifications/verify", {
+  verifyVerification: async (payload: { purpose: string; contact_value: string; code_or_token: string }) => {
+    return customerApi.post("/customer/verifications/verify", {
       purpose: payload.purpose,
-      contact_value: payload.contact_value,
-      code_or_token: payload.code_or_token,
-    }),
+      contact_value: payload.contact_value.trim(),
+      code_or_token: payload.code_or_token.trim(),
+    });
+  },
 };

@@ -13,6 +13,7 @@ import { CheckoutSuccessPage } from "@/features/checkout/pages/CheckoutSuccessPa
 import { LoginPage } from "@/features/auth-customer/pages/LoginPage";
 import { ForgotPasswordPage } from "@/features/auth-customer/pages/ForgotPasswordPage";
 import { CheckEmailPage } from "@/features/auth-customer/pages/CheckEmailPage";
+import { OtpVerificationPage } from "@/features/auth-customer/pages/OtpVerificationPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { PersonalInfoPage } from "@/features/profile/pages/PersonalInfoPage";
 import { AddressesPage } from "@/features/addresses/pages/AddressesPage";
@@ -45,6 +46,7 @@ export function AppRoutes() {
       <Route path={ROUTES.login} element={<LoginPage />} />
       <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
       <Route path={ROUTES.checkEmail} element={<CheckEmailPage />} />
+      <Route path={ROUTES.otpVerification} element={<OtpVerificationPage />} />
       <Route path={ROUTES.signup} element={<SignupPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
